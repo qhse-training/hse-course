@@ -1,0 +1,98 @@
+Изменить только JS-логику (заменить <script>...</script> полностью):
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+    authDomain: "qhse-training.firebaseapp.com",
+    projectId: "qhse-training",
+    storageBucket: "qhse-training.appspot.com",
+    messagingSenderId: "4501351718",
+    appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const courseId = new URLSearchParams(window.location.search).get('course');
+
+  auth.onAuthStateChanged(async user => {
+    if (!user) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    if (!courseId) {
+      document.getElementById("certificate").innerHTML = `
+        <h2 style="margin-top: 200px;">Ошибка</h2>
+        <p>Не указан ID курса в URL (?course=...)</p>
+      `;
+      document.querySelector('button').style.display = 'none';
+      return;
+    }
+
+    const docId = `${user.uid}_${courseId}`;
+    try {
+      const certDoc = await db.collection("course_progress").doc(docId).get();
+      if (!certDoc.exists) {
+        document.getElementById("certificate").innerHTML = `
+          <h2 style="margin-top: 200px;">Сертификат не найден</h2>
+          <p>Вы ещё не завершили этот курс</p>
+        `;
+        document.querySelector('button').style.display = 'none';
+        return;
+      }
+
+      const data = certDoc.data();
+      if (!data.passed || data.progress < 100) {
+        document.getElementById("certificate").innerHTML = `
+          <h2 style="margin-top: 200px;">Сертификат недоступен</h2>
+          <p>Необходимо пройти все слайды и успешно сдать тест.</p>
+        `;
+        document.querySelector('button').style.display = 'none';
+        return;
+      }
+
+      // Получаем название курса
+      let courseTitle = courseId;
+      try {
+        const courseDoc = await db.collection("courses").doc(courseId).get();
+        if (courseDoc.exists) {
+          courseTitle = courseDoc.data().title || courseId;
+        }
+      } catch (e) {
+        console.error("Ошибка загрузки курса:", e);
+      }
+
+      document.getElementById("username").textContent = user.email;
+      document.getElementById("coursename").textContent = courseTitle;
+      document.getElementById("date").textContent = new Date().toLocaleDateString('ru-RU');
+
+      if (data.score) {
+        document.getElementById("score").textContent = `Результат: ${data.score}/20`;
+      } else {
+        document.getElementById("score").style.display = 'none';
+      }
+
+    } catch (err) {
+      console.error("Ошибка:", err);
+      document.getElementById("certificate").innerHTML = `
+        <h2 style="margin-top: 200px;">Ошибка загрузки</h2>
+        <p>Не удалось загрузить данные</p>
+      `;
+      document.querySelector('button').style.display = 'none';
+    }
+  });
+
+  function downloadPDF() {
+    const element = document.getElementById("certificate");
+    const opt = {
+      margin: 10,
+      filename: 'сертификат.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    html2pdf().set(opt).from(element).save();
+  }
+</script>
