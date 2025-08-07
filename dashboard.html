@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Личный кабинет</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      background: #1976d2;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    #logoutBtn {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .card h3 {
+      margin: 0 0 10px;
+      color: #1976d2;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1976d2;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .progress-text {
+      font-size: 14px;
+      color: #555;
+    }
+    .card a {
+      display: inline-block;
+      margin-top: 12px;
+      background: #1976d2;
+      color: white;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+    }
+    .error {
+      background: #ffebee;
+      color: #b71c1c;
+      padding: 15px;
+      text-align: center;
+      border-radius: 4px;
+    }
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #777;
+    }
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #555;
+    }
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .debug-info {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="user-info">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div>
+        <strong id="userEmail">Загрузка...</strong><br>
+        <small>Личный кабинет</small>
+      </div>
+    </div>
+    <button id="logoutBtn">Выйти</button>
+  </div>
+
+  <div id="courseList"><p class="loading">Загрузка курсов...</p></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "4501351718",
+      appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const userEmail = document.getElementById("userEmail");
+    const userAvatar = document.getElementById("userAvatar");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const courseList = document.getElementById("courseList");
+
+    logoutBtn.onclick = () => {
+      auth.signOut().then(() => location.href = "login.html");
+    };
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        courseList.innerHTML = `<div class="error">⛔ Вы не авторизованы.</div>`;
+        setTimeout(() => location.href = "login.html", 2000);
+        return;
+      }
+
+      userEmail.textContent = user.email;
+      userAvatar.textContent = user.email.charAt(0).toUpperCase();
+
+      try {
+        const approvedDoc = await db.collection("approved_users").doc(user.uid).get();
+
+        if (!approvedDoc.exists) {
+          courseList.innerHTML = `<div class="error">⛔ Ваш аккаунт ожидает подтверждения администратора</div>`;
+          return;
+        }
+
+        const userData = approvedDoc.data();
+        const courses = userData.courses || [];
+
+        if (courses.length === 0) {
+          courseList.innerHTML = `<div class="empty">Курсы не назначены. Обратитесь к администратору.</div>`;
+          return;
+        }
+
+        renderCourses(courses, user.uid);
+      } catch (err) {
+        courseList.innerHTML = `<div class="error">Ошибка загрузки: ${err.message}</div>`;
+      }
+    });
+
+    async function renderCourses(courseIds, uid) {
+      courseList.innerHTML = `<p class="loading">Загрузка ${courseIds.length} курсов...</p>`;
+
+      try {
+        const coursePromises = courseIds.map(courseId => 
+          db.collection("courses").doc(courseId).get()
+            .then(doc => {
+              if (!doc.exists) throw new Error("Курс не найден");
+              const data = doc.data();
+              if (!data.title) throw new Error("Отсутствует заголовок курса");
+              return {
+                id: doc.id,
+                title: data.title,
+                description: data.description || "Описание отсутствует",
+                slides: data.slides || [],
+                hasTest: data.hasTest || false
+              };
+            })
+            .catch(err => ({ id: courseId, error: err.message }))
+        );
+
+        const results = await Promise.all(coursePromises);
+        const courses = results.filter(r => !r.error);
+        const failedCourses = results.filter(r => r.error);
+
+        if (courses.length === 0) {
+          let html = "Нет доступных курсов.";
+          if (failedCourses.length > 0) {
+            html += `<br><small>Ошибки загрузки:</small><br>` +
+              failedCourses.map(fc => `<b>${fc.id}</b>: ${fc.error}`).join("<br>");
+          }
+          courseList.innerHTML = `<div class="error">${html}</div>`;
+          return;
+        }
+
+        courseList.innerHTML = "";
+
+        for (const course of courses) {
+          const docId = `${uid}_${course.id}`;
+          let progressSnap = await db.collection("course_progress").doc(docId).get();
+
+          if (!progressSnap.exists) {
+            await db.collection("course_progress").doc(docId).set({
+              uid,
+              courseId: course.id,
+              progress: 0,
+              completed: 0,
+              score: 0,
+              passed: false,
+              certificateUrl: "",
+              lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            progressSnap = await db.collection("course_progress").doc(docId).get();
+          }
+
+          const progress = progressSnap.data();
+          const total = course.slides.length;
+          const done = progress.completed || 0;
+          const percent = total ? Math.round((done / total) * 100) : 0;
+
+          let testBtn = "";
+          if (course.hasTest) {
+            testBtn = progress.passed
+              ? `<a href="certificate.html?course=${course.id}" class="certificate-badge">Сертификат</a>`
+              : `<a href="test.html?course=${course.id}" style="background: #fbbc05; margin-left: 10px;">Пройти тест</a>`;
+          }
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>${course.title}</h3>
+            <p>${course.description}</p>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${percent}%;"></div>
+            </div>
+            <div class="progress-text">Прогресс: ${done} из ${total} слайдов (${percent}%)</div>
+            <div>
+              <a href="course.html?id=${course.id}">
+                ${percent === 100 ? "Повторить курс" : "Перейти к обучению"}
+              </a>
+              ${testBtn}
+            </div>
+          `;
+          courseList.appendChild(card);
+        }
+
+      } catch (err) {
+        courseList.innerHTML = `<div class="error">Ошибка загрузки курсов<br><small>${err.message}</small></div>`;
+      }
+    }
+  </script>
+</body>
+</html>
