@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Energy Wheel Safety Test</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #27ae60;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    header, nav, .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: var(--dark-color);
+      padding: 0.5rem 2rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--secondary-color);
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 2rem;
+    }
+
+    .test-info {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .test-instructions {
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .timer {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+
+    .progress-bar {
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1rem;
+      height: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-color);
+      text-align: center;
+      color: white;
+      line-height: 20px;
+    }
+
+    .question-container {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 0.8rem;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .option-radio {
+      margin-right: 0.8rem;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 200px;
+      margin: 2rem auto 0;
+      padding: 0.8rem;
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+      background-color: #1e8449;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      border-radius: 5px;
+      max-width: 600px;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .unanswered {
+      background-color: #fff3cd;
+    }
+
+    .correct-answer {
+      color: #27ae60;
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .question-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <i class="fas fa-hard-hat fa-2x"></i>
+      <div class="logo-text">Safety Training</div>
+    </div>
+    <div class="user-info">
+      <span>John Smith</span>
+      <div class="user-avatar">JS</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="tests.html" class="active">Tests</a></li>
+      <li><a href="certificates.html">Certificates</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1><i class="fas fa-clipboard-check"></i> Energy Wheel Safety Test</h1>
+    
+    <div class="test-info">
+      <div class="test-title">Energy Wheel Safety (20 Questions)</div>
+      <div class="test-instructions">Answer all questions. One correct answer per question.</div>
+      <div class="timer">Time left: <span id="time">20:00</span></div>
+      <div class="progress-bar"><div class="progress" id="progressBar">0%</div></div>
+    </div>
+
+    <div id="result" class="result-message"></div>
+
+    <form id="testForm">
+      <!-- Questions will be inserted here by JavaScript -->
+      <div style="text-align: center;">
+        <button type="button" class="submit-btn" id="submitBtn">Submit Test</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Questions from the second page
+    const questions = [
+      {
+        question: "1. What is the primary purpose of the Energy Wheel tool?",
+        options: [
+          "To replace existing safety permits",
+          "To identify and control hazardous energy sources",
+          "To calculate workplace productivity metrics",
+          "To track employee working hours"
+        ],
+        answer: 1,
+        explanation: "The Energy Wheel is designed to systematically identify and control hazardous energy sources in the workplace."
+      },
+      {
+        question: "2. Which of these is NOT one of the 10 energy sources in the Energy Wheel?",
+        options: [
+          "Gravity",
+          "Motion",
+          "Weather",
+          "Pressure"
+        ],
+        answer: 2,
+        explanation: "The 10 energy sources are: Mechanical, Electrical, Pressure, Temperature, Chemical, Radiation, Sound, Biological, Gravity, and Motion."
+      },
+      {
+        question: "3. What type of hazard is associated with 'falling objects'?",
+        options: [
+          "Electrical energy",
+          "Gravitational energy",
+          "Chemical energy",
+          "Biological energy"
+        ],
+        answer: 1,
+        explanation: "Falling objects are a gravitational energy hazard as they involve the potential energy of objects at height."
+      },
+      {
+        question: "4. Which energy source includes risks from rotating machinery parts?",
+        options: [
+          "Mechanical energy",
+          "Sound energy",
+          "Radiation",
+          "Temperature"
+        ],
+        answer: 0,
+        explanation: "Rotating machinery parts are a mechanical energy hazard due to their movement and potential to cause injury."
+      },
+      {
+        question: "5. What is the main risk associated with 'pressure' energy?",
+        options: [
+          "Electric shock",
+          "Explosions or sudden releases",
+          "Hearing loss",
+          "Skin irritation"
+        ],
+        answer: 1,
+        explanation: "Pressurized systems can lead to explosions or sudden releases of energy if not properly controlled."
+      },
+      {
+        question: "6. Which energy source includes hazards from viruses and bacteria?",
+        options: [
+          "Chemical energy",
+          "Biological energy",
+          "Radiation",
+          "Motion"
+        ],
+        answer: 1,
+        explanation: "Biological energy includes hazards from living organisms like viruses, bacteria, and other pathogens."
+      },
+      {
+        question: "7. What is a common control measure for 'electrical energy' hazards?",
+        options: [
+          "Lockout/Tagout (LOTO)",
+          "Noise-canceling headphones",
+          "Sunscreen",
+          "Hard hats"
+        ],
+        answer: 0,
+        explanation: "LOTO is a critical safety procedure for controlling hazardous electrical energy during maintenance."
+      },
+      {
+        question: "8. Which energy source includes risks from welding arcs and lasers?",
+        options: [
+          "Sound",
+          "Radiation",
+          "Temperature",
+          "Gravity"
+        ],
+        answer: 1,
+        explanation: "Welding arcs and lasers emit harmful radiation that can damage eyes and skin."
+      },
+      {
+        question: "9. What type of hazard is associated with 'cryogenic liquids'?",
+        options: [
+          "Temperature extremes",
+          "Biological contamination",
+          "Pressure changes",
+          "Electrical currents"
+        ],
+        answer: 0,
+        explanation: "Cryogenic liquids present extreme cold temperature hazards that can cause frostbite or material embrittlement."
+      },
+      {
+        question: "10. Which energy source includes risks from flammable vapors?",
+        options: [
+          "Chemical energy",
+          "Mechanical energy",
+          "Motion",
+          "Sound"
+        ],
+        answer: 0,
+        explanation: "Flammable vapors are a chemical energy hazard due to their potential for combustion."
+      },
+      {
+        question: "11. What is the primary risk associated with 'sound' energy?",
+        options: [
+          "Burns",
+          "Hearing damage",
+          "Electric shock",
+          "Radiation exposure"
+        ],
+        answer: 1,
+        explanation: "Excessive sound energy can cause permanent hearing loss or other auditory damage."
+      },
+      {
+        question: "12. Which tool integrates with the Energy Wheel for hazard analysis?",
+        options: [
+          "Job Safety Analysis (JSA)",
+          "Payroll software",
+          "Weather forecasting apps",
+          "Employee scheduling systems"
+        ],
+        answer: 0,
+        explanation: "JSA is a complementary tool that works with the Energy Wheel for comprehensive hazard analysis."
+      },
+      {
+        question: "13. What is an example of 'motion' energy hazard?",
+        options: [
+          "Static electricity",
+          "Moving conveyor belts",
+          "Toxic gases",
+          "Hot surfaces"
+        ],
+        answer: 1,
+        explanation: "Moving conveyor belts are a motion energy hazard due to their kinetic energy and potential to cause entanglement."
+      },
+      {
+        question: "14. Which energy source includes risks from high-pressure steam?",
+        options: [
+          "Pressure",
+          "Gravity",
+          "Biological",
+          "Radiation"
+        ],
+        answer: 0,
+        explanation: "High-pressure steam is a pressure energy hazard that can cause burns or explosions if released."
+      },
+      {
+        question: "15. What is the first step in the hierarchy of energy control?",
+        options: [
+          "Use PPE",
+          "Eliminate the energy source",
+          "Post warning signs",
+          "Conduct training"
+        ],
+        answer: 1,
+        explanation: "Elimination is the most effective control method in the hierarchy of controls."
+      },
+      {
+        question: "16. Which energy source includes risks from ultraviolet (UV) light?",
+        options: [
+          "Radiation",
+          "Chemical",
+          "Mechanical",
+          "Sound"
+        ],
+        answer: 0,
+        explanation: "UV light is a form of non-ionizing radiation that can damage skin and eyes."
+      },
+      {
+        question: "17. What is an example of 'temperature' energy hazard?",
+        options: [
+          "Live electrical wires",
+          "Open flames",
+          "Falling tools",
+          "Loud machinery"
+        ],
+        answer: 1,
+        explanation: "Open flames represent a high-temperature energy hazard that can cause burns or start fires."
+      },
+      {
+        question: "18. Which energy source includes risks from static electricity?",
+        options: [
+          "Electrical energy",
+          "Motion",
+          "Biological",
+          "Gravity"
+        ],
+        answer: 0,
+        explanation: "Static electricity is an electrical energy hazard that can cause sparks leading to fires or explosions."
+      },
+      {
+        question: "19. When should the Energy Wheel be used?",
+        options: [
+          "Only after accidents occur",
+          "During risk assessments before work begins",
+          "Exclusively for office environments",
+          "Only by managers"
+        ],
+        answer: 1,
+        explanation: "The Energy Wheel is a proactive tool for risk assessment before work begins to prevent accidents."
+      },
+      {
+        question: "20. What is the purpose of 'Stop-Work Authority' in energy control?",
+        options: [
+          "To delay projects indefinitely",
+          "To allow immediate cessation of unsafe work",
+          "To reduce employee breaks",
+          "To increase production speed"
+        ],
+        answer: 1,
+        explanation: "Stop-Work Authority empowers any worker to halt unsafe operations to prevent accidents."
+      }
+    ];
+
+    // Configuration
+    const totalQuestions = questions.length;
+    const testDuration = 20 * 60; // 20 minutes in seconds
+    let timeLeft = testDuration;
+    let timerInterval;
+
+    // DOM Elements
+    const timerEl = document.getElementById("time");
+    const progressBar = document.getElementById("progressBar");
+    const testForm = document.getElementById("testForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultEl = document.getElementById("result");
+
+    // Initialize the test
+    function initTest() {
+      // Create the question elements
+      questions.forEach((q, index) => {
+        const questionContainer = document.createElement('div');
+        questionContainer.className = 'question-container';
+        
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        questionText.textContent = q.question;
+        
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+        
+        q.options.forEach((option, optionIndex) => {
+          const optionItem = document.createElement('li');
+          optionItem.className = 'option-item';
+          
+          const optionLabel = document.createElement('label');
+          optionLabel.className = 'option-label';
+          
+          const optionRadio = document.createElement('input');
+          optionRadio.type = 'radio';
+          optionRadio.name = `q${index + 1}`;
+          optionRadio.className = 'option-radio';
+          optionRadio.value = optionIndex;
+          
+          optionLabel.appendChild(optionRadio);
+          optionLabel.appendChild(document.createTextNode(option));
+          optionItem.appendChild(optionLabel);
+          optionsList.appendChild(optionItem);
+        });
+        
+        questionContainer.appendChild(questionText);
+        questionContainer.appendChild(optionsList);
+        testForm.insertBefore(questionContainer, submitBtn.parentNode);
+      });
+      
+      startTimer();
+      updateProgressBar();
+      
+      // Add event listener for form changes to update progress
+      testForm.addEventListener("change", updateProgressBar);
+      
+      // Add submit button handler
+      submitBtn.addEventListener("click", calculateScore);
+    }
+
+    // Timer functionality
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timeUp();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function timeUp() {
+      alert("Time is up! Your test will be automatically submitted.");
+      calculateScore();
+    }
+
+    // Progress tracking
+    function updateProgressBar() {
+      const answeredQuestions = new Set();
+      const radioButtons = testForm.querySelectorAll('input[type="radio"]:checked');
+      
+      radioButtons.forEach(radio => {
+        answeredQuestions.add(radio.name);
+      });
+      
+      const progress = (answeredQuestions.size / totalQuestions) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.textContent = `${Math.round(progress)}%`;
+    }
+
+    // Scoring functionality
+    function calculateScore() {
+      clearInterval(timerInterval);
+      
+      let score = 0;
+      const questionContainers = document.querySelectorAll('.question-container');
+      
+      // Disable all inputs
+      const allInputs = testForm.querySelectorAll('input');
+      allInputs.forEach(input => input.disabled = true);
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      
+      // Evaluate each question
+      questionContainers.forEach((container, index) => {
+        const questionName = `q${index + 1}`;
+        const selectedOption = testForm.querySelector(`input[name="${questionName}"]:checked`);
+        const correctIndex = questions[index].answer;
+        
+        // Highlight correct answer
+        const correctOption = container.querySelectorAll('input[type="radio"]')[correctIndex];
+        const correctLabel = correctOption.parentElement;
+        
+        // Add correct answer indicator
+        const correctAnswerEl = document.createElement('div');
+        correctAnswerEl.className = 'correct-answer';
+        correctAnswerEl.textContent = `Correct answer: ${questions[index].options[correctIndex]}`;
+        container.appendChild(correctAnswerEl);
+        
+        if (selectedOption) {
+          const selectedValue = parseInt(selectedOption.value);
+          const selectedLabel = selectedOption.parentElement;
+          
+          if (selectedValue === correctIndex) {
+            score++;
+            selectedLabel.classList.add('correct');
+          } else {
+            selectedLabel.classList.add('incorrect');
+          }
+        } else {
+          // No answer selected
+          container.classList.add('unanswered');
+        }
+      });
+      
+      // Display results
+      const percentage = Math.round((score / totalQuestions) * 100);
+      resultEl.style.display = 'block';
+      resultEl.className = percentage >= 70 ? 'result-message correct' : 'result-message incorrect';
+      resultEl.innerHTML = `
+        <h3>Test Results</h3>
+        <p>You scored <strong>${score}</strong> out of <strong>${totalQuestions}</strong> (${percentage}%)</p>
+        <p>${percentage >= 70 ? 'Congratulations! You passed the test.' : 'Please review the material and try again.'}</p>
+      `;
+      
+      // Scroll to results
+      resultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize the test when page loads
+    document.addEventListener('DOMContentLoaded', initTest);
+  </script>
+</body>
+</html>
