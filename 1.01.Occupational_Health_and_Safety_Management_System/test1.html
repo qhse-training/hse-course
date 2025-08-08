@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OHSMS Final Test</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
+    h1 { text-align: center; color: #2c3e50; }
+    .question { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .question p { margin: 0 0 10px; font-weight: bold; }
+    .question label { display: block; margin-bottom: 5px; }
+    #submitBtn { background: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; display: block; margin: 20px auto; }
+    #result { text-align: center; font-size: 18px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Occupational Health and Safety Test</h1>
+  <form id="testForm">
+    <!-- Questions will be injected here -->
+  </form>
+  <button id="submitBtn">Submit Test</button>
+  <div id="result"></div>
+
+  <script>
+    const userName = "John Smith";
+    const courseName = "Occupational Health and Safety Management System";
+    const questions = [
+      { q: "1. What is the main goal of OHSMS?", a: ["Increase profit", "Reduce working hours", "Ensure workplace safety", "Decrease costs"], correct: 2 },
+      { q: "2. Which standard is commonly used for OHSMS?", a: ["ISO 9001", "ISO 14001", "ISO 45001", "ISO 27001"], correct: 2 },
+      { q: "3. What is the first step in implementing OHSMS?", a: ["Hiring a consultant", "Risk assessment", "Writing procedures", "Employee training"], correct: 1 },
+      { q: "4. What does PDCA stand for in OHSMS?", a: ["Plan, Do, Check, Act", "Prepare, Develop, Control, Assess", "Protect, Define, Create, Analyze", "Prevent, Detect, Correct, Audit"], correct: 0 },
+      { q: "5. Who is ultimately responsible for workplace safety?", a: ["Employees", "Safety officers", "Management", "Government"], correct: 2 },
+      { q: "6. What is a hazard in OHSMS terms?", a: ["An accident that has occurred", "A potential source of harm", "A safety procedure", "A type of PPE"], correct: 1 },
+      { q: "7. What is the purpose of a risk assessment?", a: ["To assign blame for accidents", "To identify and control workplace hazards", "To reduce employee benefits", "To increase production speed"], correct: 1 },
+      { q: "8. What does PPE stand for?", a: ["Personal Productivity Equipment", "Protective Professional Equipment", "Personal Protective Equipment", "Professional Protective Ensemble"], correct: 2 },
+      { q: "9. When should safety training be provided to employees?", a: ["Only when hired", "When hired and when risks change", "Only after an accident", "Once every five years"], correct: 1 },
+      { q: "10. What is an incident in OHSMS terms?", a: ["A planned inspection", "An unplanned event that could cause harm", "A safety committee meeting", "A type of drill"], correct: 1 },
+      { q: "11. What is the purpose of a safety audit?", a: ["To find employees breaking rules", "To evaluate effectiveness of safety systems", "To reduce equipment costs", "To increase quotas"], correct: 1 },
+      { q: "12. What should be done first when an accident occurs?", a: ["Assign blame", "Secure the scene and provide first aid", "Continue working", "Call a meeting"], correct: 1 },
+      { q: "13. What is a near miss?", a: ["Incident with injury", "Unplanned event without harm", "Safety inspection", "Type of PPE"], correct: 1 },
+      { q: "14. Why is worker participation important in OHSMS?", a: ["Workers know hazards best", "Reduces management workload", "Required by law", "All of the above"], correct: 3 },
+      { q: "15. What is the hierarchy of controls?", a: ["List of safety managers", "System to prioritize controls", "Type of training", "Government regulation"], correct: 1 },
+      { q: "16. Most effective hazard control?", a: ["PPE", "Elimination", "Warning signs", "Training"], correct: 1 },
+      { q: "17. What is a safety culture?", a: ["Government agency", "Shared values about safety", "Training program", "Certification"], correct: 1 },
+      { q: "18. Why document safety procedures?", a: ["Legal compliance", "Consistent practices", "Training", "All of the above"], correct: 3 },
+      { q: "19. Continuous improvement in OHSMS?", a: ["One-time audit", "Ongoing process to enhance safety", "Type of training", "Government rule"], correct: 1 },
+      { q: "20. Management's role in OHSMS?", a: ["Provide resources", "Enforce rules", "Conduct inspections", "All of the above"], correct: 3 }
+    ];
+
+    const form = document.getElementById('testForm');
+    const resultDiv = document.getElementById('result');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // Render questions
+    questions.forEach((q, index) => {
+      const container = document.createElement('div');
+      container.className = 'question';
+      const qText = document.createElement('p');
+      qText.textContent = q.q;
+      container.appendChild(qText);
+      q.a.forEach((option, i) => {
+        const label = document.createElement('label');
+        label.innerHTML = `<input type="radio" name="q${index}" value="${i}"> ${option}`;
+        container.appendChild(label);
+      });
+      form.appendChild(container);
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      let score = 0;
+      questions.forEach((q, i) => {
+        const selected = document.querySelector(`input[name=q${i}]:checked`);
+        if (selected && parseInt(selected.value) === q.correct) score++;
+      });
+
+      const percent = Math.round((score / questions.length) * 100);
+      resultDiv.innerHTML = `You scored <strong>${score}</strong> out of <strong>${questions.length}</strong> (${percent}%)`;
+
+      if (percent >= 95) {
+        const today = new Date().toLocaleDateString();
+        await generateCertificate(userName, courseName, today);
+        resultDiv.innerHTML += `<br><span style='color:green;'>Certificate generated and downloaded.</span>`;
+      } else {
+        resultDiv.innerHTML += `<br><span style='color:red;'>Certificate not generated (need 95% or higher).</span>`;
+      }
+
+      resultDiv.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    async function generateCertificate(name, course, date) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(22);
+      doc.text("Certificate of Completion", 105, 30, null, null, "center");
+
+      doc.setFontSize(16);
+      doc.text(`This certifies that`, 105, 50, null, null, "center");
+      doc.setFontSize(20);
+      doc.text(name, 105, 60, null, null, "center");
+
+      doc.setFontSize(16);
+      doc.text(`has successfully completed the course`, 105, 75, null, null, "center");
+      doc.setFontSize(18);
+      doc.text(course, 105, 85, null, null, "center");
+
+      doc.setFontSize(14);
+      doc.text(`Date: ${date}`, 20, 120);
+      doc.text("Signature: ____________________", 20, 135);
+
+      doc.save(`${course}_certificate.pdf`);
+    }
+  </script>
+</body>
+</html>
