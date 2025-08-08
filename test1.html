@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OHSMS Test with Timer & Progress</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #27ae60;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    header, nav, .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: var(--dark-color);
+      padding: 0.5rem 2rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--secondary-color);
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 2rem;
+    }
+
+    .test-info {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .test-instructions {
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .timer {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+
+    .progress-bar {
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1rem;
+      height: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-color);
+      text-align: center;
+      color: white;
+      line-height: 20px;
+    }
+
+    .question-container {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 0.8rem;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .option-radio {
+      margin-right: 0.8rem;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 200px;
+      margin: 2rem auto 0;
+      padding: 0.8rem;
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+      background-color: #1e8449;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      border-radius: 5px;
+      max-width: 600px;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .unanswered {
+      background-color: #fff3cd;
+    }
+
+    .correct-answer {
+      color: #27ae60;
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .question-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <i class="fas fa-hard-hat fa-2x"></i>
+      <div class="logo-text">OHSMS Training</div>
+    </div>
+    <div class="user-info">
+      <span>John Smith</span>
+      <div class="user-avatar">JS</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="tests.html" class="active">Tests</a></li>
+      <li><a href="certificates.html">Certificates</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1><i class="fas fa-clipboard-check"></i> OHSMS Test</h1>
+    
+    <div class="test-info">
+      <div class="test-title">Occupational Health and Safety Management System (20 Questions)</div>
+      <div class="test-instructions">Answer all questions. One correct answer per question.</div>
+      <div class="timer">Time left: <span id="time">20:00</span></div>
+      <div class="progress-bar"><div class="progress" id="progressBar">0%</div></div>
+    </div>
+
+    <div id="result" class="result-message"></div>
+
+    <form id="testForm">
+      <!-- Question 1 -->
+      <div class="question-container">
+        <div class="question-text">1. What is the main goal of OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="0"> Increase profit</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="1"> Reduce working hours</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="2"> Ensure workplace safety</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="3"> Decrease costs</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="question-container">
+        <div class="question-text">2. Which standard is commonly used for OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="0"> ISO 9001</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="1"> ISO 14001</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="2"> ISO 45001</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="3"> ISO 27001</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="question-container">
+        <div class="question-text">3. What is the first step in implementing OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="0"> Hiring a consultant</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="1"> Risk assessment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="2"> Writing procedures</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="3"> Employee training</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 4 -->
+      <div class="question-container">
+        <div class="question-text">4. What does PDCA stand for in OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="0"> Plan, Do, Check, Act</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="1"> Prepare, Develop, Control, Assess</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="2"> Protect, Define, Create, Analyze</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="3"> Prevent, Detect, Correct, Audit</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 5 -->
+      <div class="question-container">
+        <div class="question-text">5. Who is ultimately responsible for workplace safety?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="0"> Employees</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="1"> Safety officers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="2"> Management</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="3"> Government</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 6 -->
+      <div class="question-container">
+        <div class="question-text">6. What is a hazard in OHSMS terms?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="0"> An accident that has occurred</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="1"> A potential source of harm</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="2"> A safety procedure</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="3"> A type of PPE</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 7 -->
+      <div class="question-container">
+        <div class="question-text">7. What is the purpose of a risk assessment?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="0"> To assign blame for accidents</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="1"> To identify and control workplace hazards</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="2"> To reduce employee benefits</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="3"> To increase production speed</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 8 -->
+      <div class="question-container">
+        <div class="question-text">8. What does PPE stand for?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="0"> Personal Productivity Equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="1"> Protective Professional Equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="2"> Personal Protective Equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="3"> Professional Protective Ensemble</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 9 -->
+      <div class="question-container">
+        <div class="question-text">9. When should safety training be provided to employees?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="0"> Only when hired</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="1"> When hired and when risks change</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="2"> Only after an accident occurs</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="3"> Once every five years</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 10 -->
+      <div class="question-container">
+        <div class="question-text">10. What is an incident in OHSMS terms?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="0"> A planned safety inspection</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="1"> An unplanned event that could cause harm</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="2"> A safety committee meeting</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="3"> A type of safety drill</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 11 -->
+      <div class="question-container">
+        <div class="question-text">11. What is the purpose of a safety audit?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="0"> To find employees breaking rules</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="1"> To evaluate the effectiveness of safety systems</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="2"> To reduce safety equipment costs</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="3"> To increase production quotas</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 12 -->
+      <div class="question-container">
+        <div class="question-text">12. What should be done first when an accident occurs?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="0"> Assign blame</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="1"> Secure the scene and provide first aid</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="2"> Continue working</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="3"> Call a meeting</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 13 -->
+      <div class="question-container">
+        <div class="question-text">13. What is a near miss?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="0"> An incident that resulted in injury</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="1"> An unplanned event that didn't result in harm</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="2"> A safety inspection</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="3"> A type of PPE</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 14 -->
+      <div class="question-container">
+        <div class="question-text">14. Why is worker participation important in OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="0"> Workers know the hazards best</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="1"> It reduces management workload</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="2"> It's required by law</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="3"> All of the above</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 15 -->
+      <div class="question-container">
+        <div class="question-text">15. What is the hierarchy of controls?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="0"> A list of safety managers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="1"> A system to prioritize hazard controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="2"> A type of safety training</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="3"> A government regulation</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 16 -->
+      <div class="question-container">
+        <div class="question-text">16. Which is the most effective hazard control?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="0"> PPE</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="1"> Elimination of the hazard</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="2"> Warning signs</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="3"> Training</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 17 -->
+      <div class="question-container">
+        <div class="question-text">17. What is a safety culture?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="0"> A government safety agency</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="1"> The shared values about safety in an organization</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="2"> A type of safety training program</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="3"> A safety certification</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 18 -->
+      <div class="question-container">
+        <div class="question-text">18. Why document safety procedures?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="0"> For legal compliance</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="1"> To ensure consistent safety practices</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="2"> For training purposes</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="3"> All of the above</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 19 -->
+      <div class="question-container">
+        <div class="question-text">19. What is continuous improvement in OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="0"> A one-time safety audit</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="1"> An ongoing process to enhance safety</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="2"> A type of safety training</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="3"> A government regulation</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 20 -->
+      <div class="question-container">
+        <div class="question-text">20. What is management's role in OHSMS?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="0"> Provide resources and leadership</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="1"> Enforce safety rules</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="2"> Conduct safety inspections</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="3"> All of the above</label></li>
+        </ul>
+      </div>
+
+      <div style="text-align: center;">
+        <button type="button" class="submit-btn" id="submitBtn">Submit Test</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Configuration
+    const totalQuestions = 20;
+    const testDuration = 20 * 60; // 20 minutes in seconds
+    let timeLeft = testDuration;
+    let timerInterval;
+
+    // Correct answers (zero-based indices)
+    const correctAnswers = {
+      q1: 2, // Ensure workplace safety
+      q2: 2, // ISO 45001
+      q3: 1, // Risk assessment
+      q4: 0, // Plan, Do, Check, Act
+      q5: 2, // Management
+      q6: 1, // A potential source of harm
+      q7: 1, // To identify and control workplace hazards
+      q8: 2, // Personal Protective Equipment
+      q9: 1, // When hired and when risks change
+      q10: 1, // An unplanned event that could cause harm
+      q11: 1, // To evaluate the effectiveness of safety systems
+      q12: 1, // Secure the scene and provide first aid
+      q13: 1, // An unplanned event that didn't result in harm
+      q14: 3, // All of the above
+      q15: 1, // A system to prioritize hazard controls
+      q16: 1, // Elimination of the hazard
+      q17: 1, // The shared values about safety in an organization
+      q18: 3, // All of the above
+      q19: 1, // An ongoing process to enhance safety
+      q20: 3  // All of the above
+    };
+
+    // DOM Elements
+    const timerEl = document.getElementById("time");
+    const progressBar = document.getElementById("progressBar");
+    const testForm = document.getElementById("testForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultEl = document.getElementById("result");
+
+    // Initialize the test
+    function initTest() {
+      startTimer();
+      updateProgressBar();
+      
+      // Add event listener for form changes to update progress
+      testForm.addEventListener("change", updateProgressBar);
+      
+      // Add submit button handler
+      submitBtn.addEventListener("click", calculateScore);
+    }
+
+    // Timer functionality
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timeUp();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function timeUp() {
+      alert("Time is up! Your test will be automatically submitted.");
+      calculateScore();
+    }
+
+    // Progress tracking
+    function updateProgressBar() {
+      const answeredQuestions = new Set();
+      const radioButtons = testForm.querySelectorAll('input[type="radio"]:checked');
+      
+      radioButtons.forEach(radio => {
+        answeredQuestions.add(radio.name);
+      });
+      
+      const progress = (answeredQuestions.size / totalQuestions) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.textContent = `${Math.round(progress)}%`;
+    }
+
+    // Scoring functionality
+    function calculateScore() {
+      clearInterval(timerInterval);
+      
+      let score = 0;
+      const questionContainers = document.querySelectorAll('.question-container');
+      
+      // Disable all inputs
+      const allInputs = testForm.querySelectorAll('input');
+      allInputs.forEach(input => input.disabled = true);
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      
+      // Evaluate each question
+      questionContainers.forEach(container => {
+        const questionName = container.querySelector('input[type="radio"]').name;
+        const selectedOption = testForm.querySelector(`input[name="${questionName}"]:checked`);
+        const correctIndex = correctAnswers[questionName];
+        
+        // Highlight correct answer
+        const correctOption = container.querySelectorAll('input[type="radio"]')[correctIndex];
+        const correctLabel = correctOption.parentElement;
+        
+        // Add correct answer indicator
+        const correctAnswerEl = document.createElement('div');
+        correctAnswerEl.className = 'correct-answer';
+        correctAnswerEl.textContent = `Correct answer: ${correctLabel.textContent.trim()}`;
+        container.appendChild(correctAnswerEl);
+        
+        if (selectedOption) {
+          const selectedValue = parseInt(selectedOption.value);
+          const selectedLabel = selectedOption.parentElement;
+          
+          if (selectedValue === correctIndex) {
+            score++;
+            selectedLabel.classList.add('correct');
+          } else {
+            selectedLabel.classList.add('incorrect');
+          }
+        } else {
+          // No answer selected
+          container.classList.add('unanswered');
+        }
+      });
+      
+      // Display results
+      const percentage = Math.round((score / totalQuestions) * 100);
+      resultEl.style.display = 'block';
+      resultEl.className = percentage >= 70 ? 'result-message correct' : 'result-message incorrect';
+      resultEl.innerHTML = `
+        <h3>Test Results</h3>
+        <p>You scored <strong>${score}</strong> out of <strong>${totalQuestions}</strong> (${percentage}%)</p>
+        <p>${percentage >= 70 ? 'Congratulations! You passed the test.' : 'Please review the material and try again.'}</p>
+      `;
+      
+      // Scroll to results
+      resultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize the test when page loads
+    document.addEventListener('DOMContentLoaded', initTest);
+  </script>
+</body>
+</html>

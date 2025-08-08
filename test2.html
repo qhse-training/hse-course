@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hazard Control Hierarchy Test</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #27ae60;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    header, nav, .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: var(--dark-color);
+      padding: 0.5rem 2rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--secondary-color);
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 2rem;
+    }
+
+    .test-info {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .test-instructions {
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .timer {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+
+    .progress-bar {
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1rem;
+      height: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-color);
+      text-align: center;
+      color: white;
+      line-height: 20px;
+    }
+
+    .question-container {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 0.8rem;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .option-radio {
+      margin-right: 0.8rem;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 200px;
+      margin: 2rem auto 0;
+      padding: 0.8rem;
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+      background-color: #1e8449;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      border-radius: 5px;
+      max-width: 600px;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .unanswered {
+      background-color: #fff3cd;
+    }
+
+    .correct-answer {
+      color: #27ae60;
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .question-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <i class="fas fa-hard-hat fa-2x"></i>
+      <div class="logo-text">Safety Training</div>
+    </div>
+    <div class="user-info">
+      <span>John Smith</span>
+      <div class="user-avatar">JS</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="tests.html" class="active">Tests</a></li>
+      <li><a href="certificates.html">Certificates</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1><i class="fas fa-clipboard-check"></i> Hazard Control Hierarchy Test</h1>
+    
+    <div class="test-info">
+      <div class="test-title">Hazard Control Hierarchy (20 Questions)</div>
+      <div class="test-instructions">Answer all questions. One correct answer per question.</div>
+      <div class="timer">Time left: <span id="time">20:00</span></div>
+      <div class="progress-bar"><div class="progress" id="progressBar">0%</div></div>
+    </div>
+
+    <div id="result" class="result-message"></div>
+
+    <form id="testForm">
+      <!-- Question 1 -->
+      <div class="question-container">
+        <div class="question-text">1. Which hazard control method is the most effective?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="0"> Personal Protective Equipment (PPE)</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="1"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="2"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q1" class="option-radio" value="3"> Engineering controls</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="question-container">
+        <div class="question-text">2. What does "substitution" mean in the hazard control hierarchy?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="0"> Using safer materials or processes</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="1"> Removing the hazard source</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="2"> Installing physical barriers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q2" class="option-radio" value="3"> Conducting safety training</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="question-container">
+        <div class="question-text">3. Which example falls under engineering controls?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="0"> Conducting safety training</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="1"> Installing machine guards</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="2"> Using respirators</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q3" class="option-radio" value="3"> Replacing toxic chemicals with less harmful ones</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 4 -->
+      <div class="question-container">
+        <div class="question-text">4. Which of the following is an example of administrative controls?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="0"> Using noise-canceling headphones</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="1"> Developing safety procedures</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="2"> Eliminating manual lifting of heavy loads</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q4" class="option-radio" value="3"> Using ventilation to remove hazardous fumes</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 5 -->
+      <div class="question-container">
+        <div class="question-text">5. Which control measure is considered the last line of defense?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="0"> Engineering controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="1"> Personal Protective Equipment (PPE)</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="2"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q5" class="option-radio" value="3"> Hazard elimination</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 6 -->
+      <div class="question-container">
+        <div class="question-text">6. Which example demonstrates hazard elimination?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="0"> Replacing glass windows with shatterproof panels</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="1"> Using prefabricated structures to avoid working at heights</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="2"> Installing noise barriers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q6" class="option-radio" value="3"> Conducting regular safety briefings</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 7 -->
+      <div class="question-container">
+        <div class="question-text">7. Which of the following is an example of substituting hazardous materials?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="0"> Using water-based solutions instead of solvents</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="1"> Installing circuit breakers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="2"> Posting warning signs</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q7" class="option-radio" value="3"> Wearing safety goggles</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 8 -->
+      <div class="question-container">
+        <div class="question-text">8. Which hazard control method includes installing ventilation systems?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="0"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="1"> Engineering controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="2"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q8" class="option-radio" value="3"> Personal Protective Equipment</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 9 -->
+      <div class="question-container">
+        <div class="question-text">9. Which of the following is an example of PPE?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="0"> Anti-slip floor coatings</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="1"> Safety glasses</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="2"> Automatic shutoff switches</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q9" class="option-radio" value="3"> Holding safety meetings</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 10 -->
+      <div class="question-container">
+        <div class="question-text">10. Which hazard control method involves modifying work procedures?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="0"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="1"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="2"> Engineering controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q10" class="option-radio" value="3"> Substituting hazardous materials</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 11 -->
+      <div class="question-container">
+        <div class="question-text">11. Which example illustrates hazard reduction?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="0"> Eliminating manual lifting of heavy objects</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="1"> Using less toxic chemicals</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="2"> Installing guardrails</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q11" class="option-radio" value="3"> Conducting training sessions</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 12 -->
+      <div class="question-container">
+        <div class="question-text">12. Which of the following is an engineering control?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="0"> Developing safety protocols</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="1"> Installing smoke detectors</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="2"> Wearing hard hats</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q12" class="option-radio" value="3"> Replacing equipment</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 13 -->
+      <div class="question-container">
+        <div class="question-text">13. Which hazard control method completely removes the risk?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="0"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="1"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="2"> Personal Protective Equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q13" class="option-radio" value="3"> Engineering controls</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 14 -->
+      <div class="question-container">
+        <div class="question-text">14. Which of the following is an example of substitution?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="0"> Using electric forklifts instead of diesel-powered ones</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="1"> Installing protective screens</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="2"> Performing job safety analyses</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q14" class="option-radio" value="3"> Wearing gloves</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 15 -->
+      <div class="question-container">
+        <div class="question-text">15. Which hazard control method includes job rotation for workers?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="0"> Engineering controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="1"> Administrative controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="2"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q15" class="option-radio" value="3"> Personal Protective Equipment</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 16 -->
+      <div class="question-container">
+        <div class="question-text">16. Which of the following is an example of hazard elimination?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="0"> Replacing welding with bolted connections</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="1"> Using robotic systems</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="2"> Installing ventilation</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q16" class="option-radio" value="3"> Posting safety signs</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 17 -->
+      <div class="question-container">
+        <div class="question-text">17. Which example illustrates administrative controls?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="0"> Implementing work permits for high-risk tasks</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="1"> Installing machine guards</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="2"> Using protective gloves</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q17" class="option-radio" value="3"> Substituting chemicals</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 18 -->
+      <div class="question-container">
+        <div class="question-text">18. Which of the following is an engineering control?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="0"> Conducting safety training</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="1"> Installing noise barriers</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="2"> Using respirators</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q18" class="option-radio" value="3"> Replacing machinery</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 19 -->
+      <div class="question-container">
+        <div class="question-text">19. Which hazard control method involves wearing protective clothing?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="0"> Hazard elimination</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="1"> Engineering controls</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="2"> Personal Protective Equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q19" class="option-radio" value="3"> Administrative controls</label></li>
+        </ul>
+      </div>
+
+      <!-- Question 20 -->
+      <div class="question-container">
+        <div class="question-text">20. Which of the following is an example of hazard reduction?</div>
+        <ul class="options-list">
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="0"> Eliminating work at heights</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="1"> Using low-voltage equipment</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="2"> Installing guardrails</label></li>
+          <li class="option-item"><label class="option-label"><input type="radio" name="q20" class="option-radio" value="3"> Scheduling rest breaks</label></li>
+        </ul>
+      </div>
+
+      <div style="text-align: center;">
+        <button type="button" class="submit-btn" id="submitBtn">Submit Test</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Configuration
+    const totalQuestions = 20;
+    const testDuration = 20 * 60; // 20 minutes in seconds
+    let timeLeft = testDuration;
+    let timerInterval;
+
+    // Correct answers (zero-based indices)
+    const correctAnswers = {
+      q1: 2, // Hazard elimination
+      q2: 0, // Using safer materials or processes
+      q3: 1, // Installing machine guards
+      q4: 1, // Developing safety procedures
+      q5: 1, // Personal Protective Equipment (PPE)
+      q6: 1, // Using prefabricated structures to avoid working at heights
+      q7: 0, // Using water-based solutions instead of solvents
+      q8: 1, // Engineering controls
+      q9: 1, // Safety glasses
+      q10: 1, // Administrative controls
+      q11: 1, // Using less toxic chemicals
+      q12: 1, // Installing smoke detectors
+      q13: 1, // Hazard elimination
+      q14: 0, // Using electric forklifts instead of diesel-powered ones
+      q15: 1, // Administrative controls
+      q16: 1, // Using robotic systems
+      q17: 0, // Implementing work permits for high-risk tasks
+      q18: 1, // Installing noise barriers
+      q19: 2, // Personal Protective Equipment
+      q20: 1  // Using low-voltage equipment
+    };
+
+    // DOM Elements
+    const timerEl = document.getElementById("time");
+    const progressBar = document.getElementById("progressBar");
+    const testForm = document.getElementById("testForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultEl = document.getElementById("result");
+
+    // Initialize the test
+    function initTest() {
+      startTimer();
+      updateProgressBar();
+      
+      // Add event listener for form changes to update progress
+      testForm.addEventListener("change", updateProgressBar);
+      
+      // Add submit button handler
+      submitBtn.addEventListener("click", calculateScore);
+    }
+
+    // Timer functionality
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timeUp();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function timeUp() {
+      alert("Time is up! Your test will be automatically submitted.");
+      calculateScore();
+    }
+
+    // Progress tracking
+    function updateProgressBar() {
+      const answeredQuestions = new Set();
+      const radioButtons = testForm.querySelectorAll('input[type="radio"]:checked');
+      
+      radioButtons.forEach(radio => {
+        answeredQuestions.add(radio.name);
+      });
+      
+      const progress = (answeredQuestions.size / totalQuestions) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.textContent = `${Math.round(progress)}%`;
+    }
+
+    // Scoring functionality
+    function calculateScore() {
+      clearInterval(timerInterval);
+      
+      let score = 0;
+      const questionContainers = document.querySelectorAll('.question-container');
+      
+      // Disable all inputs
+      const allInputs = testForm.querySelectorAll('input');
+      allInputs.forEach(input => input.disabled = true);
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      
+      // Evaluate each question
+      questionContainers.forEach(container => {
+        const questionName = container.querySelector('input[type="radio"]').name;
+        const selectedOption = testForm.querySelector(`input[name="${questionName}"]:checked`);
+        const correctIndex = correctAnswers[questionName];
+        
+        // Highlight correct answer
+        const correctOption = container.querySelectorAll('input[type="radio"]')[correctIndex];
+        const correctLabel = correctOption.parentElement;
+        
+        // Add correct answer indicator
+        const correctAnswerEl = document.createElement('div');
+        correctAnswerEl.className = 'correct-answer';
+        correctAnswerEl.textContent = `Correct answer: ${correctLabel.textContent.trim()}`;
+        container.appendChild(correctAnswerEl);
+        
+        if (selectedOption) {
+          const selectedValue = parseInt(selectedOption.value);
+          const selectedLabel = selectedOption.parentElement;
+          
+          if (selectedValue === correctIndex) {
+            score++;
+            selectedLabel.classList.add('correct');
+          } else {
+            selectedLabel.classList.add('incorrect');
+          }
+        } else {
+          // No answer selected
+          container.classList.add('unanswered');
+        }
+      });
+      
+      // Display results
+      const percentage = Math.round((score / totalQuestions) * 100);
+      resultEl.style.display = 'block';
+      resultEl.className = percentage >= 70 ? 'result-message correct' : 'result-message incorrect';
+      resultEl.innerHTML = `
+        <h3>Test Results</h3>
+        <p>You scored <strong>${score}</strong> out of <strong>${totalQuestions}</strong> (${percentage}%)</p>
+        <p>${percentage >= 70 ? 'Congratulations! You passed the test.' : 'Please review the material and try again.'}</p>
+      `;
+      
+      // Scroll to results
+      resultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize the test when page loads
+    document.addEventListener('DOMContentLoaded', initTest);
+  </script>
+</body>
+</html>
