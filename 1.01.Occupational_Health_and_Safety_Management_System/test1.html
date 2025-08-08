@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OHSMS Test with Certificate</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <h1>Test Page</h1>
+  <p>Имя пользователя и курс берутся из localStorage и URL.</p>
+
+  <button onclick="simulateTestResult()">Симулировать результат теста</button>
+
+  <script>
+    // Получить имя пользователя из localStorage и курс из URL
+    const userName = localStorage.getItem("username") || "User";
+    const urlParams = new URLSearchParams(window.location.search);
+    const courseTitle = urlParams.get("course") || "Your Course";
+
+    // Основная функция генерации PDF-сертификата
+    async function generateCertificate(name, course, date) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(22);
+      doc.text("Certificate of Completion", 105, 30, null, null, "center");
+
+      doc.setFontSize(16);
+      doc.text(`This certifies that`, 105, 50, null, null, "center");
+
+      doc.setFontSize(20);
+      doc.text(name, 105, 60, null, null, "center");
+
+      doc.setFontSize(16);
+      doc.text(`has successfully completed the course`, 105, 75, null, null, "center");
+
+      doc.setFontSize(18);
+      doc.text(course, 105, 85, null, null, "center");
+
+      doc.setFontSize(14);
+      doc.text(`Date: ${date}`, 20, 120);
+      doc.text("Signature: ____________________", 20, 135);
+
+      doc.save(`${course}_certificate.pdf`);
+    }
+
+    // Пример функции симуляции результата теста
+    function simulateTestResult() {
+      const score = 19; // Например 19 из 20
+      const total = 20;
+      const percentage = Math.round((score / total) * 100);
+
+      if (percentage >= 95) {
+        const today = new Date().toLocaleDateString();
+        generateCertificate(userName, courseTitle, today);
+        alert("Сертификат сгенерирован и загружен");
+      } else {
+        alert("Результат меньше 95%. Сертификат не сгенерирован.");
+      }
+    }
+  </script>
+</body>
+</html>
