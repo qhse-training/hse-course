@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Выбор курсов и регистрация</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    h2 {
+      margin-top: 30px;
+      background: #f2f2f2;
+      padding: 10px;
+      border-left: 4px solid #007bff;
+    }
+    table {
+      width: 100%; border-collapse: collapse; margin-bottom: 30px;
+    }
+    th, td {
+      padding: 10px; border: 1px solid #ccc; text-align: left;
+    }
+    th { background: #f9f9f9; }
+    input[type="submit"] {
+      padding: 10px 20px;
+      background: #007bff;
+      border: none;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover { background: #0056b3; }
+    label { display: block; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Выберите курсы и зарегистрируйтесь</h1>
+  <form id="courseForm">
+    <div id="coursesContainer">Загрузка курсов...</div>
+
+    <label>ФИО: <input type="text" name="fullName" required></label>
+    <label>Телефон: <input type="tel" name="phone" required></label>
+    <label>Email: <input type="email" name="email" required></label>
+    <label>Пароль: <input type="password" name="password" required></label>
+    <label>Комментарий: <textarea name="comment"></textarea></label>
+
+    <input type="submit" value="Зарегистрироваться и отправить заявку">
+  </form>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    async function loadCourses() {
+      const snapshot = await db.collection("courses").get();
+      const modules = {};
+      snapshot.forEach(doc => {
+        const course = doc.data();
+        const id = doc.id;
+        const module = course.module || "Прочее";
+        if (!modules[module]) modules[module] = [];
+        modules[module].push({
+          id,
+          title: course.title || id,
+          description: course.description || "",
+          price: course.price || 0
+        });
+      });
+
+      const container = document.getElementById("coursesContainer");
+      container.innerHTML = "";
+
+      if (Object.keys(modules).length === 0) {
+        container.innerHTML = "<p>Курсы не найдены.</p>";
+        return;
+      }
+
+      for (const [moduleName, courses] of Object.entries(modules)) {
+        const header = document.createElement("h2");
+        header.textContent = moduleName;
+        container.appendChild(header);
+
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th>Название курса</th>
+            <th>Описание</th>
+            <th>Цена</th>
+            <th>Выбрать</th>
+          </tr>`;
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        courses.forEach(course => {
+          const tr = document.createElement("tr");
+
+          tr.innerHTML = `
+            <td>${course.title}</td>
+            <td>${course.description}</td>
+            <td>${course.price} ₸</td>
+            <td><input type="checkbox" name="selectedCourses" value="${course.id}"></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        container.appendChild(table);
+      }
+    }
+
+    loadCourses();
+
+    document.getElementById("courseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+
+      const fullName = form.fullName.value.trim();
+      const phone = form.phone.value.trim();
+      const email = form.email.value.trim();
+      const password = form.password.value;
+      const comment = form.comment.value.trim();
+      const selectedCourses = Array.from(
+        form.querySelectorAll('input[name="selectedCourses"]:checked')
+      ).map(cb => cb.value);
+
+      if (!email || !password || !fullName || !phone) {
+        alert("Пожалуйста, заполните все поля.");
+        return;
+      }
+
+      if (selectedCourses.length === 0) {
+        alert("Пожалуйста, выберите хотя бы один курс.");
+        return;
+      }
+
+      try {
+        let userCredential;
+
+        // Проверка: существует ли уже пользователь с таким email?
+        const methods = await auth.fetchSignInMethodsForEmail(email);
+        if (methods.length === 0) {
+          // Новый пользователь — регистрация
+          userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        } else {
+          // Уже существует — вход
+          userCredential = await auth.signInWithEmailAndPassword(email, password);
+        }
+
+        const user = userCredential.user;
+
+        // Отправка заявки
+        await db.collection("requests").add({
+          fullName,
+          phone,
+          email,
+          comment,
+          selectedCourses,
+          approved: false,
+          userId: user.uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("Заявка успешно отправлена! Вы вошли в систему.");
+        form.reset();
+      } catch (error) {
+        console.error("Ошибка:", error);
+        if (error.code === "auth/wrong-password") {
+          alert("Неверный пароль. Пожалуйста, используйте правильный или зарегистрируйтесь с другим email.");
+        } else {
+          alert("Ошибка: " + error.message);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

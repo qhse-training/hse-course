@@ -1,0 +1,272 @@
+<!-- login.html (обновлено со ссылкой на регистрацию) -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вход в систему</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f8f9fa;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .logo img {
+      height: 50px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #2c3e50;
+    }
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+    }
+    input {
+      width: 100%;
+      padding: 12px 40px 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input:focus {
+      border-color: #4285f4;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+    .toggle-password {
+      position: absolute;
+      top: 38px;
+      right: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      color: #888;
+      user-select: none;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #3367d6;
+    }
+    .error {
+      color: #d32f2f;
+      margin: 15px 0;
+      text-align: center;
+      font-size: 14px;
+      padding: 10px;
+      background: #ffebee;
+      border-radius: 4px;
+      display: none;
+    }
+    .loader {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #4285f4;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+      display: none;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .footer-links {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 14px;
+    }
+    .footer-links a {
+      color: #4285f4;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="logo">
+      <img src="https://via.placeholder.com/150x50?text=Company+Logo" alt="Логотип">
+    </div>
+    <h2>Вход в систему</h2>
+
+    <div class="error" id="errorMsg"></div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="Введите ваш email" required />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Пароль</label>
+      <input type="password" id="password" placeholder="Введите ваш пароль" required />
+      <span class="toggle-password" id="togglePassword">👁</span>
+    </div>
+
+    <button id="loginBtn">
+      <span id="loginText">Войти</span>
+      <div class="loader" id="loginLoader"></div>
+    </button>
+
+    <div class="footer-links">
+      <a href="#" id="forgotPassword">Забыли пароль?</a> |
+      <a href="signUp.html">Нет аккаунта? Зарегистрироваться</a>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "4501351718",
+      appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+    };
+    
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginText = document.getElementById('loginText');
+    const loginLoader = document.getElementById('loginLoader');
+    const errorMsg = document.getElementById('errorMsg');
+    const forgotPasswordLink = document.getElementById('forgotPassword');
+    const togglePassword = document.getElementById('togglePassword');
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    async function handleLogin() {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showError("Пожалуйста, заполните все поля");
+        return;
+      }
+
+      loginText.style.display = 'none';
+      loginLoader.style.display = 'block';
+      loginBtn.disabled = true;
+      errorMsg.style.display = 'none';
+
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        const adminDoc = await db.collection('admins').doc(user.uid).get();
+        if (adminDoc.exists) {
+          window.location.href = "admin.html";
+        } else {
+          const userDoc = await db.collection('approved_users').doc(user.uid).get();
+          if (userDoc.exists) {
+            window.location.href = "dashboard.html";
+          } else {
+            await auth.signOut();
+            showError("Ваш аккаунт ожидает подтверждения администратора");
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка входа:", error);
+        showError(getFriendlyError(error.code));
+      } finally {
+        loginText.style.display = 'block';
+        loginLoader.style.display = 'none';
+        loginBtn.disabled = false;
+      }
+    }
+
+    async function handlePasswordReset() {
+      const email = prompt("Введите ваш email для сброса пароля:");
+      if (!email) return;
+
+      try {
+        await auth.sendPasswordResetEmail(email);
+        alert("Письмо для сброса пароля отправлено на ваш email");
+      } catch (error) {
+        console.error("Ошибка сброса пароля:", error);
+        alert(getFriendlyError(error.code));
+      }
+    }
+
+    function showError(message) {
+      errorMsg.textContent = message;
+      errorMsg.style.display = 'block';
+    }
+
+    function getFriendlyError(code) {
+      switch (code) {
+        case "auth/invalid-email": return "Некорректный email адрес";
+        case "auth/user-not-found": return "Пользователь с таким email не найден";
+        case "auth/wrong-password": return "Неверный пароль";
+        case "auth/invalid-credential": return "Неверные учетные данные";
+        case "auth/too-many-requests": return "Слишком много попыток. Попробуйте позже";
+        case "auth/user-disabled": return "Аккаунт отключен";
+        case "auth/operation-not-allowed": return "Операция не разрешена";
+        default: return "Ошибка входа. Пожалуйста, попробуйте снова";
+      }
+    }
+
+    loginBtn.addEventListener('click', handleLogin);
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      handlePasswordReset();
+    });
+
+    passwordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleLogin();
+      }
+    });
+
+    togglePassword.addEventListener('click', () => {
+      const isVisible = passwordInput.type === 'text';
+      passwordInput.type = isVisible ? 'password' : 'text';
+      togglePassword.textContent = isVisible ? '👁' : '🙈';
+    });
+  </script>
+</body>
+</html>

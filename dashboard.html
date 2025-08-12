@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Личный кабинет - Все курсы</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --secondary: #3498db;
+      --success: #27ae60;
+      --warning: #e67e22;
+      --gray: #7f8c8d;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+    }
+    
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .logout-btn {
+      background: transparent;
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .page-title {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin: 0;
+    }
+    
+    .search-box {
+      position: relative;
+      width: 300px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 10px 15px;
+      padding-left: 40px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      background: white url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%237f8c8d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 15px center;
+    }
+    
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .course-card {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .course-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .course-image {
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    
+    .course-module {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+    
+    .course-body {
+      padding: 1.2rem;
+    }
+    
+    .course-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: var(--primary);
+    }
+    
+    .course-desc {
+      font-size: 0.9rem;
+      color: var(--gray);
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .course-price {
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    
+    .course-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .btn {
+      flex: 1;
+      min-width: 100px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    
+    .btn-outline {
+      background: white;
+      color: var(--secondary);
+      border: 1px solid var(--secondary);
+    }
+    
+    .btn-outline:hover {
+      background: #f0f8ff;
+    }
+    
+    .btn-slides {
+      background: var(--gray);
+      color: white;
+    }
+    
+    .btn-test {
+      background: var(--warning);
+      color: white;
+    }
+    
+    .no-courses {
+      text-align: center;
+      padding: 3rem;
+      color: var(--gray);
+      font-size: 1.1rem;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--secondary);
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <span>OHSMS Academy</span>
+    </div>
+    
+    <div class="user-area">
+      <div class="user-avatar" id="userAvatar">U</div>
+      <button id="logoutBtn" class="logout-btn">Выйти</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="dashboard-header">
+      <h1 class="page-title">Все курсы</h1>
+      <div class="search-box">
+        <input type="text" id="searchInput" class="search-input" placeholder="Поиск курсов...">
+      </div>
+    </div>
+    
+    <div class="courses-grid" id="courseList">
+      <div style="text-align: center; grid-column: 1 / -1;">
+        <div class="loading"></div>
+        <p>Загрузка курсов...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "4501351718",
+      appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM elements
+    const logoutBtn = document.getElementById("logoutBtn");
+    const courseList = document.getElementById("courseList");
+    const userAvatar = document.getElementById("userAvatar");
+    const searchInput = document.getElementById("searchInput");
+
+    // Logout handler
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        window.location.href = 'login.html';
+      });
+    });
+
+    // Load all courses from Firestore
+    async function loadAllCourses() {
+      try {
+        const snapshot = await db.collection('courses').get();
+        const courses = [];
+        
+        snapshot.forEach(doc => {
+          const courseData = doc.data();
+          courses.push({
+            id: doc.id,
+            ...courseData,
+            slideUrl: courseData.testHtml 
+              ? courseData.testHtml.replace('/test', '/Slide').replace('.html', '1.JPG')
+              : `https://raw.githubusercontent.com/qhse-training/hse-course/main/${doc.id}/Slide1.JPG`
+          });
+        });
+        
+        return courses;
+      } catch (error) {
+        console.error("Ошибка загрузки курсов:", error);
+        return [];
+      }
+    }
+
+    // Render courses grid
+    function renderCourses(courses) {
+      if (courses.length === 0) {
+        courseList.innerHTML = `
+          <div class="no-courses">
+            <p>Курсы не найдены</p>
+          </div>
+        `;
+        return;
+      }
+      
+      courseList.innerHTML = '';
+      
+      courses.forEach(course => {
+        const card = document.createElement('div');
+        card.className = 'course-card';
+        
+        card.innerHTML = `
+          <div class="course-image" style="background-image: url('${course.slideUrl}')">
+            ${course.module ? `<span class="course-module">${course.module}</span>` : ''}
+          </div>
+          
+          <div class="course-body">
+            <h3 class="course-title">${course.title || 'Без названия'}</h3>
+            <p class="course-desc">${course.description || 'Описание отсутствует'}</p>
+            
+            ${course.price ? `<div class="course-price">${course.price} ₸</div>` : ''}
+            
+            <div class="course-actions">
+              ${course.slideUrl ? `
+                <a href="${course.slideUrl.replace('Slide1.JPG', 'Slide1.JPG')}" 
+                   target="_blank" 
+                   class="btn btn-slides">
+                  Слайды
+                </a>
+              ` : ''}
+              
+              ${course.testHtml ? `
+                <a href="${course.testHtml}" 
+                   target="_blank" 
+                   class="btn btn-test">
+                  Тест
+                </a>
+              ` : ''}
+              
+              <a href="course.html?id=${course.id}" 
+                 class="btn btn-primary">
+                Подробнее
+              </a>
+            </div>
+          </div>
+        `;
+        
+        courseList.appendChild(card);
+      });
+    }
+
+    // Search courses by title or description
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const filteredCourses = allCourses.filter(course => 
+        course.title.toLowerCase().includes(searchTerm) || 
+        (course.description && course.description.toLowerCase().includes(searchTerm))
+      );
+      renderCourses(filteredCourses);
+    });
+
+    let allCourses = [];
+
+    // Auth state observer
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      userAvatar.textContent = user.email ? user.email.charAt(0).toUpperCase() : 'U';
+      
+      allCourses = await loadAllCourses();
+      renderCourses(allCourses);
+    });
+  </script>
+</body>
+</html>
