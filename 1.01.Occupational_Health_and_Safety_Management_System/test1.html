@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Тест — Система управления по охране труда (СУОТ)</title>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase v9 (modular) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --primary-light: #3498db;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --light-bg: #f7f9fb;
+      --white: #ffffff;
+      --text: #333333;
+      --text-light: #7f8c8d;
+      --border: #e0e0e0;
+      --shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--light-bg);
+      padding: 20px;
+      color: var(--text);
+      line-height: 1.6;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .meta-container {
+      background: var(--white);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .timer {
+      font-weight: bold;
+      color: var(--danger);
+      background: #fdecea;
+      padding: 5px 10px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .progress-container {
+      width: 100%;
+      margin: 10px 0;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: #ecf0f1;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 5px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-light);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    #testForm {
+      margin-top: 20px;
+    }
+    
+    .question-card {
+      background: var(--white);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+    
+    .question-card:hover {
+      transform: translateY(-2px);
+    }
+    
+    .question-text {
+      font-weight: 600;
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+    }
+    
+    .option-label {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+    }
+    
+    .option-label:hover {
+      background: #f0f8ff;
+      border-color: var(--primary-light);
+    }
+    
+    .option-label input {
+      margin-right: 12px;
+      cursor: pointer;
+    }
+    
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 30px auto;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--success);
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    
+    .submit-btn:hover {
+      background: #219653;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .submit-btn:disabled {
+      background: #95a5a6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .result-container {
+      margin-top: 30px;
+      padding: 20px;
+      background: var(--white);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    
+    .success-result {
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .fail-result {
+      color: var(--danger);
+    }
+    
+    .certificate-code {
+      font-family: monospace;
+      background: #f4f4f4;
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin: 10px 0;
+      display: inline-block;
+      font-size: 1.1rem;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .action-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .action-btn i {
+      font-size: 0.9em;
+    }
+    
+    .btn-primary {
+      background: var(--primary-light);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    
+    .btn-secondary {
+      background: var(--white);
+      color: var(--primary);
+      border: 1px solid var(--primary-light);
+    }
+    
+    .btn-secondary:hover {
+      background: #f0f8ff;
+    }
+    
+    .warning-message {
+      color: var(--warning);
+      background: #fff8e6;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .question-card {
+        padding: 15px;
+      }
+      
+      .option-label {
+        padding: 10px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .action-btn {
+        width: 100%;
+        max-width: 250px;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fas fa-graduation-cap"></i> Тест — Система управления по охране труда (СУОТ)</h1>
+
+  <div class="meta-container">
+    <div class="meta-item">
+      <i class="fas fa-book"></i>
+      <span id="courseTitle">Курс: СУОТ</span>
+    </div>
+    
+    <div class="meta-item">
+      <i class="fas fa-user"></i>
+      <span id="userName">Загрузка...</span>
+    </div>
+    
+    <div class="meta-item">
+      <i class="fas fa-envelope"></i>
+      <span id="userEmail">—</span>
+    </div>
+    
+    <div class="meta-item">
+      <i class="fas fa-clock"></i>
+      <span class="timer" id="timer">10:00</span>
+    </div>
+    
+    <div class="progress-container" style="display: none;" id="progressInfo">
+      <div>Прогресс: <span id="progressText">0%</span></div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <form id="testForm">
+    <div id="questionsContainer"></div>
+    
+    <div class="warning-message" id="incompleteWarning" style="display: none;">
+      <i class="fas fa-exclamation-triangle"></i> Вы ответили не на все вопросы!
+    </div>
+    
+    <button id="submitBtn" class="submit-btn" type="submit" disabled>
+      <i class="fas fa-paper-plane"></i> Отправить тест
+    </button>
+  </form>
+
+  <div class="result-container" id="resultContainer" style="display: none;">
+    <div id="resultMessage"></div>
+    <div class="action-buttons" id="actionButtons" style="display: none;">
+      <a href="#" class="action-btn btn-primary" id="downloadBtn">
+        <i class="fas fa-download"></i> Скачать сертификат
+      </a>
+      <a href="dashboard.html" class="action-btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Вернуться к курсам
+      </a>
+    </div>
+  </div>
+
+<script>
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+  authDomain: "qhse-training.firebaseapp.com",
+  projectId: "qhse-training",
+  storageBucket: "qhse-training.appspot.com",
+  messagingSenderId: "4501351718",
+  appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Constants
+const COURSE_ID = "0EFXo6H4N1mbA1jBJwOK";
+const COURSE_TITLE = "Система управления по охране труда (СУОТ)";
+const TEST_DURATION = 10 * 60; // 10 minutes in seconds
+const PASS_THRESHOLD = 95; // 95% to pass
+const WARNING_THRESHOLD = 5 * 60; // Show warning when 5 minutes left
+
+// Questions data
+const questions = [
+  { q: "1. Какова основная цель OHSMS?", a: ["Увеличение прибыли","Сокращение рабочего времени","Обеспечение безопасности на рабочем месте","Снижение затрат"], correct: 2 },
+  { q: "2. Какой стандарт обычно используется для OHSMS?", a: ["ISO 9001","ISO 14001","ISO 45001","ISO 27001"], correct: 2 },
+  { q: "3. Какой первый шаг при внедрении OHSMS?", a: ["Найм консультанта","Оценка рисков","Написание процедур","Обучение сотрудников"], correct: 1 },
+  { q: "4. Что означает PDCA в OHSMS?", a: ["Планируй, Делай, Проверяй, Действуй","Подготавливай, Разрабатывай, Контролируй, Анализируй","Предотвращай, Обнаруживай, Исправляй, Аудируй","Проверяй, Делай, Планируй, Анализируй"], correct: 0 },
+  { q: "5. Кто несет окончательную ответственность за безопасность на рабочем месте?", a: ["Сотрудники","Специалисты по охране труда","Руководство","Государство"], correct: 2 },
+  { q: "6. Что такое опасность в терминах OHSMS?", a: ["Происшествие, которое уже случилось","Потенциальный источник вреда","Процедура безопасности","Тип СИЗ"], correct: 1 },
+  { q: "7. Какова цель оценки рисков?", a: ["Назначение вины за аварии","Выявление и контроль опасностей на рабочем месте","Сокращение льгот сотрудников","Увеличение скорости производства"], correct: 1 },
+  { q: "8. Что означает СИЗ?", a: ["Средства индивидуальной защиты","Система измерения затрат","Стандартные измерительные знаки","Система информационной защиты"], correct: 0 },
+  { q: "9. Когда следует проводить обучение по технике безопасности?", a: ["Только при приеме на работу","При приеме и при изменении рисков","Только после инцидента","Раз в пять лет"], correct: 1 },
+  { q: "10. Что такое инцидент в терминах OHSMS?", a: ["Планируемая проверка","Незапланированное событие, которое может причинить вред","Собрание комитета по безопасности","Отчет о производительности"], correct: 1 },
+  { q: "11. Какова цель аудита безопасности?", a: ["Поиск нарушителей","Оценка эффективности систем безопасности","Сокращение затрат на оборудование","Повышение производительности"], correct: 1 },
+  { q: "12. Что сделать в первую очередь при аварии?", a: ["Назначить виновного","Обезопасить место и оказать первую помощь","Продолжить работу","Сообщить СМИ"], correct: 1 },
+  { q: "13. Что такое 'опасное происшествие'?", a: ["Инцидент с травмой","Незапланированное событие без вреда","Проверка безопасности","Оповещение руководства"], correct: 1 },
+  { q: "14. Почему важно участие работников в OHSMS?", a: ["Работники лучше знают опасности","Снижает нагрузку на руководство","Требуется законом","Все перечисленное"], correct: 3 },
+  { q: "15. Что такое иерархия мер контроля?", a: ["Список руководителей","Система приоритезации мер контроля","Тип обучения","План реагирования"], correct: 1 },
+  { q: "16. Какая мера контроля опасностей наиболее эффективна?", a: ["СИЗ","Устранение","Предупреждающие знаки","Обучение"], correct: 1 },
+  { q: "17. Что такое культура безопасности?", a: ["Государственное агентство","Общие ценности в отношении безопасности","Программа обучения","Документ"], correct: 1 },
+  { q: "18. Зачем документировать процедуры безопасности?", a: ["Соответствие закону","Единые стандарты работы","Обучение","Все перечисленное"], correct: 3 },
+  { q: "19. Что такое непрерывное улучшение в OHSMS?", a: ["Единоразовый аудит","Постоянный процесс повышения безопасности","Государственное требование","План обучения"], correct: 1 },
+  { q: "20. Какова роль руководства в OHSMS?", a: ["Обеспечение ресурсами","Контроль соблюдения правил","Проведение проверок","Все перечисленное"], correct: 3 }
+];
+
+// DOM elements
+const questionsContainer = document.getElementById('questionsContainer');
+const submitBtn = document.getElementById('submitBtn');
+const timerEl = document.getElementById('timer');
+const resultContainer = document.getElementById('resultContainer');
+const resultMessage = document.getElementById('resultMessage');
+const actionButtons = document.getElementById('actionButtons');
+const userNameEl = document.getElementById('userName');
+const userEmailEl = document.getElementById('userEmail');
+const courseTitleEl = document.getElementById('courseTitle');
+const progressInfo = document.getElementById('progressInfo');
+const progressText = document.getElementById('progressText');
+const progressBar = document.getElementById('progressBar');
+const incompleteWarning = document.getElementById('incompleteWarning');
+const downloadBtn = document.getElementById('downloadBtn');
+
+// State variables
+let currentUser = null;
+let timeLeft = TEST_DURATION;
+let timerInterval = null;
+let testSubmitted = false;
+let certificateData = null;
+
+// Initialize the test
+function initTest() {
+  renderQuestions();
+  startTimer();
+  updateProgress();
+}
+
+// Render questions to the DOM
+function renderQuestions() {
+  questionsContainer.innerHTML = '';
+  
+  questions.forEach((question, qIndex) => {
+    const questionEl = document.createElement('div');
+    questionEl.className = 'question-card';
+    
+    let optionsHtml = '';
+    question.a.forEach((option, oIndex) => {
+      optionsHtml += `
+        <label class="option-label">
+          <input type="radio" name="q${qIndex}" value="${oIndex}">
+          ${option}
+        </label>
+      `;
+    });
+    
+    questionEl.innerHTML = `
+      <div class="question-text">${question.q}</div>
+      ${optionsHtml}
+    `;
+    
+    questionsContainer.appendChild(questionEl);
+  });
+}
+
+// Start the countdown timer
+function startTimer() {
+  updateTimerDisplay();
+  
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!testSubmitted) {
+        submitTest();
+      }
+    } else if (timeLeft === WARNING_THRESHOLD) {
+      showTimeWarning();
+    }
+  }, 1000);
+}
+
+// Update timer display
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  
+  // Change color when time is running out
+  if (timeLeft <= WARNING_THRESHOLD) {
+    timerEl.style.color = 'var(--danger)';
+  }
+}
+
+// Show warning when time is running out
+function showTimeWarning() {
+  const warning = document.createElement('div');
+  warning.className = 'warning-message';
+  warning.innerHTML = '<i class="fas fa-clock"></i> Внимание! Осталось 5 минут до завершения теста.';
+  questionsContainer.prepend(warning);
+  
+  setTimeout(() => {
+    warning.remove();
+  }, 10000);
+}
+
+// Update progress (answered questions)
+function updateProgress() {
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  const total = questions.length;
+  const percent = Math.round((answered / total) * 100);
+  
+  progressText.textContent = `${percent}% (${answered}/${total})`;
+  progressBar.style.width = `${percent}%`;
+  
+  // Enable submit button when all questions answered
+  submitBtn.disabled = answered < total;
+  
+  // Show warning if not all questions answered
+  incompleteWarning.style.display = answered < total ? 'block' : 'none';
+  
+  // Show progress bar after first answer
+  if (answered > 0) {
+    progressInfo.style.display = 'block';
+  }
+}
+
+// Submit the test
+async function submitTest() {
+  if (testSubmitted) return;
+  testSubmitted = true;
+  clearInterval(timerInterval);
+  
+  // Disable all inputs
+  document.querySelectorAll('input[type="radio"]').forEach(input => {
+    input.disabled = true;
+  });
+  
+  // Calculate score
+  let correctAnswers = 0;
+  questions.forEach((question, index) => {
+    const selectedOption = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selectedOption && parseInt(selectedOption.value) === question.correct) {
+      correctAnswers++;
+    }
+  });
+  
+  const scorePercent = Math.round((correctAnswers / questions.length) * 100);
+  const passed = scorePercent >= PASS_THRESHOLD;
+  
+  // Prepare test result data
+  const testResult = {
+    uid: currentUser.uid,
+    courseId: COURSE_ID,
+    courseTitle: COURSE_TITLE,
+    score: correctAnswers,
+    totalQuestions: questions.length,
+    scorePercent,
+    passed,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  
+  try {
+    // Save test result to Firestore
+    const resultRef = await db.collection('test_results').add(testResult);
+    
+    // Update course progress
+    const progressDocId = `${currentUser.uid}_${COURSE_ID}`;
+    await db.collection('course_progress').doc(progressDocId).set({
+      lastTestScore: scorePercent,
+      lastTestDate: firebase.firestore.FieldValue.serverTimestamp(),
+      passed: passed,
+      certificateId: passed ? resultRef.id : null
+    }, { merge: true });
+    
+    // Show result to user
+    showTestResult(correctAnswers, scorePercent, passed, resultRef.id);
+    
+    // Generate certificate if passed
+    if (passed) {
+      certificateData = {
+        id: resultRef.id,
+        userName: currentUser.displayName || userNameEl.textContent,
+        date: formatDate(new Date()),
+        courseTitle: COURSE_TITLE,
+        score: scorePercent
+      };
+      
+      downloadBtn.style.display = 'inline-flex';
+    } else {
+      downloadBtn.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('Ошибка сохранения результатов:', error);
+    resultMessage.innerHTML = `
+      <div class="fail-result">
+        <i class="fas fa-exclamation-circle"></i> Произошла ошибка при сохранении результатов. Пожалуйста, попробуйте позже.
+      </div>
+    `;
+    resultContainer.style.display = 'block';
+  }
+}
+
+// Show test result to user
+function showTestResult(correct, percent, passed, certificateId) {
+  if (passed) {
+    resultMessage.innerHTML = `
+      <div class="success-result">
+        <i class="fas fa-check-circle"></i> Поздравляем! Вы успешно прошли тест.
+      </div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent}%).</p>
+      <p>Ваш код сертификата:</p>
+      <div class="certificate-code">${certificateId}</div>
+    `;
+  } else {
+    resultMessage.innerHTML = `
+      <div class="fail-result">
+        <i class="fas fa-times-circle"></i> Тест не пройден.
+      </div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent}%).</p>
+      <p>Для успешного прохождения теста необходимо набрать ${PASS_THRESHOLD}%.</p>
+    `;
+  }
+  
+  resultContainer.style.display = 'block';
+  actionButtons.style.display = 'flex';
+  submitBtn.style.display = 'none';
+}
+
+// Generate PDF certificate
+function generateCertificate() {
+  if (!certificateData) return;
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: 'a4'
+  });
+  
+  // Certificate design
+  doc.setFontSize(28);
+  doc.setTextColor(40, 60, 80);
+  doc.text('СЕРТИФИКАТ', 105, 30, { align: 'center' });
+  
+  doc.setFontSize(16);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Настоящий сертификат подтверждает, что', 105, 45, { align: 'center' });
+  
+  doc.setFontSize(24);
+  doc.setTextColor(20, 100, 60);
+  doc.text(certificateData.userName, 105, 60, { align: 'center' });
+  
+  doc.setFontSize(16);
+  doc.setTextColor(100, 100, 100);
+  doc.text('успешно прошел(а) курс обучения по программе', 105, 75, { align: 'center' });
+  
+  doc.setFontSize(20);
+  doc.setTextColor(40, 60, 80);
+  doc.text(certificateData.courseTitle, 105, 90, { align: 'center' });
+  
+  doc.setFontSize(14);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`Дата выдачи: ${certificateData.date}`, 105, 110, { align: 'center' });
+  doc.text(`Результат тестирования: ${certificateData.score}%`, 105, 120, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.text(`ID сертификата: ${certificateData.id}`, 20, 190);
+  doc.text('Выдано: QHSE-Solutions.kz', 20, 195);
+  
+  // Border
+  doc.setDrawColor(200);
+  doc.setLineWidth(1);
+  doc.rect(10, 10, 277, 190);
+  
+  // Save PDF
+  doc.save(`Сертификат_${certificateData.id}.pdf`);
+}
+
+// Format date as DD.MM.YYYY
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
+// Event listeners
+document.getElementById('testForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  submitTest();
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.tagName === 'INPUT' && e.target.type === 'radio') {
+    updateProgress();
+  }
+});
+
+downloadBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  generateCertificate();
+});
+
+// Auth state observer
+auth.onAuthStateChanged((user) => {
+  if (!user) {
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  currentUser = user;
+  userNameEl.textContent = user.displayName || user.email || 'Пользователь';
+  userEmailEl.textContent = user.email || '—';
+  courseTitleEl.textContent = `Курс: ${COURSE_TITLE}`;
+  
+  // Enable the test
+  initTest();
+});
+</script>
+</body>
+</html>
