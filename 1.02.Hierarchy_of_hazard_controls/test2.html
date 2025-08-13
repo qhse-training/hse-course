@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест — Иерархия контроля опасности</title>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    h1 { text-align: center; }
+    .question { padding: 15px; background: #fafafa; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    label { display: block; margin-top: 8px; }
+    button { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; }
+    button:disabled { background: #ccc; }
+    .status { margin: 15px 0; padding: 10px; border-radius: 5px; }
+    .success { background: #e8f5e9; border: 1px solid #c8e6c9; }
+    .fail { background: #ffebee; border: 1px solid #ffcdd2; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тест — Иерархия контроля опасности</h1>
+  <div id="status" class="status">Пройдите тест, чтобы получить сертификат</div>
+  <div id="questions"></div>
+  <button id="submitBtn" disabled>Отправить ответы</button>
+</div>
+
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+    authDomain: "qhse-training.firebaseapp.com",
+    projectId: "qhse-training",
+    storageBucket: "qhse-training.appspot.com",
+    messagingSenderId: "73177963917",
+    appId: "1:73177963917:web:adf0dbb61a8770f32d5c5e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const COURSE_ID = "0Jqmw9JvD6lXB1EM1lcD";
+  const COURSE_TITLE = "Иерархия контроля опасности";
+
+  let certificateData = null;
+
+  // Вопросы
+  const questions = [
+    { q: "1. Какой метод контроля опасности является наиболее эффективным?", a: ["СИЗ","Административные меры","Устранение опасности","Инженерные меры"], correct: 2 },
+    { q: "2. Что означает 'замещение' в иерархии контроля опасностей?", a: ["Использование более безопасных материалов","Удаление источника опасности","Установка барьеров","Проведение обучения"], correct: 0 },
+    { q: "3. Какой из примеров относится к инженерным мерам?", a: ["Обучение","Защитные ограждения","Респираторы","Замена химикатов"], correct: 1 },
+    { q: "4. Какой из вариантов является примером административных мер?", a: ["Шумоподавляющие наушники","Разработка инструкций","Исключение подъёма тяжестей","Вентиляция"], correct: 1 },
+    { q: "5. Какая мера контроля считается последней линией защиты?", a: ["Инженерные меры","СИЗ","Административные меры","Устранение"], correct: 1 },
+    { q: "6. Какой пример демонстрирует устранение опасности?", a: ["Ударопрочные панели","Сборные конструкции","Шумозащитные экраны","Инструктаж"], correct: 1 },
+    { q: "7. Какой из вариантов — замещение?", a: ["Водные растворы вместо растворителей","Автоматические выключатели","Знаки","Очки"], correct: 0 },
+    { q: "8. Какой метод включает вентиляцию?", a: ["Административные","Инженерные","Устранение","СИЗ"], correct: 1 },
+    { q: "9. Пример СИЗ?", a: ["Противоскользящие покрытия","Очки","Автоматические выключатели","Совещания"], correct: 1 },
+    { q: "10. Метод с изменением процедур?", a: ["Устранение","Административные","Инженерные","Замещение"], correct: 1 },
+    { q: "11. Пример снижения опасности?", a: ["Исключение подъёма","Менее токсичные химикаты","Ограждения","Обучение"], correct: 1 },
+    { q: "12. Что относится к инженерным?", a: ["Протоколы","Дымовые извещатели","Каски","Замена оборудования"], correct: 1 },
+    { q: "13. Какой метод полностью устраняет риск?", a: ["Административные","Устранение","СИЗ","Инженерные"], correct: 1 },
+    { q: "14. Пример замещения?", a: ["Электропогрузчики","Защитные экраны","Анализ безопасности","Перчатки"], correct: 0 },
+    { q: "15. Ротация работников?", a: ["Инженерные","Административные","Устранение","СИЗ"], correct: 1 },
+    { q: "16. Пример устранения?", a: ["Болтовые соединения","Роботы","Вентиляция","Знаки"], correct: 0 },
+    { q: "17. Пример административных?", a: ["Разрешения на работы","Защитные ограждения","Перчатки","Замена химикатов"], correct: 0 },
+    { q: "18. Пример инженерных?", a: ["Обучение","Шумозащитные экраны","Респираторы","Замена оборудования"], correct: 1 },
+    { q: "19. Метод — защитная одежда?", a: ["Устранение","Инженерные","СИЗ","Административные"], correct: 2 },
+    { q: "20. Пример снижения?", a: ["Исключение высоты","Низковольтное оборудование","Ограждения","Перерывы"], correct: 1 }
+  ];
+
+  // Отрисовка вопросов
+  const qDiv = document.getElementById("questions");
+  questions.forEach((item, i) => {
+    const div = document.createElement("div");
+    div.className = "question";
+    div.innerHTML = `<p>${item.q}</p>` + item.a.map((ans, idx) => `<label><input type="radio" name="q${i}" value="${idx}"> ${ans}</label>`).join("");
+    qDiv.appendChild(div);
+  });
+
+  // Отслеживание заполненности
+  document.addEventListener("change", () => {
+    const answered = document.querySelectorAll("input[type=radio]:checked").length;
+    document.getElementById("submitBtn").disabled = answered < questions.length;
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    let score = 0;
+    questions.forEach((q, i) => {
+      const selected = document.querySelector(`input[name=q${i}]:checked`);
+      if (selected && parseInt(selected.value) === q.correct) score++;
+    });
+    const percent = (score / questions.length) * 100;
+    const statusDiv = document.getElementById("status");
+
+    const user = auth.currentUser;
+    if (!user) { alert("Вы не авторизованы"); return; }
+
+    if (percent >= 95) {
+      statusDiv.className = "status success";
+      statusDiv.innerText = `Тест пройден (${percent.toFixed(1)}%) — Сертификат выдан`;
+      const certId = Math.random().toString(36).substring(2, 22);
+
+      certificateData = {
+        id: certId,
+        userName: user.displayName || user.email,
+        date: new Date().toLocaleDateString(),
+        courseTitle: COURSE_TITLE
+      };
+
+      await db.collection("course_progress").doc(`${user.uid}_${COURSE_ID}`).set({
+        uid: user.uid,
+        courseId: COURSE_ID,
+        completed: true,
+        certificateId: certId,
+        issueDate: new Date().toISOString(),
+        verified: false
+      });
+
+      generateCertificate(); // автогенерация PDF
+    } else {
+      statusDiv.className = "status fail";
+      statusDiv.innerText = `Тест не пройден (${percent.toFixed(1)}%), требуется 95%`;
+    }
+  });
+
+  // Исправленная генерация PDF с кириллицей
+  async function generateCertificate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/fonts/Roboto-Regular.ttf';
+    const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+    const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBytes)));
+    doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+    doc.setFont("Roboto");
+
+    doc.setFontSize(28);
+    doc.text('СЕРТИФИКАТ', 148, 40, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text('Настоящим подтверждается, что', 148, 55, { align: 'center' });
+    doc.setFontSize(22);
+    doc.text(certificateData.userName, 148, 70, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text(`успешно прошёл(а) курс "${certificateData.courseTitle}"`, 148, 85, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text(`Дата выдачи: ${certificateData.date}`, 148, 100, { align: 'center' });
+    doc.text(`Сертификат ID: ${certificateData.id}`, 148, 110, { align: 'center' });
+    doc.text('Выдан: QSHE-Solutions.kz', 148, 120, { align: 'center' });
+
+    doc.save(`Сертификат_${certificateData.id}.pdf`);
+  }
+
+  // Авторизация
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      // тестовая авторизация
+      auth.signInWithEmailAndPassword("test@example.com", "password123")
+        .catch(err => console.error(err));
+    }
+  });
+</script>
+</body>
+</html>
