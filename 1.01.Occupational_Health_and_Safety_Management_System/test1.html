@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест — Система управления по охране труда (СУОТ)</title>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    h1 { text-align: center; }
+    .question { padding: 15px; background: #fafafa; margin-bottom: 15px; border-radius: 8px; border: 1px solid #ddd; }
+    label { display: block; margin-top: 8px; }
+    button { background: #27ae60; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; }
+    button:disabled { background: #ccc; }
+    .status { margin: 15px 0; padding: 10px; border-radius: 5px; }
+    .success { background: #e8f5e9; border: 1px solid #c8e6c9; }
+    .fail { background: #ffebee; border: 1px solid #ffcdd2; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тест — Система управления по охране труда (СУОТ)</h1>
+  <div id="status" class="status">Пройдите тест, чтобы получить сертификат</div>
+  <div id="questions"></div>
+  <button id="submitBtn" disabled>Отправить ответы</button>
+</div>
+
+<script>
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+    authDomain: "qhse-training.firebaseapp.com",
+    projectId: "qhse-training",
+    storageBucket: "qhse-training.appspot.com",
+    messagingSenderId: "73177963917",
+    appId: "1:73177963917:web:adf0dbb61a8770f32d5c5e"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const COURSE_ID = "0EFXo6H4N1mbA1jBJwOK";
+  const COURSE_TITLE = "Система управления по охране труда (СУОТ)";
+
+  let certificateData = null;
+
+  // Вопросы по СУОТ
+  const questions = [
+    { q: "1. Какова основная цель OHSMS?", a: ["Увеличение прибыли","Сокращение рабочего времени","Обеспечение безопасности на рабочем месте","Снижение затрат"], correct: 2 },
+    { q: "2. Какой стандарт обычно используется для OHSMS?", a: ["ISO 9001","ISO 14001","ISO 45001","ISO 27001"], correct: 2 },
+    { q: "3. Какой первый шаг при внедрении OHSMS?", a: ["Найм консультанта","Оценка рисков","Написание процедур","Обучение сотрудников"], correct: 1 },
+    { q: "4. Что означает PDCA в OHSMS?", a: ["Планируй, Делай, Проверяй, Действуй","Подготавливай, Разрабатывай, Контролируй, Анализируй","Предотвращай, Обнаруживай, Исправляй, Аудируй","Проверяй, Делай, Планируй, Анализируй"], correct: 0 },
+    { q: "5. Кто несет окончательную ответственность за безопасность на рабочем месте?", a: ["Сотрудники","Специалисты по охране труда","Руководство","Государство"], correct: 2 },
+    { q: "6. Что такое опасность в терминах OHSMS?", a: ["Происшествие, которое уже случилось","Потенциальный источник вреда","Процедура безопасности","Тип СИЗ"], correct: 1 },
+    { q: "7. Какова цель оценки рисков?", a: ["Назначение вины за аварии","Выявление и контроль опасностей на рабочем месте","Сокращение льгот сотрудников","Увеличение скорости производства"], correct: 1 },
+    { q: "8. Что означает СИЗ?", a: ["Средства индивидуальной защиты","Система измерения затрат","Стандартные измерительные знаки","Система информационной защиты"], correct: 0 },
+    { q: "9. Когда следует проводить обучение по технике безопасности?", a: ["Только при приеме на работу","При приеме и при изменении рисков","Только после инцидента","Раз в пять лет"], correct: 1 },
+    { q: "10. Что такое инцидент в терминах OHSMS?", a: ["Планируемая проверка","Незапланированное событие, которое может причинить вред","Собрание комитета по безопасности","Отчет о производительности"], correct: 1 },
+    { q: "11. Какова цель аудита безопасности?", a: ["Поиск нарушителей","Оценка эффективности систем безопасности","Сокращение затрат на оборудование","Повышение производительности"], correct: 1 },
+    { q: "12. Что сделать в первую очередь при аварии?", a: ["Назначить виновного","Обезопасить место и оказать первую помощь","Продолжить работу","Сообщить СМИ"], correct: 1 },
+    { q: "13. Что такое 'опасное происшествие'?", a: ["Инцидент с травмой","Незапланированное событие без вреда","Проверка безопасности","Оповещение руководства"], correct: 1 },
+    { q: "14. Почему важно участие работников в OHSMS?", a: ["Работники лучше знают опасности","Снижает нагрузку на руководство","Требуется законом","Все перечисленное"], correct: 3 },
+    { q: "15. Что такое иерархия мер контроля?", a: ["Список руководителей","Система приоритезации мер контроля","Тип обучения","План реагирования"], correct: 1 },
+    { q: "16. Какая мера контроля опасностей наиболее эффективна?", a: ["СИЗ","Устранение","Предупреждающие знаки","Обучение"], correct: 1 },
+    { q: "17. Что такое культура безопасности?", a: ["Государственное агентство","Общие ценности в отношении безопасности","Программа обучения","Документ"], correct: 1 },
+    { q: "18. Зачем документировать процедуры безопасности?", a: ["Соответствие закону","Единые стандарты работы","Обучение","Все перечисленное"], correct: 3 },
+    { q: "19. Что такое непрерывное улучшение в OHSMS?", a: ["Единоразовый аудит","Постоянный процесс повышения безопасности","Государственное требование","План обучения"], correct: 1 },
+    { q: "20. Какова роль руководства в OHSMS?", a: ["Обеспечение ресурсами","Контроль соблюдения правил","Проведение проверок","Все перечисленное"], correct: 3 }
+  ];
+
+  // Отрисовка вопросов
+  const qDiv = document.getElementById("questions");
+  questions.forEach((item, i) => {
+    const div = document.createElement("div");
+    div.className = "question";
+    div.innerHTML = `<p>${item.q}</p>` + item.a.map((ans, idx) => `<label><input type="radio" name="q${i}" value="${idx}"> ${ans}</label>`).join("");
+    qDiv.appendChild(div);
+  });
+
+  // Отслеживание заполненности
+  document.addEventListener("change", () => {
+    const answered = document.querySelectorAll("input[type=radio]:checked").length;
+    document.getElementById("submitBtn").disabled = answered < questions.length;
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", async () => {
+    let score = 0;
+    questions.forEach((q, i) => {
+      const selected = document.querySelector(`input[name=q${i}]:checked`);
+      if (selected && parseInt(selected.value) === q.correct) score++;
+    });
+    const percent = (score / questions.length) * 100;
+    const statusDiv = document.getElementById("status");
+
+    const user = auth.currentUser;
+    if (!user) { alert("Вы не авторизованы"); return; }
+
+    if (percent >= 95) {
+      statusDiv.className = "status success";
+      statusDiv.innerText = `Тест пройден (${percent.toFixed(1)}%) — Сертификат выдан`;
+      const certId = Math.random().toString(36).substring(2, 22);
+
+      certificateData = {
+        id: certId,
+        userName: user.displayName || user.email,
+        date: new Date().toLocaleDateString(),
+        courseTitle: COURSE_TITLE
+      };
+
+      await db.collection("course_progress").doc(`${user.uid}_${COURSE_ID}`).set({
+        uid: user.uid,
+        courseId: COURSE_ID,
+        completed: true,
+        certificateId: certId,
+        issueDate: new Date().toISOString(),
+        verified: false
+      });
+
+      generateCertificate();
+    } else {
+      statusDiv.className = "status fail";
+      statusDiv.innerText = `Тест не пройден (${percent.toFixed(1)}%), требуется 95%`;
+    }
+  });
+
+  // Генерация сертификата с кириллицей
+  async function generateCertificate() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.72/fonts/Roboto-Regular.ttf';
+    const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
+    const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBytes)));
+    doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+    doc.setFont("Roboto");
+
+    doc.setFontSize(28);
+    doc.text('СЕРТИФИКАТ', 148, 40, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text('Настоящим подтверждается, что', 148, 55, { align: 'center' });
+    doc.setFontSize(22);
+    doc.text(certificateData.userName, 148, 70, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text(`успешно прошёл(а) курс "${certificateData.courseTitle}"`, 148, 85, { align: 'center' });
+    doc.setFontSize(14);
+    doc.text(`Дата выдачи: ${certificateData.date}`, 148, 100, { align: 'center' });
+    doc.text(`Сертификат ID: ${certificateData.id}`, 148, 110, { align: 'center' });
+    doc.text('Выдан: QSHE-Solutions.kz', 148, 120, { align: 'center' });
+
+    doc.save(`Сертификат_${certificateData.id}.pdf`);
+  }
+
+  // Авторизация
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      auth.signInWithEmailAndPassword("test@example.com", "password123")
+        .catch(err => console.error(err));
+    }
+  });
+</script>
+</body>
+</html>
