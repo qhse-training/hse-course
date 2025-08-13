@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Тест — Иерархия контроля опасностей</title>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Font Awesome для иконок -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --primary: #2c3e50;
+  --primary-light: #3498db;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --light-bg: #f7f9fb;
+  --white: #ffffff;
+  --text: #333333;
+  --text-light: #7f8c8d;
+  --border: #e0e0e0;
+  --shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+body { 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+  background: var(--light-bg); 
+  margin: 0; 
+  padding: 20px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container { 
+  max-width: 900px; 
+  margin: auto; 
+  background: var(--white); 
+  padding: 20px; 
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+h1 { 
+  text-align: center; 
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.meta-container {
+  background: var(--white);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.question { 
+  padding: 20px; 
+  background: var(--white); 
+  margin-bottom: 15px; 
+  border-radius: 8px; 
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s;
+}
+
+.question:hover {
+  transform: translateY(-2px);
+}
+
+.question-text {
+  font-weight: 600;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  padding: 12px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--border);
+}
+
+.option-label:hover {
+  background: #f0f8ff;
+  border-color: var(--primary-light);
+}
+
+.option-label input {
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+button { 
+  background: var(--success); 
+  color: white; 
+  border: none; 
+  padding: 12px 20px; 
+  border-radius: 5px; 
+  cursor: pointer;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: #219653;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+button:disabled { 
+  background: #95a5a6; 
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.status { 
+  margin: 15px 0; 
+  padding: 15px; 
+  border-radius: 8px;
+  text-align: center;
+}
+
+.success { 
+  background: #e8f5e9; 
+  border: 1px solid #c8e6c9;
+  color: var(--success);
+}
+
+.fail { 
+  background: #ffebee; 
+  border: 1px solid #ffcdd2;
+  color: var(--danger);
+}
+
+.warning-message {
+  color: var(--warning);
+  background: #fff8e6;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 15px 0;
+  text-align: center;
+}
+
+.result-container {
+  margin-top: 30px;
+  padding: 20px;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.success-result {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.fail-result {
+  color: var(--danger);
+}
+
+.certificate-code {
+  font-family: monospace;
+  background: #f4f4f4;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 10px 0;
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-btn i {
+  font-size: 0.9em;
+}
+
+.btn-primary {
+  background: var(--primary-light);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+}
+
+.btn-secondary {
+  background: var(--white);
+  color: var(--primary);
+  border: 1px solid var(--primary-light);
+}
+
+.btn-secondary:hover {
+  background: #f0f8ff;
+}
+
+.progress-container {
+  width: 100%;
+  margin: 10px 0;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #ecf0f1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-light);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .question {
+    padding: 15px;
+  }
+  
+  .option-label {
+    padding: 10px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .action-btn {
+    width: 100%;
+    max-width: 250px;
+    justify-content: center;
+  }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1><i class="fas fa-graduation-cap"></i> Тест — Иерархия контроля опасностей</h1>
+
+  <div class="meta-container">
+    <div class="meta-item">
+      <i class="fas fa-book"></i>
+      <span id="courseTitle">Курс: Иерархия контроля опасностей</span>
+    </div>
+    
+    <div class="meta-item">
+      <i class="fas fa-user"></i>
+      <span id="userName">Загрузка...</span>
+    </div>
+    
+    <div class="meta-item">
+      <i class="fas fa-envelope"></i>
+      <span id="userEmail">—</span>
+    </div>
+  </div>
+
+  <div class="progress-container" style="display: none;" id="progressInfo">
+    <div>Прогресс: <span id="progressText">0%</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressBar"></div>
+    </div>
+  </div>
+
+  <div id="status" class="status">Пройдите тест, чтобы получить сертификат</div>
+  
+  <div class="warning-message" id="incompleteWarning" style="display: none;">
+    <i class="fas fa-exclamation-triangle"></i> Вы ответили не на все вопросы!
+  </div>
+  
+  <div id="questions"></div>
+  
+  <button id="submitBtn" disabled>
+    <i class="fas fa-paper-plane"></i> Отправить ответы
+  </button>
+
+  <div class="result-container" id="resultContainer" style="display: none;">
+    <div id="resultMessage"></div>
+    <div class="action-buttons" id="actionButtons" style="display: none;">
+      <a href="#" class="action-btn btn-primary" id="downloadBtn">
+        <i class="fas fa-download"></i> Скачать сертификат
+      </a>
+      <a href="dashboard.html" class="action-btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Вернуться к курсам
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+  authDomain: "qhse-training.firebaseapp.com",
+  projectId: "qhse-training",
+  storageBucket: "qhse-training.appspot.com",
+  messagingSenderId: "73177963917",
+  appId: "1:73177963917:web:adf0dbb61a8770f32d5c5e"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const COURSE_ID = "0Jqmw9JvD6lXB1EM1lcD";
+const COURSE_TITLE = "Иерархия контроля опасностей";
+const PASS_THRESHOLD = 95; // 95% to pass
+
+let certificateData = null;
+let currentUser = null;
+
+// DOM elements
+const userNameEl = document.getElementById('userName');
+const userEmailEl = document.getElementById('userEmail');
+const courseTitleEl = document.getElementById('courseTitle');
+const progressInfo = document.getElementById('progressInfo');
+const progressText = document.getElementById('progressText');
+const progressBar = document.getElementById('progressBar');
+const incompleteWarning = document.getElementById('incompleteWarning');
+const downloadBtn = document.getElementById('downloadBtn');
+const resultContainer = document.getElementById('resultContainer');
+const resultMessage = document.getElementById('resultMessage');
+const actionButtons = document.getElementById('actionButtons');
+
+// Вопросы второго курса
+const questions = [
+  { q: "1. Какой метод контроля опасности является наиболее эффективным?", 
+    a: ["СИЗ","Административные меры","Устранение опасности","Инженерные меры"], correct: 2 },
+  { q: "2. Что означает 'замещение' в иерархии контроля опасностей?", 
+    a: ["Использование более безопасных материалов","Удаление источника опасности","Установка барьеров","Проведение обучения"], correct: 0 },
+  { q: "3. Какой из примеров относится к инженерным мерам?", 
+    a: ["Обучение","Защитные ограждения","Респираторы","Замена химикатов"], correct: 1 },
+  { q: "4. Какой из вариантов является примером административных мер?", 
+    a: ["Шумоподавляющие наушники","Разработка инструкций","Исключение подъёма тяжестей","Вентиляция"], correct: 1 },
+  { q: "5. Какая мера контроля считается последней линией защиты?", 
+    a: ["Инженерные меры","СИЗ","Административные меры","Устранение"], correct: 1 },
+  { q: "6. Какой пример демонстрирует устранение опасности?", 
+    a: ["Ударопрочные панели","Сборные конструкции","Шумозащитные экраны","Инструктаж"], correct: 0 },
+  { q: "7. Какой из вариантов — замещение?", 
+    a: ["Водные растворы вместо растворителей","Автоматические выключатели","Знаки","Очки"], correct: 0 },
+  { q: "8. Какой метод включает вентиляцию?", 
+    a: ["Административные","Инженерные","Устранение","СИЗ"], correct: 1 },
+  { q: "9. Пример СИЗ?", 
+    a: ["Противоскользящие покрытия","Очки","Автоматические выключатели","Совещания"], correct: 1 },
+  { q: "10. Метод с изменением процедур?", 
+    a: ["Устранение","Административные","Инженерные","Замещение"], correct: 1 },
+  { q: "11. Пример снижения опасности?", 
+    a: ["Исключение подъёма","Менее токсичные химикаты","Ограждения","Обучение"], correct: 1 },
+  { q: "12. Что относится к инженерным?", 
+    a: ["Протоколы","Дымовые извещатели","Каски","Замена оборудования"], correct: 3 },
+  { q: "13. Какой метод полностью устраняет риск?", 
+    a: ["Административные","Устранение","СИЗ","Инженерные"], correct: 1 },
+  { q: "14. Пример замещения?", 
+    a: ["Электропогрузчики","Защитные экраны","Анализ безопасности","Перчатки"], correct: 0 },
+  { q: "15. Ротация работников?", 
+    a: ["Инженерные","Административные","Устранение","СИЗ"], correct: 1 },
+  { q: "16. Пример устранения?", 
+    a: ["Болтовые соединения","Роботы","Вентиляция","Знаки"], correct: 1 },
+  { q: "17. Пример административных?", 
+    a: ["Разрешения на работы","Защитные ограждения","Перчатки","Замена химикатов"], correct: 0 },
+  { q: "18. Пример инженерных?", 
+    a: ["Обучение","Шумозащитные экраны","Респираторы","Замена оборудования"], correct: 3 },
+  { q: "19. Метод — защитная одежда?", 
+    a: ["Устранение","Инженерные","СИЗ","Административные"], correct: 2 },
+  { q: "20. Пример снижения?", 
+    a: ["Исключение высоты","Низковольтное оборудование","Ограждения","Перерывы"], correct: 0 }
+];
+
+// Render questions
+const qDiv = document.getElementById("questions");
+questions.forEach((item, i) => {
+  const div = document.createElement("div");
+  div.className = "question";
+  div.innerHTML = `
+    <div class="question-text">${item.q}</div>
+    ${item.a.map((ans, idx) => `
+      <label class="option-label">
+        <input type="radio" name="q${i}" value="${idx}">
+        ${ans}
+      </label>
+    `).join("")}
+  `;
+  qDiv.appendChild(div);
+});
+
+// Update progress
+document.addEventListener("change", updateProgress);
+function updateProgress() {
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  const total = questions.length;
+  const percent = Math.round((answered / total) * 100);
+  
+  progressText.textContent = `${percent}% (${answered}/${total})`;
+  progressBar.style.width = `${percent}%`;
+  
+  document.getElementById("submitBtn").disabled = answered < total;
+  incompleteWarning.style.display = answered < total ? 'block' : 'none';
+  if (answered > 0) progressInfo.style.display = 'block';
+}
+
+// Format date
+function formatDate(date) {
+  const day = String(date.getDate()).padStart(2,'0');
+  const month = String(date.getMonth()+1).padStart(2,'0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
+// Show test result
+function showTestResult(correct, percent, passed, certificateId) {
+  const statusDiv = document.getElementById("status");
+  if(passed) {
+    statusDiv.className = "status success";
+    statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Тест пройден (${percent.toFixed(1)}%) — Сертификат выдан`;
+    resultMessage.innerHTML = `
+      <div class="success-result"><i class="fas fa-check-circle"></i> Поздравляем! Вы успешно прошли тест.</div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent}%).</p>
+      <div>Сертификат ID: <span class="certificate-code">${certificateId}</span></div>
+    `;
+    actionButtons.style.display = 'flex';
+  } else {
+    statusDiv.className = "status fail";
+    statusDiv.innerHTML = `<i class="fas fa-times-circle"></i> Тест не пройден (${percent.toFixed(1)}%)`;
+    resultMessage.innerHTML = `
+      <div class="fail-result"><i class="fas fa-times-circle"></i> К сожалению, вы не набрали проходной балл.</div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent}%).</p>
+    `;
+  }
+  resultContainer.style.display = 'block';
+}
+
+// Generate certificate PDF
+async function generateCertificate(name, email, certificateId) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("Сертификат о прохождении курса", 105, 30, null, null, "center");
+  doc.setFontSize(14);
+  doc.text(`Настоящим подтверждается, что ${name}`, 105, 50, null, null, "center");
+  doc.text(`успешно прошёл курс "${COURSE_TITLE}"`, 105, 60, null, null, "center");
+  const dateStr = formatDate(new Date());
+  doc.text(`Дата выдачи: ${dateStr}`, 105, 80, null, null, "center");
+  doc.text(`Сертификат ID: ${certificateId}`, 105, 90, null, null, "center");
+  
+  const url = doc.output('bloburl');
+  downloadBtn.href = url;
+  downloadBtn.download = `Certificate_${name}.pdf`;
+}
+
+// On submit
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  let correct = 0;
+  questions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if(selected && parseInt(selected.value) === q.correct) correct++;
+  });
+  const percent = (correct / questions.length) * 100;
+  const passed = percent >= PASS_THRESHOLD;
+  const certificateId = Math.random().toString(36).substring(2, 22);
+  
+  await generateCertificate(currentUser.displayName || "Пользователь", currentUser.email, certificateId);
+  
+  showTestResult(correct, percent, passed, certificateId);
+
+  // Save progress in Firestore
+  if(currentUser) {
+    const docRef = db.collection('course_progress').doc(currentUser.uid + "_" + COURSE_ID);
+    docRef.set({
+      uid: currentUser.uid,
+      courseId: COURSE_ID,
+      courseTitle: COURSE_TITLE,
+      score: percent,
+      passed: passed,
+      certificateId: passed ? certificateId : "",
+      issueDate: passed ? formatDate(new Date()) : "",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+});
+
+// Load current user
+auth.onAuthStateChanged(user => {
+  if(user) {
+    currentUser = user;
+    userNameEl.textContent = user.displayName || "Пользователь";
+    userEmailEl.textContent = user.email;
+  } else {
+    userNameEl.textContent = "Не вошли";
+    userEmailEl.textContent = "—";
+  }
+});
+
+courseTitleEl.textContent = COURSE_TITLE;
+</script>
+</body>
+</html>
