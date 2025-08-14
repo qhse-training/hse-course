@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f6f6f6; margin: 0; padding: 20px; }
+    .course-card {
+      background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .status {
+      font-weight: bold; color: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>Личный кабинет</h2>
+  <p id="userInfo">Загрузка пользователя...</p>
+  <h3>Назначенные курсы:</h3>
+  <div id="courseList">Загрузка курсов...</div>
+
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "488293717235",
+      appId: "1:488293717235:web:7a740b8f91f2f27e6427ae"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUserUID = null;
+
+    // Авторизация
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        currentUserUID = user.uid;
+        document.getElementById("userInfo").innerText = `Вы вошли как: ${user.email}`;
+        loadCourses();
+      } else {
+        document.getElementById("userInfo").innerText = "Не авторизован";
+        document.getElementById("courseList").innerHTML = "Пожалуйста, войдите в систему.";
+      }
+    });
+
+    // Загрузка курсов и статуса
+    async function loadCourses() {
+      try {
+        const approvedRef = db.collection("approved_users").doc(currentUserUID);
+        const approvedSnap = await approvedRef.get();
+
+        if (!approvedSnap.exists) {
+          document.getElementById("courseList").innerHTML = "Вам не назначены курсы.";
+          return;
+        }
+
+        const userData = approvedSnap.data();
+        const assignedCourses = userData.courses || [];
+
+        if (assignedCourses.length === 0) {
+          document.getElementById("courseList").innerHTML = "Вам не назначены курсы.";
+          return;
+        }
+
+        let html = "";
+
+        for (let courseId of assignedCourses) {
+          const courseSnap = await db.collection("courses").doc(courseId).get();
+          if (!courseSnap.exists) continue;
+
+          const courseData = courseSnap.data();
+
+          // Загружаем прогресс
+          const progressSnap = await db.collection("course_progress")
+            .where("userId", "==", currentUserUID)
+            .where("courseId", "==", courseId)
+            .limit(1)
+            .get();
+
+          let statusText = "Не начат";
+          if (!progressSnap.empty) {
+            const progress = progressSnap.docs[0].data();
+            if (progress.status) {
+              statusText = progress.status;
+            }
+          }
+
+          html += `
+            <div class="course-card">
+              <h4>${courseData.title || "Без названия"}</h4>
+              <p>Описание: ${courseData.description || "Нет описания"}</p>
+              <p class="status">Статус: ${statusText}</p>
+              <a href="test1.html?courseId=${courseId}">Перейти к тесту</a>
+            </div>
+          `;
+        }
+
+        document.getElementById("courseList").innerHTML = html;
+
+      } catch (error) {
+        console.error("Ошибка загрузки курсов:", error);
+        document.getElementById("courseList").innerHTML = "Ошибка при загрузке данных.";
+      }
+    }
+  </script>
+</body>
+</html>
