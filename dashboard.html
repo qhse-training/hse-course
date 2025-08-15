@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Курсы</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f8f8; margin: 0; }
+    header { background: #3498db; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .course-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
+    .course-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+    .course-image { height: 160px; background-size: cover; background-position: center; }
+    .course-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+    .course-title { margin: 0 0 10px; font-size: 18px; }
+    .course-desc { flex: 1; color: #555; }
+    .course-actions { margin-top: 10px; display: flex; gap: 10px; }
+    .btn { padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; text-align: center; }
+    .btn-test { background: #e67e22; }
+  </style>
+</head>
+<body>
+  <header>
+    <div id="userInfo">Загрузка...</div>
+    <button id="logoutBtn" style="background:#e74c3c;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;">Выйти</button>
+  </header>
+
+  <input type="text" id="searchInput" placeholder="Поиск курсов..." style="width:100%;padding:10px;border:none;border-bottom:1px solid #ccc;">
+
+  <div class="course-list" id="courseList"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "4501351718",
+      appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    const courseList = document.getElementById('courseList');
+    const searchInput = document.getElementById('searchInput');
+
+    async function getPreviewUrl(folder) {
+      const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folder}`;
+      const variants = ["Slide1.JPG", "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG"];
+      for (let file of variants) {
+        try {
+          const res = await fetch(`${base}/${file}`, { method: 'HEAD' });
+          if (res.ok) return `${base}/${file}`;
+        } catch(e) {}
+      }
+      return 'https://via.placeholder.com/300x160?text=Нет+превью';
+    }
+
+    async function loadAllCourses() {
+      const snapshot = await db.collection('courses').get();
+      const courses = [];
+      for (let doc of snapshot.docs) {
+        const courseData = doc.data();
+        const preview = await getPreviewUrl(doc.id);
+        courses.push({ id: doc.id, ...courseData, slideUrl: preview });
+      }
+      return courses;
+    }
+
+    function renderCourses(courses) {
+      if (!courses.length) {
+        courseList.innerHTML = `<div>Курсы не найдены</div>`;
+        return;
+      }
+      courseList.innerHTML = '';
+      courses.forEach(course => {
+        const card = document.createElement('div');
+        card.className = 'course-card';
+        card.innerHTML = `
+          <div class="course-image" style="background-image:url('${course.slideUrl}')"></div>
+          <div class="course-body">
+            <h3 class="course-title">${course.title || 'Без названия'}</h3>
+            <p class="course-desc">${course.description || 'Описание отсутствует'}</p>
+            <div class="course-actions">
+              <a href="course.html?id=${course.id}" class="btn">Пройти курс</a>
+              ${course.testHtml ? `<a href="${course.testHtml}" target="_blank" class="btn btn-test">Тест</a>` : ''}
+            </div>
+          </div>
+        `;
+        courseList.appendChild(card);
+      });
+    }
+
+    let allCourses = [];
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const userDoc = await db.collection("approved_users").doc(user.uid).get();
+      const fullName = userDoc.exists ? userDoc.data().fullName : (user.email || 'Пользователь');
+      document.getElementById('userInfo').textContent = `${fullName} (${user.email})`;
+
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        auth.signOut().then(() => location.href = 'login.html');
+      });
+
+      allCourses = await loadAllCourses();
+      renderCourses(allCourses);
+    });
+
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const filtered = allCourses.filter(c => 
+        (c.title || '').toLowerCase().includes(searchTerm) || 
+        (c.description || '').toLowerCase().includes(searchTerm)
+      );
+      renderCourses(filtered);
+    });
+  </script>
+</body>
+</html>
