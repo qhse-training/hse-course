@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Health and Safety Monitoring Test</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #27ae60;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+
+    header, nav, .container {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-img {
+      height: 50px;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--secondary-color);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+    }
+
+    nav {
+      background-color: var(--dark-color);
+      padding: 0.5rem 2rem;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a:hover,
+    nav a.active {
+      color: var(--secondary-color);
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 2rem;
+    }
+
+    .test-info {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .test-title {
+      font-size: 1.5rem;
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .test-instructions {
+      color: #555;
+      margin-bottom: 1rem;
+    }
+
+    .timer {
+      font-weight: bold;
+      font-size: 1.2rem;
+      color: var(--accent-color);
+    }
+
+    .progress-bar {
+      background-color: #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 1rem;
+      height: 20px;
+    }
+
+    .progress {
+      height: 100%;
+      width: 0%;
+      background-color: var(--success-color);
+      text-align: center;
+      color: white;
+      line-height: 20px;
+    }
+
+    .question-container {
+      background-color: white;
+      border-radius: 5px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .question-text {
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--dark-color);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .option-item {
+      margin-bottom: 0.8rem;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .option-radio {
+      margin-right: 0.8rem;
+    }
+
+    .submit-btn {
+      display: block;
+      width: 100%;
+      max-width: 200px;
+      margin: 2rem auto 0;
+      padding: 0.8rem;
+      background-color: var(--success-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn:hover {
+      background-color: #1e8449;
+    }
+
+    .result-message {
+      text-align: center;
+      padding: 1.5rem;
+      margin: 1rem auto;
+      border-radius: 5px;
+      max-width: 600px;
+      font-size: 1.1rem;
+      display: none;
+    }
+
+    .correct {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .incorrect {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .unanswered {
+      background-color: #fff3cd;
+    }
+
+    .correct-answer {
+      color: #27ae60;
+      font-size: 0.9rem;
+      margin-top: 0.4rem;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+      }
+      
+      nav ul {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .question-container {
+        padding: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <i class="fas fa-hard-hat fa-2x"></i>
+      <div class="logo-text">Safety Training</div>
+    </div>
+    <div class="user-info">
+      <span>John Smith</span>
+      <div class="user-avatar">JS</div>
+    </div>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="courses.html">Courses</a></li>
+      <li><a href="tests.html" class="active">Tests</a></li>
+      <li><a href="certificates.html">Certificates</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <h1><i class="fas fa-clipboard-check"></i> Health and Safety Monitoring Test</h1>
+    
+    <div class="test-info">
+      <div class="test-title">Health and Safety Monitoring (20 Questions)</div>
+      <div class="test-instructions">Answer all questions. One correct answer per question.</div>
+      <div class="timer">Time left: <span id="time">20:00</span></div>
+      <div class="progress-bar"><div class="progress" id="progressBar">0%</div></div>
+    </div>
+
+    <div id="result" class="result-message"></div>
+
+    <form id="testForm">
+      <!-- Questions will be inserted here by JavaScript -->
+      <div style="text-align: center;">
+        <button type="button" class="submit-btn" id="submitBtn">Submit Test</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Questions about Health and Safety Monitoring
+    const questions = [
+      {
+        question: "1. What does LTIF stand for in health and safety monitoring?",
+        options: [
+          "Lost Time Injury Frequency",
+          "Long-Term Incident Frequency",
+          "Labor Time Injury Factor",
+          "Lost Time Incident Factor"
+        ],
+        answer: 0,
+        explanation: "LTIF stands for Lost Time Injury Frequency, which measures the rate of lost time injuries."
+      },
+      {
+        question: "2. How is LTIF calculated?",
+        options: [
+          "(Fatalities + Medical Treatment Cases) × 100,000 / Total Hours Worked",
+          "(Lost Time Injuries + Fatalities) × 1,000,000 / Total Hours Worked",
+          "(All Recordable Injuries) × 200,000 / Total Hours Worked",
+          "(First Aid Cases) × 1,000 / Total Hours Worked"
+        ],
+        answer: 1,
+        explanation: "LTIF = (Lost Time Injuries + Fatalities) × 1,000,000 / Total Hours Worked"
+      },
+      {
+        question: "3. What is included in TRIF that is not included in LTIF?",
+        options: [
+          "Only fatalities",
+          "Only lost time injuries",
+          "Medical treatment cases and restricted work cases",
+          "Near-miss incidents"
+        ],
+        answer: 2,
+        explanation: "TRIF includes medical treatment cases and restricted work cases, while LTIF only includes lost time injuries and fatalities."
+      },
+      {
+        question: "4. What does the FAR metric specifically measure?",
+        options: [
+          "All recordable injuries",
+          "Fatal accident rate",
+          "First aid cases",
+          "Restricted work cases"
+        ],
+        answer: 1,
+        explanation: "FAR (Fatal Accident Rate) specifically measures fatal accidents."
+      },
+      {
+        question: "5. How is FAR calculated?",
+        options: [
+          "Fatalities × 1,000,000 / Total Hours Worked",
+          "Fatalities × 100,000,000 / Total Hours Worked",
+          "Fatalities × 200,000 / Total Hours Worked",
+          "Fatalities × 10,000 / Total Hours Worked"
+        ],
+        answer: 1,
+        explanation: "FAR = Fatalities × 100,000,000 / Total Hours Worked"
+      },
+      {
+        question: "6. What does DAFWR specifically measure?",
+        options: [
+          "Cases with days away from work (excluding fatalities and partial disabilities)",
+          "All recordable injuries",
+          "Only fatalities",
+          "Near-miss incidents"
+        ],
+        answer: 0,
+        explanation: "DAFWR measures cases with days away from work, excluding fatalities and partial disabilities."
+      },
+      {
+        question: "7. What multiplier is used in the DAFWR calculation?",
+        options: [
+          "1,000,000",
+          "200,000",
+          "100,000",
+          "10,000"
+        ],
+        answer: 1,
+        explanation: "DAFWR uses a multiplier of 200,000 in its calculation."
+      },
+      {
+        question: "8. Which of these is the most comprehensive safety metric?",
+        options: [
+          "LTIF",
+          "FAR",
+          "TRIR",
+          "DAFWR"
+        ],
+        answer: 2,
+        explanation: "TRIR (Total Recordable Incident Rate) is the most comprehensive as it includes all recordable incidents."
+      },
+      {
+        question: "9. What does PTD stand for in safety metrics?",
+        options: [
+          "Partial Time Disability",
+          "Permanent Total Disability",
+          "Preliminary Treatment Document",
+          "Protective Training Directive"
+        ],
+        answer: 1,
+        explanation: "PTD stands for Permanent Total Disability."
+      },
+      {
+        question: "10. What does PPD stand for in safety metrics?",
+        options: [
+          "Permanent Partial Disability",
+          "Preliminary Protection Data",
+          "Personal Protective Device",
+          "Periodic Performance Document"
+        ],
+        answer: 0,
+        explanation: "PPD stands for Permanent Partial Disability."
+      },
+      {
+        question: "11. What does LWC stand for in safety metrics?",
+        options: [
+          "Long Work Cycle",
+          "Lost Workday Case",
+          "Light Work Capacity",
+          "Limited Work Condition"
+        ],
+        answer: 1,
+        explanation: "LWC stands for Lost Workday Case."
+      },
+      {
+        question: "12. What does RWC stand for in safety metrics?",
+        options: [
+          "Regular Work Capacity",
+          "Restricted Work Case",
+          "Risk Warning Category",
+          "Recordable Work Condition"
+        ],
+        answer: 1,
+        explanation: "RWC stands for Restricted Work Case."
+      },
+      {
+        question: "13. What does MTC stand for in safety metrics?",
+        options: [
+          "Mandatory Training Course",
+          "Medical Treatment Case",
+          "Minimum Threshold Condition",
+          "Maintenance Tracking Code"
+        ],
+        answer: 1,
+        explanation: "MTC stands for Medical Treatment Case."
+      },
+      {
+        question: "14. Which metric would include a case where an employee needed stitches?",
+        options: [
+          "LTIF only",
+          "TRIR",
+          "FAR",
+          "None of these"
+        ],
+        answer: 1,
+        explanation: "A case requiring stitches would be included in TRIR as a medical treatment case."
+      },
+      {
+        question: "15. If a company had 2 fatalities in 5,000,000 work hours, what would be their FAR?",
+        options: [
+          "0.4",
+          "40",
+          "4",
+          "400"
+        ],
+        answer: 1,
+        explanation: "FAR = (2 × 100,000,000) / 5,000,000 = 40"
+      },
+      {
+        question: "16. Which metric is most useful for comparing safety performance across different industries?",
+        options: [
+          "Total number of incidents",
+          "TRIR",
+          "Number of fatalities",
+          "Number of near-misses"
+        ],
+        answer: 1,
+        explanation: "TRIR is standardized and allows for comparison across different industries."
+      },
+      {
+        question: "17. What is the primary purpose of safety metrics like LTIF and TRIR?",
+        options: [
+          "To assign blame for accidents",
+          "To measure and improve safety performance",
+          "To reduce workers' compensation costs",
+          "To meet minimum legal requirements"
+        ],
+        answer: 1,
+        explanation: "The primary purpose is to measure and improve safety performance."
+      },
+      {
+        question: "18. Why are metrics typically calculated per hours worked rather than per employee?",
+        options: [
+          "It's easier to calculate",
+          "It accounts for differences in work exposure",
+          "Employees don't like being counted",
+          "It's required by law"
+        ],
+        answer: 1,
+        explanation: "Calculating per hours worked accounts for differences in work exposure between employees."
+      },
+      {
+        question: "19. What is the main difference between OSHA's recordable incidents and company internal reporting?",
+        options: [
+          "OSHA requires reporting of all incidents",
+          "OSHA has specific criteria for what must be recorded",
+          "Companies can choose which incidents to report",
+          "There is no difference"
+        ],
+        answer: 1,
+        explanation: "OSHA has specific criteria for recordable incidents that may differ from company internal reporting."
+      },
+      {
+        question: "20. Which factor is NOT typically considered when calculating safety metrics?",
+        options: [
+          "Hours worked",
+          "Number of injuries",
+          "Employee salaries",
+          "Severity of injuries"
+        ],
+        answer: 2,
+        explanation: "Employee salaries are not typically considered in safety metric calculations."
+      }
+    ];
+
+    // Configuration
+    const totalQuestions = questions.length;
+    const testDuration = 20 * 60; // 20 minutes in seconds
+    let timeLeft = testDuration;
+    let timerInterval;
+
+    // DOM Elements
+    const timerEl = document.getElementById("time");
+    const progressBar = document.getElementById("progressBar");
+    const testForm = document.getElementById("testForm");
+    const submitBtn = document.getElementById("submitBtn");
+    const resultEl = document.getElementById("result");
+
+    // Initialize the test
+    function initTest() {
+      // Create the question elements
+      questions.forEach((q, index) => {
+        const questionContainer = document.createElement('div');
+        questionContainer.className = 'question-container';
+        
+        const questionText = document.createElement('div');
+        questionText.className = 'question-text';
+        questionText.textContent = q.question;
+        
+        const optionsList = document.createElement('ul');
+        optionsList.className = 'options-list';
+        
+        q.options.forEach((option, optionIndex) => {
+          const optionItem = document.createElement('li');
+          optionItem.className = 'option-item';
+          
+          const optionLabel = document.createElement('label');
+          optionLabel.className = 'option-label';
+          
+          const optionRadio = document.createElement('input');
+          optionRadio.type = 'radio';
+          optionRadio.name = `q${index + 1}`;
+          optionRadio.className = 'option-radio';
+          optionRadio.value = optionIndex;
+          
+          optionLabel.appendChild(optionRadio);
+          optionLabel.appendChild(document.createTextNode(option));
+          optionItem.appendChild(optionLabel);
+          optionsList.appendChild(optionItem);
+        });
+        
+        questionContainer.appendChild(questionText);
+        questionContainer.appendChild(optionsList);
+        testForm.insertBefore(questionContainer, submitBtn.parentNode);
+      });
+      
+      startTimer();
+      updateProgressBar();
+      
+      // Add event listener for form changes to update progress
+      testForm.addEventListener("change", updateProgressBar);
+      
+      // Add submit button handler
+      submitBtn.addEventListener("click", calculateScore);
+    }
+
+    // Timer functionality
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+        
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          timeUp();
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    }
+
+    function timeUp() {
+      alert("Time is up! Your test will be automatically submitted.");
+      calculateScore();
+    }
+
+    // Progress tracking
+    function updateProgressBar() {
+      const answeredQuestions = new Set();
+      const radioButtons = testForm.querySelectorAll('input[type="radio"]:checked');
+      
+      radioButtons.forEach(radio => {
+        answeredQuestions.add(radio.name);
+      });
+      
+      const progress = (answeredQuestions.size / totalQuestions) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.textContent = `${Math.round(progress)}%`;
+    }
+
+    // Scoring functionality
+    function calculateScore() {
+      clearInterval(timerInterval);
+      
+      let score = 0;
+      const questionContainers = document.querySelectorAll('.question-container');
+      
+      // Disable all inputs
+      const allInputs = testForm.querySelectorAll('input');
+      allInputs.forEach(input => input.disabled = true);
+      
+      // Disable submit button
+      submitBtn.disabled = true;
+      
+      // Evaluate each question
+      questionContainers.forEach((container, index) => {
+        const questionName = `q${index + 1}`;
+        const selectedOption = testForm.querySelector(`input[name="${questionName}"]:checked`);
+        const correctIndex = questions[index].answer;
+        
+        // Highlight correct answer
+        const correctOption = container.querySelectorAll('input[type="radio"]')[correctIndex];
+        const correctLabel = correctOption.parentElement;
+        
+        // Add correct answer indicator
+        const correctAnswerEl = document.createElement('div');
+        correctAnswerEl.className = 'correct-answer';
+        correctAnswerEl.textContent = `Correct answer: ${questions[index].options[correctIndex]}`;
+        container.appendChild(correctAnswerEl);
+        
+        if (selectedOption) {
+          const selectedValue = parseInt(selectedOption.value);
+          const selectedLabel = selectedOption.parentElement;
+          
+          if (selectedValue === correctIndex) {
+            score++;
+            selectedLabel.classList.add('correct');
+          } else {
+            selectedLabel.classList.add('incorrect');
+          }
+        } else {
+          // No answer selected
+          container.classList.add('unanswered');
+        }
+      });
+      
+      // Display results
+      const percentage = Math.round((score / totalQuestions) * 100);
+      resultEl.style.display = 'block';
+      resultEl.className = percentage >= 70 ? 'result-message correct' : 'result-message incorrect';
+      resultEl.innerHTML = `
+        <h3>Test Results</h3>
+        <p>You scored <strong>${score}</strong> out of <strong>${totalQuestions}</strong> (${percentage}%)</p>
+        <p>${percentage >= 70 ? 'Congratulations! You passed the test.' : 'Please review the material and try again.'}</p>
+      `;
+      
+      // Scroll to results
+      resultEl.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Initialize the test when page loads
+    document.addEventListener('DOMContentLoaded', initTest);
+  </script>
+</body>
+</html>
