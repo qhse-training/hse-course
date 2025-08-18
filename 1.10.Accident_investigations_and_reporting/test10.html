@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Тест — Расследование инцидентов</title>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Roboto для поддержки кириллицы в PDF -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- Firebase (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --primary:#2c3e50; --primary-light:#3498db; --success:#27ae60; --danger:#e74c3c;
+  --light-bg:#f7f9fb; --white:#fff; --text:#333; --border:#e0e0e0; --shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+body{font-family:'Roboto',sans-serif;background:var(--light-bg);margin:0;padding:20px;color:var(--text);line-height:1.6}
+.container{max-width:960px;margin:auto;background:var(--white);padding:20px;border-radius:10px;box-shadow:var(--shadow)}
+h1{text-align:center;color:var(--primary);margin-bottom:8px}
+.meta-container{background:var(--white);padding:12px;border-radius:8px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.meta-item{display:flex;align-items:center;gap:8px}
+.question{padding:18px;background:var(--white);margin-bottom:12px;border-radius:8px;border:1px solid var(--border);box-shadow:var(--shadow);transition:transform .18s}
+.question:hover{transform:translateY(-3px)}
+.question-text{font-weight:600;margin-bottom:12px;font-size:1.05rem}
+.option-label{display:flex;align-items:center;margin:8px 0;padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid var(--border)}
+.option-label:hover{background:#f0f8ff;border-color:var(--primary-light)}
+.option-label input{margin-right:12px}
+button{background:var(--success);color:#fff;border:none;padding:12px 18px;border-radius:6px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:8px}
+button:disabled{background:#95a5a6;cursor:not-allowed}
+.status{margin:14px 0;padding:12px;border-radius:8px;text-align:center}
+.success{background:#e8f5e9;border:1px solid #c8e6c9;color:var(--success)}
+.fail{background:#ffebee;border:1px solid #ffcdd2;color:var(--danger)}
+.warning-message{color:#f39c12;background:#fff8e6;padding:10px;border-radius:6px;margin:12px 0;text-align:center}
+.result-container{margin-top:22px;padding:18px;background:var(--white);border-radius:10px;box-shadow:var(--shadow);text-align:center}
+.certificate-code{font-family:monospace;background:#f4f4f4;padding:8px 12px;border-radius:4px;display:inline-block;font-size:1.05rem;margin:8px 0}
+.action-buttons{display:flex;justify-content:center;gap:12px;margin-top:16px}
+.action-btn{padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--primary-light);color:#fff}
+.btn-secondary{background:var(--white);color:var(--primary);border:1px solid var(--primary-light)}
+.progress-container{width:100%;margin:10px 0}
+.progress-bar{height:10px;background:#ecf0f1;border-radius:6px;overflow:hidden;margin-top:6px}
+.progress-fill{height:100%;background:var(--primary-light);width:0%;transition:width .25s ease}
+@media(max-width:768px){.container{padding:14px}}
+.correct{background:#e6fbef}
+.incorrect{background:#ffecec}
+.unanswered{background:#fff7e6}
+.correct-answer{color:var(--success);font-weight:600;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1><i class="fas fa-search"></i> Тест — Расследование инцидентов</h1>
+
+  <div class="meta-container">
+    <div class="meta-item"><i class="fas fa-book"></i><span id="courseTitle">Курс: Расследование инцидентов</span></div>
+    <div class="meta-item"><i class="fas fa-user"></i><span id="userName">Загрузка...</span></div>
+    <div class="meta-item"><i class="fas fa-envelope"></i><span id="userEmail">—</span></div>
+  </div>
+
+  <div class="progress-container" id="progressInfo" style="display:none">
+    <div>Прогресс: <span id="progressText">0%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div>
+  </div>
+
+  <div id="status" class="status">Пройдите тест, чтобы получить сертификат</div>
+  <div class="warning-message" id="incompleteWarning" style="display:none"><i class="fas fa-exclamation-triangle"></i> Вы ответили не на все вопросы!</div>
+
+  <div id="questions"></div>
+
+  <div style="text-align:center;margin-top:12px">
+    <button id="submitBtn" disabled><i class="fas fa-paper-plane"></i> Отправить ответы</button>
+  </div>
+
+  <div class="result-container" id="resultContainer" style="display:none">
+    <div id="resultMessage"></div>
+    <div class="action-buttons" id="actionButtons" style="display:none">
+      <a href="#" class="action-btn btn-primary" id="downloadBtn"><i class="fas fa-download"></i> Скачать сертификат</a>
+      <a href="https://qhse-training.github.io/hse-course/dashboard.html" class="action-btn btn-secondary"><i class="fas fa-arrow-left"></i> Вернуться к курсам</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   Firebase Init
+   ========================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+  authDomain: "qhse-training.firebaseapp.com",
+  projectId: "qhse-training",
+  storageBucket: "qhse-training.appspot.com",
+  messagingSenderId: "73177963917",
+  appId: "1:73177963917:web:adf0dbb61a8770f32d5c5e"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* =========================
+   Constants
+   ========================= */
+const urlParams = new URLSearchParams(window.location.search);
+const COURSE_ID = urlParams.get("id") || "INCIDENT-INV-001";
+const COURSE_TITLE = "Расследование инцидентов";
+const COURSE_TITLE_EN = "Incident Investigation";
+const PASS_THRESHOLD = 70; // процент прохождения
+
+/* =========================
+   State
+   ========================= */
+let certificateData = null;
+let currentUser = null;
+
+/* =========================
+   DOM
+   ========================= */
+const userNameEl = document.getElementById('userName');
+const userEmailEl = document.getElementById('userEmail');
+const courseTitleEl = document.getElementById('courseTitle');
+const progressInfo = document.getElementById('progressInfo');
+const progressText = document.getElementById('progressText');
+const progressBar = document.getElementById('progressBar');
+const incompleteWarning = document.getElementById('incompleteWarning');
+const downloadBtn = document.getElementById('downloadBtn');
+const resultContainer = document.getElementById('resultContainer');
+const resultMessage = document.getElementById('resultMessage');
+const actionButtons = document.getElementById('actionButtons');
+const statusDiv = document.getElementById("status");
+
+/* =========================
+   Questions (20) — Расследование инцидентов — русский перевод
+   ========================= */
+const questions = [
+  { q: "1. Какова основная цель расследования инцидента?", a: ["Назначить виновных","Выявить коренные причины и предотвратить повторение","Удовлетворить страховые требования","Создать документы для регуляторов"], correct: 1, explanation: "Цель — найти коренные причины и принять меры, чтобы инцидент не повторился."},
+  { q: "2. Какой метод обычно используют для выявления коренных причин?", a: ["Анализ 5 почему","Анализ затрат и выгод","SWOT-анализ","Маркетинговое исследование"], correct: 0, explanation: "Метод '5 почему' — популярный инструмент для поиска коренных причин."},
+  { q: "3. Что следует сделать ПЕРВЫМ при возникновении инцидента?", a: ["Немедленно начать расследование","Обезопасить место и обеспечить безопасность","Уведомить высшее руководство","Опрашивать свидетелей"], correct: 1, explanation: "Сначала нужно обезопасить место, чтобы предотвратить дальнейший вред."},
+  { q: "4. Что НЕ является типичным компонентом отчёта расследования?", a: ["Последовательность событий","Анализ корневых причин","Корректирующие меры","Информация о зарплате сотрудников"], correct: 3, explanation: "Данные о зарплате обычно не относятся к отчёту расследования."},
+  { q: "5. Что такое 'near miss' (приближённый инцидент)?", a: ["Инцидент с незначительными травмами","Событие, которое могло бы причинить вред, но не причинило","Нарушение безопасности без последствий","Отказ оборудования"], correct: 1, explanation: "Near miss — событие без последствий, но с потенциальным риском."},
+  { q: "6. Кто должен участвовать в расследовании инцидента?", a: ["Только представители руководства","Только специалисты по безопасности","Кросс-функциональная команда с участием работников фронта","Только внешние консультанты"], correct: 2, explanation: "Лучше привлекать разных участников, включая фронтовых работников."},
+  { q: "7. Какова цель опросов свидетелей при расследовании?", a: ["Назначить вину","Понять, что произошло с разных точек зрения","Проверить память сотрудников","Выполнить юридические формальности"], correct: 1, explanation: "Опросы помогают получить разные точки зрения и уточнить обстоятельства."},
+  { q: "8. Какой фактор САМИЙ важный при опросе свидетелей?", a: ["Скорость завершения","Создание безопасной (не угрожающей) атмосферы","Использование наводящих вопросов","Запись каждого слова дословно"], correct: 1, explanation: "Важно, чтобы свидетель чувствовал себя свободно и говорил правду."},
+  { q: "9. Что такое 'коренная причина' при расследовании?", a: ["Первое пошедшее не так","Системная ошибка, позволившая случиться инциденту","Человек, наиболее ответственный","Видимый ущерб"], correct: 1, explanation: "Коренная причина — системный фактор, позволяющий инциденту произойти."},
+  { q: "10. Какой пример эффективной корректирующей меры?", a: ["Переподготовка только вовлечённого сотрудника","Изменение процедуры для устранения опасности","Размещение предупреждающего знака","Проведение внепланового собрания по безопасности"], correct: 1, explanation: "Изменение системы/процедуры устраняет источник риска, а не только симптом."},
+  { q: "11. Когда должны быть завершены отчёты по расследованию?", a: ["В течение 24 часов для всех инцидентов","В разумные сроки в зависимости от сложности","Только по требованию регуляторов","В конце финансового года"], correct: 1, explanation: "Срок должен соответствовать сложности и обеспечивать качество расследования."},
+  { q: "12. Какова цель документирования 'извлечённых уроков'?", a: ["Наказать виновных","Делиться знаниями по организации","Удовлетворить аудиторов","Создать учебные материалы"], correct: 1, explanation: "Уроки помогают предотвратить повторение в других подразделениях."},
+  { q: "13. Какая характеристика хороших корректирующих мер?", a: ["Они конкретные и измеримые","Они широкие и общие","Они фокусируются только на поведении человека","Они требуют минимальных усилий"], correct: 0, explanation: "Корректирующие меры должны быть конкретными и проверяемыми."},
+  { q: "14. Что следует делать с результатами расследования?", a: ["Хранить в секрете, чтобы избежать ответственности","Делиться релевантной информацией с затронутыми работниками","Положить в архив и забыть","Использовать только для дисциплины"], correct: 1, explanation: "Важно информировать пострадавших и внедрять улучшения."},
+  { q: "15. Что НЕ является распространённой техникой расследования?", a: ["Разработка временной последовательности событий","Барьерный анализ","Анализ изменений","Тестирование личности"], correct: 3, explanation: "Тесты личности не являются стандартной техникой расследования."},
+  { q: "16. Что такое иерархия мер управления опасностями?", a: ["Ранжирование мер контроля от наиболее до наименее эффективных","Список членов комитета по безопасности","Организационная схема служб безопасности","График проверок по безопасности"], correct: 0, explanation: "Иерархия мер — порядок приоритезации мер (устранение, замена, инженерные меры и т.д.)."},
+  { q: "17. Почему важно расследовать near misses?", a: ["Они показывают места, где могут произойти серьёзные инциденты","Они помогают выявить проблемных сотрудников","Они требуются страховщиками","Они дают повод для дисциплины"], correct: 0, explanation: "Near miss — ранний индикатор уязвимости; работа с ними предотвращает серьезные инциденты."},
+  { q: "18. Какова роль руководства в расследовании инцидентов?", a: ["Обеспечить тщательное расследование и внедрение улучшений","Свести выводы к минимуму, чтобы снизить ответственность","Фокусироваться только на экономии","Перекладывать всю ответственность на специалистов по безопасности"], correct: 0, explanation: "Руководство должно поддержать расследование и внедрение изменений."},
+  { q: "19. Что означает 'многофакторность' при анализе инцидента?", a: ["Идея, что обычно несколько факторов способствуют инциденту","Когда виноваты несколько людей","Инциденты, затрагивающие несколько систем","Расследования, проводимые несколькими агентствами"], correct: 0, explanation: "Чаще всего инциденты имеют несколько взаимосвязанных причин."},
+  { q: "20. Какова конечная цель расследования инцидента?", a: ["Соответствовать регуляциям","Предотвратить повторение и улучшить безопасность","Документировать события для защиты в суде","Рассчитать страховые выплаты"], correct: 1, explanation: "Главная цель — предотвратить повторение и улучшить безопасность."}
+];
+
+/* =========================
+   Render questions
+   ========================= */
+const qDiv = document.getElementById("questions");
+questions.forEach((item, i) => {
+  const div = document.createElement("div");
+  div.className = "question";
+  div.innerHTML = `
+    <div class="question-text">${item.q}</div>
+    ${item.a.map((ans, idx) => `
+      <label class="option-label">
+        <input type="radio" name="q${i}" value="${idx}">
+        ${ans}
+      </label>
+    `).join("")}
+  `;
+  qDiv.appendChild(div);
+});
+
+/* =========================
+   Progress updates
+   ========================= */
+document.addEventListener("change", updateProgress);
+function updateProgress() {
+  const answered = document.querySelectorAll('input[type="radio"]:checked').length;
+  const total = questions.length;
+  const percent = Math.round((answered / total) * 100);
+
+  progressText.textContent = `${percent}% (${answered}/${total})`;
+  progressBar.style.width = `${percent}%`;
+
+  document.getElementById("submitBtn").disabled = answered < total;
+  incompleteWarning.style.display = answered < total ? 'block' : 'none';
+  if (answered > 0) progressInfo.style.display = 'block';
+}
+
+/* =========================
+   Helpers
+   ========================= */
+function formatDate(date) {
+  const d = String(date.getDate()).padStart(2,'0');
+  const m = String(date.getMonth()+1).padStart(2,'0');
+  const y = date.getFullYear();
+  return `${d}.${m}.${y}`;
+}
+function arrayBufferToBase64(buffer) {
+  let binary='';
+  const bytes = new Uint8Array(buffer);
+  for (let i=0;i<bytes.byteLength;i++) binary+=String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+function generateId(len=20){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let id="";
+  for(let i=0;i<len;i++) id+=chars.charAt(Math.floor(Math.random()*chars.length));
+  return id;
+}
+
+/* =========================
+   Result UI
+   ========================= */
+function showTestResult(correct, percent, passed, certificateId) {
+  if (passed) {
+    statusDiv.className = "status success";
+    statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Тест пройден (${percent.toFixed(1)}%) — Сертификат выдан`;
+    resultMessage.innerHTML = `
+      <div class="success-result"><i class="fas fa-check-circle"></i> Поздравляем! Вы успешно прошли тест.</div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent.toFixed(1)}%).</p>
+      <p>Ваш код сертификата:</p>
+      <div class="certificate-code">${certificateId}</div>
+    `;
+  } else {
+    statusDiv.className = "status fail";
+    statusDiv.innerHTML = `<i class="fas fa-times-circle"></i> Тест не пройден (${percent.toFixed(1)}%), требуется ${PASS_THRESHOLD}%`;
+    resultMessage.innerHTML = `
+      <div class="fail-result"><i class="fas fa-times-circle"></i> Тест не пройден.</div>
+      <p>Вы ответили правильно на <strong>${correct} из ${questions.length}</strong> вопросов (${percent.toFixed(1)}%).</p>
+      <p>Для успешного прохождения теста необходимо набрать ${PASS_THRESHOLD}%.</p>
+    `;
+  }
+  resultContainer.style.display = 'block';
+  actionButtons.style.display = passed ? 'flex' : 'none';
+}
+
+/* =========================
+   PDF generation (Русский сертификат)
+   ========================= */
+async function generateCertificate() {
+  if (!certificateData) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+
+  // Попытка загрузить Roboto (для кириллицы)
+  try {
+    const fontUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+    const response = await fetch(fontUrl);
+    if (!response.ok) throw new Error('Font load failed');
+    const fontData = await response.arrayBuffer();
+    const fontBase64 = arrayBufferToBase64(fontData);
+    doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+    doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+    doc.setFont("Roboto");
+  } catch (e) {
+    console.warn("Не удалось загрузить Roboto, используем Helvetica:", e);
+    doc.setFont("helvetica");
+  }
+
+  doc.setFontSize(28);
+  doc.setTextColor(40,60,80);
+  doc.text('СЕРТИФИКАТ О ЗАВЕРШЕНИИ', 148, 30, { align:'center' });
+
+  doc.setFontSize(16);
+  doc.setTextColor(100,100,100);
+  doc.text('Настоящий сертификат подтверждает, что', 148, 45, { align:'center' });
+
+  doc.setFontSize(24);
+  doc.setTextColor(20,100,60);
+  doc.text(certificateData.userName, 148, 60, { align:'center' });
+
+  doc.setFontSize(16);
+  doc.setTextColor(100,100,100);
+  doc.text('успешно прошёл(а) курс', 148, 75, { align:'center' });
+
+  doc.setFontSize(20);
+  doc.setTextColor(40,60,80);
+  doc.text(`"${certificateData.courseTitle}"`, 148, 90, { align:'center' });
+
+  doc.setFontSize(14);
+  doc.setTextColor(100,100,100);
+  doc.text(`Дата выдачи: ${certificateData.date}`, 148, 110, { align:'center' });
+  doc.text(`ID сертификата: ${certificateData.id}`, 148, 120, { align:'center' });
+  doc.text('Выдано: QHSE-Solutions.kz', 148, 130, { align:'center' });
+
+  doc.setDrawColor(200);
+  doc.setLineWidth(1);
+  doc.rect(10,10,277,190);
+
+  const safeName = certificateData.userName.replace(/[^a-zA-Zа-яА-Я0-9]/g,'_');
+  const fileName = `Certificate_${safeName}.pdf`;
+  doc.save(fileName);
+}
+
+/* =========================
+   Submit handler
+   ========================= */
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) { alert("Пожалуйста, войдите в систему, чтобы отправить ответы."); return; }
+
+  let score = 0;
+  questions.forEach((q,i) => {
+    const sel = document.querySelector(`input[name=q${i}]:checked`);
+    if (sel && parseInt(sel.value,10) === q.correct) score++;
+  });
+  const percent = (score / questions.length) * 100;
+  const passed = percent >= PASS_THRESHOLD;
+
+  const certId = generateId(20);
+  const fullName = userNameEl.textContent || user.email || 'Участник';
+  const progressRef = db.collection("course_progress").doc(user.uid);
+  const nowISO = new Date().toISOString();
+
+  try {
+    await progressRef.set({
+      userId: user.uid,
+      courseId: COURSE_ID,
+      status: passed ? "Курс завершён" : "Курс в процессе",
+      testPassed: passed,
+      certificateIssued: passed,
+      certificateId: passed ? certId : null,
+      issueDate: passed ? nowISO : null,
+      score: Math.round(percent * 10) / 10,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.error("Ошибка записи в Firestore:", e);
+    alert("Не удалось сохранить результат. Проверьте доступ и правила Firestore.");
+    return;
+  }
+
+  showTestResult(score, percent, passed, certId);
+
+  if (passed) {
+    certificateData = {
+      id: certId,
+      userName: fullName,
+      date: formatDate(new Date()),
+      courseTitle: COURSE_TITLE,
+      score: percent
+    };
+    downloadBtn.style.display = 'inline-flex';
+  } else {
+    downloadBtn.style.display = 'none';
+  }
+
+  highlightAnswers();
+});
+
+/* =========================
+   Подсветка ответов и пояснения
+   ========================= */
+function highlightAnswers() {
+  const questionNodes = document.querySelectorAll('.question');
+  questionNodes.forEach((container, idx) => {
+    const radios = container.querySelectorAll('input[type="radio"]');
+    const selected = container.querySelector('input[type="radio"]:checked');
+    const correctIndex = questions[idx].correct;
+
+    radios.forEach((r, i) => {
+      const label = r.parentElement;
+      label.classList.remove('correct','incorrect');
+      if (i === correctIndex) {
+        label.classList.add('correct');
+      }
+    });
+
+    if (selected) {
+      const selIndex = parseInt(selected.value,10);
+      if (selIndex !== correctIndex) {
+        const chosenLabel = radios[selIndex].parentElement;
+        chosenLabel.classList.add('incorrect');
+      }
+    } else {
+      container.classList.add('unanswered');
+    }
+
+    // добавим пояснение (не дублируя при повторных вызовах)
+    if (!container.querySelector('.correct-answer')) {
+      const expl = document.createElement('div');
+      expl.className = 'correct-answer';
+      expl.textContent = `Пояснение: ${questions[idx].explanation}`;
+      container.appendChild(expl);
+    }
+  });
+}
+
+/* =========================
+   Download certificate
+   ========================= */
+downloadBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  generateCertificate();
+});
+
+/* =========================
+   Auth state + preload name
+   ========================= */
+auth.onAuthStateChanged(async user => {
+  courseTitleEl.textContent = `Курс: ${COURSE_TITLE}`;
+  if (!user) {
+    userNameEl.textContent = 'Гость';
+    statusDiv.className = 'status fail';
+    statusDiv.innerHTML = `<i class="fas fa-sign-in-alt"></i> Пожалуйста, войдите, чтобы пройти тест.`;
+    document.getElementById("submitBtn").disabled = true;
+    return;
+  }
+  currentUser = user;
+  userEmailEl.textContent = user.email || '—';
+
+  try {
+    const approvedSnap = await db.collection("approved_users").doc(user.uid).get();
+    if (!approvedSnap.exists) {
+      userNameEl.textContent = user.email || 'Пользователь';
+      statusDiv.className = "status fail";
+      statusDiv.innerHTML = `<i class="fas fa-ban"></i> Вы не зарегистрированы как одобренный пользователь. Обратитесь к администратору.`;
+      document.getElementById("submitBtn").disabled = true;
+      return;
+    }
+    const userData = approvedSnap.data();
+    userNameEl.textContent = userData.fullName || user.email || 'Пользователь';
+
+    if (userData.courses && Array.isArray(userData.courses) && !userData.courses.includes(COURSE_ID)) {
+      statusDiv.className = "status fail";
+      statusDiv.innerHTML = `<i class="fas fa-lock"></i> У вас нет доступа к этому курсу.`;
+      document.getElementById("submitBtn").disabled = true;
+      return;
+    }
+
+    statusDiv.className = "status";
+    statusDiv.innerHTML = `<i class="fas fa-user"></i> Привет, ${userNameEl.textContent}! Удачи в тесте.`;
+    document.getElementById("submitBtn").disabled = false;
+  } catch (e) {
+    console.error("Ошибка чтения approved_users:", e);
+    statusDiv.className = "status fail";
+    statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Ошибка доступа к данным пользователя.`;
+    document.getElementById("submitBtn").disabled = true;
+    return;
+  }
+
+  try {
+    const progressDoc = await db.collection("course_progress").doc(user.uid).get();
+    if (progressDoc.exists && progressDoc.data().certificateIssued) {
+      statusDiv.className = "status success";
+      statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> Курс уже завершён, сертификат выдан.`;
+    }
+  } catch (e) {
+    console.warn("Не удалось прочитать progress:", e);
+  }
+});
+</script>
+</body>
+</html>
