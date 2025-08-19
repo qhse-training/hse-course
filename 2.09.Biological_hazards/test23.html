@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест по биологическим и химическим опасностям</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #2c3e50 0%, #4ca1af 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .progress-container {
+            background-color: #eef2f7;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            flex-grow: 1;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ca1af 0%, #2c3e50 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .question-container {
+            padding: 25px;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .option {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .option:hover {
+            background-color: #eef5ff;
+            border-color: #4ca1af;
+        }
+        
+        .option.selected {
+            background-color: #d6eaff;
+            border-color: #2c7dbe;
+        }
+        
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        #prev-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        #next-btn {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        #next-btn:hover {
+            background-color: #1a252f;
+        }
+        
+        #submit-btn {
+            background-color: #28a745;
+            color: white;
+            display: none;
+        }
+        
+        #submit-btn:hover {
+            background-color: #218838;
+        }
+        
+        .result-container {
+            display: none;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .result-container h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .score {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        
+        .message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .certificate {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px dashed #4ca1af;
+        }
+        
+        .certificate h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .certificate-code {
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #28a745;
+            letter-spacing: 2px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .action-btn {
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #4ca1af;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a8d9b;
+        }
+        
+        .btn-secondary {
+            background-color: white;
+            color: #2c3e50;
+            border: 2px solid #4ca1af;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #f8f9fa;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .question {
+                font-size: 16px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Тест по биологическим и химическим опасностям</h1>
+            <p>Проверьте свои знания о безопасности при работе с биологическими и химическими материалами</p>
+        </div>
+        
+        <div class="progress-container">
+            <span id="progress-text">Вопрос 1 из 20</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <span id="score">0%</span>
+        </div>
+        
+        <div class="question-container" id="question-container">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            
+            <div class="navigation">
+                <button id="prev-btn">Назад</button>
+                <button id="next-btn">Вперед</button>
+                <button id="submit-btn">Завершить тест</button>
+            </div>
+        </div>
+        
+        <div class="result-container" id="result-container">
+            <h2>Результаты теста</h2>
+            <div class="score" id="final-score"></div>
+            <div class="message" id="result-message"></div>
+            
+            <div class="certificate">
+                <h3>Ваш сертификат</h3>
+                <p>Код сертификата:</p>
+                <div class="certificate-code" id="certificate-code"></div>
+                <p>Сохраните этот код для подтверждения прохождения теста</p>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="#" class="action-btn btn-primary">
+                    <i class="fas fa-download"></i> Скачать сертификат
+                </a>
+                <a href="#" class="action-btn btn-secondary">
+                    <i class="fas fa-redo"></i> Пройти тест снова
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Вопросы и ответы
+            const questions = [
+                {
+                    question: "Что такое биологическая опасность?",
+                    options: [
+                        "Воздействие химических веществ на организм.",
+                        "Воздействие микроорганизмов, вирусов, бактерий, грибков и других биологических агентов, способных вызвать заболевания у человека.",
+                        "Воздействие радиации на организм.",
+                        "Воздействие шума на слух."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие профессии наиболее подвержены биологическим угрозам?",
+                    options: [
+                        "Программисты и бухгалтеры.",
+                        "Медицинский персонал, уборочные и лабораторные работники, канализационные службы.",
+                        "Водители и строители.",
+                        "Учителя и юристы."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие СИЗ используются для защиты от биологической опасности?",
+                    options: [
+                        "Каски и защитные очки.",
+                        "Маски, перчатки, защитная одежда.",
+                        "Респираторы и наушники.",
+                        "Сапоги и жилеты."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Что такое MSDS/SDS?",
+                    options: [
+                        "Документ, содержащий информацию о финансовых рисках.",
+                        "Паспорт безопасности материала, содержащий информацию о химическом веществе, его свойствах и правилах безопасного обращения.",
+                        "Инструкция по эксплуатации оборудования.",
+                        "Документ, описывающий правила пожарной безопасности."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие основные опасные свойства химических веществ?",
+                    options: [
+                        "Взрывоопасность, огнеопасность, едкость, реактивность, токсичность.",
+                        "Теплопроводность, электропроводность, магнитные свойства.",
+                        "Цвет, запах, вкус.",
+                        "Плотность, вязкость, температура плавления."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие меры безопасности необходимо соблюдать при работе с химикатами?",
+                    options: [
+                        "Использование защитных очков и перчаток.",
+                        "Ознакомление с MSDS, выбор правильных СИЗ, наличие аварийных планов.",
+                        "Ношение каски и наушников.",
+                        "Использование защитной обуви и жилета."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Что такое асбест?",
+                    options: [
+                        "Вид пластика, используемого в строительстве.",
+                        "Группа минеральных волокнистых силикатов, используемых в строительстве и изоляции.",
+                        "Вид металла, используемого в автомобильной промышленности.",
+                        "Вид стекла, используемого в оптике."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие заболевания может вызвать асбест?",
+                    options: [
+                        "Асбестоз, рак легких, мезотелиома.",
+                        "Диабет, гипертония, астма.",
+                        "Грипп, простуда, ангина.",
+                        "Артрит, остеопороз, сколиоз."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Что такое силикоз?",
+                    options: [
+                        "Заболевание кожи, вызванное воздействием химикатов.",
+                        "Заболевание легких, вызванное длительным вдыханием пыли, содержащей свободную двуокись кремния.",
+                        "Заболевание сердца, вызванное стрессом.",
+                        "Заболевание печени, вызванное неправильным питанием."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие меры предосторожности необходимы при хранении легковоспламеняющихся жидкостей?",
+                    options: [
+                        "Хранение в сухом, вентилируемом помещении, вдали от источников тепла и открытого огня.",
+                        "Хранение в холодильнике.",
+                        "Хранение в открытых контейнерах.",
+                        "Хранение вблизи источников тепла."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие знаки маркировки используются для легковоспламеняющихся жидкостей?",
+                    options: [
+                        "Зеленый ярлык с изображением дерева.",
+                        "Красный ярлык с изображением пламени и надписью 'ЛЕГКОВОСПЛАМЕНЯЮЩАЯСЯ ЖИДКОСТЬ 3'.",
+                        "Синий ярлык с изображением воды.",
+                        "Желтый ярлык с изображением молнии."
+                    ],
+                    correct: 1
+                },
+                {
+                    question: "Какие вещества относятся к асфиксантам?",
+                    options: [
+                        "Азот, углекислый газ, аргон.",
+                        "Бензин, ацетон, керосин.",
+                        "Кислоты, щелочи, каустическая сода.",
+                        "Пестициды, ртуть, цианиды."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие вещества относятся к ядовитым?",
+                    options: [
+                        "Пестициды, ртуть, цианиды.",
+                        "Бензин, ацетон, керосин.",
+                        "Кислоты, щелочи, каустическая сода.",
+                        "Азот, углекислый газ, аргон."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие СИЗ используются для защиты органов дыхания?",
+                    options: [
+                        "Респираторы с фильтрами, изолирующие дыхательные аппараты.",
+                        "Защитные очки и щитки.",
+                        "Каски и наушники.",
+                        "Защитные перчатки и обувь."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие СИЗ используются для защиты глаз при работе с химикатами?",
+                    options: [
+                        "Химически защитные очки и защитные щитки для лица.",
+                        "Каски и наушники.",
+                        "Защитные перчатки и обувь.",
+                        "Респираторы и маски."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Что такое иерархия контроля опасных факторов?",
+                    options: [
+                        "Устранение источника риска, снижение воздействия, применение технических мер контроля, использование СИЗ.",
+                        "Использование только СИЗ.",
+                        "Устранение источника риска и использование СИЗ.",
+                        "Снижение воздействия и использование СИЗ."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие меры помогают снизить воздействие биологической опасности?",
+                    options: [
+                        "Сокращение времени контакта, использование безопасных методов работы, улучшение вентиляции.",
+                        "Использование только СИЗ.",
+                        "Устранение источника риска и использование СИЗ.",
+                        "Снижение воздействия и использование СИЗ."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие СИЗ используются для защиты рук при работе с химикатами?",
+                    options: [
+                        "Химически защитные перчатки.",
+                        "Защитные очки и щитки.",
+                        "Каски и наушники.",
+                        "Респираторы и маски."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие СИЗ используются для защиты тела при работе с химикатами?",
+                    options: [
+                        "Водонепроницаемая химически стойкая одежда.",
+                        "Защитные очки и щитки.",
+                        "Каски и наушники.",
+                        "Респираторы и маски."
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "Какие СИЗ используются для защиты ног при работе с химикатами?",
+                    options: [
+                        "Резиновые или специальные химически стойкие сапоги.",
+                        "Защитные очки и щитки.",
+                        "Каски и наушники.",
+                        "Респираторы и маски."
+                    ],
+                    correct: 0
+                }
+            ];
+
+            // Элементы DOM
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            const progressTextElement = document.getElementById('progress-text');
+            const progressBarElement = document.getElementById('progress-bar');
+            const scoreElement = document.getElementById('score');
+            const prevButton = document.getElementById('prev-btn');
+            const nextButton = document.getElementById('next-btn');
+            const submitButton = document.getElementById('submit-btn');
+            const questionContainer = document.getElementById('question-container');
+            const resultContainer = document.getElementById('result-container');
+            const finalScoreElement = document.getElementById('final-score');
+            const resultMessageElement = document.getElementById('result-message');
+            const certificateCodeElement = document.getElementById('certificate-code');
+
+            // Переменные состояния
+            let currentQuestion = 0;
+            let score = 0;
+            let userAnswers = new Array(questions.length).fill(null);
+
+            // Функция загрузки вопроса
+            function loadQuestion() {
+                const question = questions[currentQuestion];
+                questionElement.textContent = question.question;
+                
+                optionsElement.innerHTML = '';
+                question.options.forEach((option, index) => {
+                    const optionElement = document.createElement('div');
+                    optionElement.classList.add('option');
+                    if (userAnswers[currentQuestion] === index) {
+                        optionElement.classList.add('selected');
+                    }
+                    optionElement.textContent = option;
+                    optionElement.addEventListener('click', () => selectOption(index));
+                    optionsElement.appendChild(optionElement);
+                });
+                
+                progressTextElement.textContent = `Вопрос ${currentQuestion + 1} из ${questions.length}`;
+                progressBarElement.style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+                
+                // Обновление видимости кнопок
+                prevButton.style.display = currentQuestion === 0 ? 'none' : 'block';
+                nextButton.style.display = currentQuestion === questions.length - 1 ? 'none' : 'block';
+                submitButton.style.display = currentQuestion === questions.length - 1 ? 'block' : 'none';
+                
+                // Обновление счета
+                updateScore();
+            }
+
+            // Функция выбора варианта ответа
+            function selectOption(index) {
+                userAnswers[currentQuestion] = index;
+                
+                // Сброс выделения всех вариантов
+                const options = document.querySelectorAll('.option');
+                options.forEach(option => option.classList.remove('selected'));
+                
+                // Выделение выбранного варианта
+                options[index].classList.add('selected');
+                
+                // Проверка ответа и обновление счета
+                updateScore();
+            }
+
+            // Функция обновления счета
+            function updateScore() {
+                score = 0;
+                userAnswers.forEach((answer, index) => {
+                    if (answer !== null && answer === questions[index].correct) {
+                        score++;
+                    }
+                });
+                
+                const percentage = Math.round((score / questions.length) * 100);
+                scoreElement.textContent = `${percentage}%`;
+            }
+
+            // Функция отображения результатов
+            function showResults() {
+                questionContainer.style.display = 'none';
+                resultContainer.style.display = 'block';
+                
+                const percentage = Math.round((score / questions.length) * 100);
+                finalScoreElement.textContent = `${score}/${questions.length} (${percentage}%)`;
+                
+                if (percentage >= 85) {
+                    resultMessageElement.textContent = 'Поздравляем! Вы отлично справились с тестом. Вы демонстрируете отличные знания по биологическим и химическим опасностям.';
+                } else if (percentage >= 70) {
+                    resultMessageElement.textContent = 'Хороший результат! Вы показали хорошие знания, но есть некоторые пробелы, которые стоит заполнить.';
+                } else if (percentage >= 60) {
+                    resultMessageElement.textContent = 'Удовлетворительный результат. Рекомендуется повторить материалы по биологическим и химическим опасностям.';
+                } else {
+                    resultMessageElement.textContent = 'Вам нужно улучшить свои знания по биологическим и химическим опасностям. Рекомендуется пройти обучение еще раз.';
+                }
+                
+                // Генерация кода сертификата
+                const code = generateCertificateCode();
+                certificateCodeElement.textContent = code;
+            }
+
+            // Генерация кода сертификата
+            function generateCertificateCode() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < 12; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                    if ((i + 1) % 4 === 0 && i !== 11) {
+                        result += '-';
+                    }
+                }
+                return result;
+            }
+
+            // Обработчики событий для кнопок
+            prevButton.addEventListener('click', () => {
+                if (currentQuestion > 0) {
+                    currentQuestion--;
+                    loadQuestion();
+                }
+            });
+
+            nextButton.addEventListener('click', () => {
+                if (currentQuestion < questions.length - 1) {
+                    currentQuestion++;
+                    loadQuestion();
+                }
+            });
+
+            submitButton.addEventListener('click', showResults);
+
+            // Инициализация теста
+            loadQuestion();
+        });
+    </script>
+
+    <!-- Font Awesome для иконок -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>
