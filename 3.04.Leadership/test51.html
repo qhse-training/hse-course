@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Тест по теме: Лидерство и управление</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f4f4f9;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .question {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+    .options label {
+      display: block;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .options input {
+      margin-right: 10px;
+    }
+    .navigation {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-prev { background: #bbb; }
+    .btn-next { background: #4CAF50; color: #fff; }
+    .btn-finish { background: #2196F3; color: #fff; width: 100%; }
+    #timer {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: right;
+      margin-bottom: 15px;
+    }
+    #result {
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тест: Лидерство и управление</h1>
+  <div id="timer">Время: 30</div>
+  <div id="quiz"></div>
+  <div class="navigation">
+    <button class="btn-prev" onclick="prevQuestion()">Назад</button>
+    <button class="btn-next" onclick="nextQuestion()">Далее</button>
+  </div>
+  <button class="btn-finish" onclick="finishTest()">Завершить тест</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    question: "1. Что является ключевым качеством эффективного лидера?",
+    options: ["Авторитарность", "Умение вдохновлять", "Изоляция от команды", "Жёсткий контроль"],
+    answer: 1
+  },
+  {
+    question: "2. Какой стиль лидерства наиболее эффективен в кризисных ситуациях?",
+    options: ["Демократический", "Авторитарный", "Либеральный", "Отсутствие руководства"],
+    answer: 1
+  },
+  {
+    question: "3. Что понимается под эмоциональным интеллектом лидера?",
+    options: ["Знание иностранных языков", "Способность управлять эмоциями", "Физическая выносливость", "Высокий IQ"],
+    answer: 1
+  },
+  {
+    question: "4. Что из ниже перечисленного относится к функциям лидера?",
+    options: ["Формирование видения", "Мотивация команды", "Принятие решений", "Все вышеперечисленное"],
+    answer: 3
+  },
+  {
+    question: "5. Как лидер должен реагировать на ошибки команды?",
+    options: ["Игнорировать", "Наказывать публично", "Использовать как возможность для обучения", "Увольнять сотрудников"],
+    answer: 2
+  },
+  {
+    question: "6. Какое поведение снижает доверие к лидеру?",
+    options: ["Прозрачность", "Честность", "Непоследовательность", "Справедливость"],
+    answer: 2
+  },
+  {
+    question: "7. Что наиболее важно для эффективной коммуникации лидера?",
+    options: ["Сложные термины", "Активное слушание", "Повышенный тон", "Монолог"],
+    answer: 1
+  },
+  {
+    question: "8. Как лидер может мотивировать сотрудников?",
+    options: ["Только повышением зарплаты", "Игнорированием успехов", "Признанием и поддержкой", "Жёстким контролем"],
+    answer: 2
+  },
+  {
+    question: "9. Как лидер развивает доверие в команде?",
+    options: ["Скрывая информацию", "Соблюдая обещания", "Манипулируя", "Изолируясь"],
+    answer: 1
+  },
+  {
+    question: "10. Какой навык помогает лидеру справляться с конфликтами?",
+    options: ["Эмпатия", "Агрессия", "Игнорирование", "Угроза"],
+    answer: 0
+  },
+  {
+    question: "11. Что означает делегирование?",
+    options: ["Передача полномочий", "Избегание работы", "Полный контроль", "Отказ от обязанностей"],
+    answer: 0
+  },
+  {
+    question: "12. Как лидер может способствовать развитию сотрудников?",
+    options: ["Давать обратную связь", "Задавливать инициативу", "Ограничивать обучение", "Избегать наставничества"],
+    answer: 0
+  },
+  {
+    question: "13. Какой из стилей лидерства способствует инновациям?",
+    options: ["Авторитарный", "Трансформационный", "Пассивный", "Либеральный"],
+    answer: 1
+  },
+  {
+    question: "14. Что является основой лидерского влияния?",
+    options: ["Угроза", "Страх", "Доверие", "Жёсткий контроль"],
+    answer: 2
+  },
+  {
+    question: "15. Какая характеристика относится к служащему лидерству?",
+    options: ["Служение интересам команды", "Фокус на себе", "Игнорирование подчинённых", "Авторитарность"],
+    answer: 0
+  },
+  {
+    question: "16. Как лидер должен принимать решения?",
+    options: ["Спонтанно", "На основе фактов и анализа", "Скрытно", "Под давлением эмоций"],
+    answer: 1
+  },
+  {
+    question: "17. Что помогает лидеру справляться со стрессом?",
+    options: ["Самоорганизация", "Игнорирование проблем", "Агрессия", "Изоляция"],
+    answer: 0
+  },
+  {
+    question: "18. Какая роль лидера в формировании корпоративной культуры?",
+    options: ["Отсутствие участия", "Личный пример", "Запрет ценностей", "Изоляция от команды"],
+    answer: 1
+  },
+  {
+    question: "19. Как лидер демонстрирует справедливость?",
+    options: ["Избирательным отношением", "Равным подходом к сотрудникам", "Игнорированием мнений", "Личным фаворитизмом"],
+    answer: 1
+  },
+  {
+    question: "20. Что является признаком эффективного лидерства?",
+    options: ["Высокая текучесть кадров", "Низкая мотивация", "Сильная и вовлечённая команда", "Отсутствие развития"],
+    answer: 2
+  }
+];
+
+let currentQuestion = 0;
+let userAnswers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 30;
+
+function showQuestion(index) {
+  clearInterval(timer);
+  timeLeft = 30;
+  document.getElementById("timer").textContent = "Время: " + timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").textContent = "Время: " + timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      nextQuestion();
+    }
+  }, 1000);
+
+  const q = questions[index];
+  const quizDiv = document.getElementById("quiz");
+  quizDiv.innerHTML = `
+    <div class="question">${q.question}</div>
+    <div class="options">
+      ${q.options.map((opt, i) => `
+        <label>
+          <input type="radio" name="option" value="${i}" ${userAnswers[index]===i ? "checked":""}
+          onchange="selectAnswer(${index}, ${i})"> ${opt}
+        </label>
+      `).join("")}
+    </div>
+  `;
+}
+
+function selectAnswer(qIndex, answerIndex) {
+  userAnswers[qIndex] = answerIndex;
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    showQuestion(currentQuestion);
+  }
+}
+
+function nextQuestion() {
+  if (currentQuestion < questions.length - 1) {
+    currentQuestion++;
+    showQuestion(currentQuestion);
+  } else {
+    finishTest();
+  }
+}
+
+function finishTest() {
+  clearInterval(timer);
+  let score = 0;
+  questions.forEach((q, i) => {
+    if (userAnswers[i] === q.answer) score++;
+  });
+  document.getElementById("quiz").innerHTML = "";
+  document.querySelector(".navigation").style.display = "none";
+  document.querySelector(".btn-finish").style.display = "none";
+  document.getElementById("timer").style.display = "none";
+  document.getElementById("result").textContent = 
+    "Ваш результат: " + score + " из " + questions.length;
+}
+
+// запуск
+showQuestion(currentQuestion);
+</script>
+</body>
+</html>
