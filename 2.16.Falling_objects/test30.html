@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Опасность падающих предметов</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(90deg, #2c3e50 0%, #4a6491 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: .95;
+        }
+        
+        .progress-container {
+            background-color: #eef2f7;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            flex-grow: 1;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2c3e50 0%, #4a6491 100%);
+            width: 0%;
+            transition: width .5s ease;
+        }
+        
+        .question-container {
+            padding: 25px;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .option {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .3s ease;
+        }
+        
+        .option:hover {
+            background-color: #e9ecef;
+            border-color: #adb5bd;
+        }
+        
+        .option.selected {
+            background-color: #d8e2f3;
+            border-color: #2c3e50;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all .3s ease;
+        }
+        
+        #prev-btn {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        #prev-btn:hover {
+            background-color: #5a6268;
+        }
+        
+        #next-btn {
+            background-color: #2c3e50;
+            color: white;
+        }
+        
+        #next-btn:hover {
+            background-color: #1a252f;
+        }
+        
+        #submit-btn {
+            background-color: #28a745;
+            color: white;
+            display: none;
+        }
+        
+        #submit-btn:hover {
+            background-color: #218838;
+        }
+        
+        .result-container {
+            display: none;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .result-container h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .score {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 20px 0;
+        }
+        
+        .message {
+            font-size: 18px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .certificate {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 2px dashed #2c3e50;
+        }
+        
+        .certificate h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .certificate-code {
+            font-family: monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: #28a745;
+            letter-spacing: 2px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .question {
+                font-size: 16px;
+            }
+            
+            .navigation {
+                flex-direction: column;
+            }
+            
+            .navigation button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Тест: Опасность падающих предметов</h1>
+            <p>Выберите один правильный ответ для каждого вопроса</p>
+        </div>
+
+        <div class="progress-container">
+            <span id="progress-text">Вопрос 1 из 20</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+            <span id="score">0%</span>
+        </div>
+
+        <div class="question-container" id="question-container">
+            <div class="question" id="question"></div>
+            <div class="options" id="options"></div>
+            <div class="navigation">
+                <button id="prev-btn">Назад</button>
+                <button id="next-btn">Вперед</button>
+                <button id="submit-btn">Завершить тест</button>
+            </div>
+        </div>
+
+        <div class="result-container" id="result-container">
+            <h2>Результаты теста</h2>
+            <div class="score" id="final-score"></div>
+            <div class="message" id="result-message"></div>
+            <div class="certificate">
+                <h3>Ваш сертификат</h3>
+                <p>Код сертификата:</p>
+                <div class="certificate-code" id="certificate-code"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const questions = [
+                {
+                    q: "Какая основная причина падения предметов на рабочих местах?",
+                    o: ["Хорошая фиксация инструментов", "Отсутствие ограждений и страховки грузов", "Использование защитных сеток", "Регулярные проверки оборудования"],
+                    c: 1
+                },
+                {
+                    q: "Какой вес создает молоток 2 кг при падении с высоты 6 метров?",
+                    o: ["39 кг", "78 кг", "117 кг", "200 кг"],
+                    c: 2
+                },
+                {
+                    q: "Какая зона на буровой установке считается наиболее опасной из-за высокого риска падения предметов?",
+                    o: ["Зеленая зона", "Желтая зона", "Красная зона", "Синяя зона"],
+                    c: 2
+                },
+                {
+                    q: "Какой элемент НЕ является мерой предосторожности против падающих предметов?",
+                    o: ["Использование защитных козырьков", "Ношение каски с подбородочным ремнем", "Игнорирование зон риска", "Применение страховочных тросов для инструментов"],
+                    c: 2
+                },
+                {
+                    q: "Какой результат возможен при падении болта весом 220 г с высоты 23 метра?",
+                    o: ["Легкий ушиб", "Госпитализация", "Смертельный случай", "Никаких последствий"],
+                    c: 2
+                },
+                {
+                    q: "Какая формула используется для расчета силы удара падающего предмета?",
+                    o: ["Масса × Высота × Скорость ветра", "Масса × Высота × Гравитационное ускорение", "Высота × Температура × Влажность", "Масса × Время падения × Цвет предмета"],
+                    c: 1
+                },
+                {
+                    q: "Какое СИЗ обязательно для защиты от падающих предметов?",
+                    o: ["Защитные очки", "Каска с подбородочным ремнем", "Перчатки", "Все перечисленные"],
+                    c: 3
+                },
+                {
+                    q: "Какая зона на буровой установке включает такие области, как 'Rig Floor' и 'Monkey Board'?",
+                    o: ["Зеленая зона", "Желтая зона", "Красная зона", "Оранжевая зона"],
+                    c: 2
+                },
+                {
+                    q: "Какой предмет при падении с высоты 10 метров создает силу удара 49 кг?",
+                    o: ["Молоток", "Болт", "Отвертка", "Гаечный ключ"],
+                    c: 2
+                },
+                {
+                    q: "Что необходимо делать для предотвращения падения инструментов?",
+                    o: ["Использовать страховочные тросы", "Оставлять инструменты без фиксации", "Игнорировать зоны риска", "Не носить каску"],
+                    c: 0
+                },
+                {
+                    q: "Какая зона на буровой установке считается безопасной?",
+                    o: ["Красная зона", "Желтая зона", "Зеленая зона", "Фиолетовая зона"],
+                    c: 2
+                },
+                {
+                    q: "Какой параметр НЕ учитывается при расчете силы удара падающего предмета?",
+                    o: ["Масса предмета", "Высота падения", "Цвет предмета", "Гравитационное ускорение"],
+                    c: 2
+                },
+                {
+                    q: "Какое минимальное СИЗ необходимо для работы в зоне риска падающих предметов?",
+                    o: ["Каска", "Защитные очки", "Перчатки", "Все перечисленные"],
+                    c: 3
+                },
+                {
+                    q: "Какой пример демонстрирует смертельную опасность даже небольших предметов?",
+                    o: ["Падение молотка с 1 этажа", "Падение болта с 6 этажа", "Падение отвертки с 3 этажа", "Все перечисленные"],
+                    c: 3
+                },
+                {
+                    q: "Какая мера НЕ помогает снизить риск падающих предметов?",
+                    o: ["Регулярные проверки креплений", "Обучение персонала", "Игнорирование предупредительных знаков", "Использование защитных сеток"],
+                    c: 2
+                },
+                {
+                    q: "Какая зона включает 'Mud Tanks' и 'Mud Pumps' на буровой установке?",
+                    o: ["Красная зона", "Желтая зона", "Зеленая зона", "Синяя зона"],
+                    c: 1
+                },
+                {
+                    q: "Какой предмет при падении с высоты 4 метра создает силу удара 78 кг?",
+                    o: ["Болт", "Молоток", "Отвертка", "Гаечный ключ"],
+                    c: 1
+                },
+                {
+                    q: "Какое утверждение о падающих предметах верно?",
+                    o: ["Они не опасны", "Их последствия можно игнорировать", "Даже небольшие предметы могут быть смертельными", "Защитные меры не требуются"],
+                    c: 2
+                },
+                {
+                    q: "Какая зона на буровой установке включает 'Camp Area'?",
+                    o: ["Красная зона", "Желтая зона", "Зеленая зона", "Оранжевая зона"],
+                    c: 2
+                },
+                {
+                    q: "Что необходимо сделать при обнаружении незакрепленного инструмента?",
+                    o: ["Проигнорировать", "Закрепить или убрать его", "Использовать его без фиксации", "Передать коллеге"],
+                    c: 1
+                }
+            ];
+
+            const questionEl = document.getElementById('question');
+            const optionsEl = document.getElementById('options');
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+            const scoreEl = document.getElementById('score');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            const questionBox = document.getElementById('question-container');
+            const resultBox = document.getElementById('result-container');
+            const finalScore = document.getElementById('final-score');
+            const resultMsg = document.getElementById('result-message');
+            const certCode = document.getElementById('certificate-code');
+
+            let current = 0;
+            let score = 0;
+            let answers = new Array(questions.length).fill(null);
+
+            function loadQ() {
+                const q = questions[current];
+                questionEl.textContent = q.q;
+                optionsEl.innerHTML = '';
+                q.o.forEach((opt, i) => {
+                    const div = document.createElement('div');
+                    div.classList.add('option');
+                    if (answers[current] === i) div.classList.add('selected');
+                    div.textContent = opt;
+                    div.onclick = () => select(i);
+                    optionsEl.appendChild(div);
+                });
+                progressText.textContent = `Вопрос ${current + 1} из ${questions.length}`;
+                progressBar.style.width = `${((current + 1) / questions.length) * 100}%`;
+                prevBtn.style.display = current === 0 ? 'none' : 'block';
+                nextBtn.style.display = current === questions.length - 1 ? 'none' : 'block';
+                submitBtn.style.display = current === questions.length - 1 ? 'block' : 'none';
+                updateScore();
+            }
+
+            function select(i) {
+                answers[current] = i;
+                document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+                optionsEl.children[i].classList.add('selected');
+                updateScore();
+            }
+
+            function updateScore() {
+                score = 0;
+                answers.forEach((a, i) => { if (a === questions[i].c) score++; });
+                scoreEl.textContent = Math.round((score / questions.length) * 100) + "%";
+            }
+
+            function results() {
+                questionBox.style.display = 'none';
+                resultBox.style.display = 'block';
+                const perc = Math.round((score / questions.length) * 100);
+                finalScore.textContent = `${score}/${questions.length} (${perc}%)`;
+                resultMsg.textContent = perc >= 85 ? "Отлично! Вы отлично разбираетесь в опасности падающих предметов."
+                    : perc >= 70 ? "Хорошо, но есть пробелы в знаниях. Рекомендуется повторить материал."
+                    : perc >= 50 ? "Удовлетворительно, необходимо дополнительное обучение."
+                    : "Недостаточно знаний. Требуется серьезное обучение по технике безопасности.";
+                certCode.textContent = genCode();
+            }
+
+            function genCode() {
+                const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let r = '';
+                for (let i = 0; i < 12; i++) {
+                    r += c[Math.floor(Math.random() * c.length)];
+                    if ((i + 1) % 4 === 0 && i !== 11) r += '-';
+                }
+                return r;
+            }
+
+            prevBtn.onclick = () => { if (current > 0) { current--; loadQ(); } };
+            nextBtn.onclick = () => { if (current < questions.length - 1) { current++; loadQ(); } };
+            submitBtn.onclick = results;
+
+            loadQ();
+        });
+    </script>
+</body>
+</html>
