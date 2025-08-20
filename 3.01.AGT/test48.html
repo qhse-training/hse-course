@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест: Газотестеры и наблюдатели</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { color: #333; }
+    .question { font-weight: bold; margin-top: 20px; }
+    .options { margin: 10px 0; }
+    .options label { display: block; margin-bottom: 8px; cursor: pointer; }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+      background: #007bff;
+      color: white;
+    }
+    button:hover { background: #0056b3; }
+    .result { font-size: 18px; font-weight: bold; margin-top: 20px; }
+    .timer { font-size: 18px; color: #d9534f; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Тест по теме: Газотестеры и наблюдатели</h2>
+    <div id="quiz"></div>
+    <div class="timer" id="timer">Время: 30</div>
+    <button id="nextBtn" onclick="nextQuestion()">Далее</button>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "1. Кто имеет право работать газотестером?",
+        options: ["Любой работник", "Работник, прошедший обучение и аттестацию", "Только руководитель смены", "Стажер под наблюдением"],
+        answer: 1
+      },
+      {
+        question: "2. Основная обязанность газотестера?",
+        options: ["Руководить работами", "Контролировать состояние оборудования", "Измерять загазованность и выдавать допуск", "Составлять график смен"],
+        answer: 2
+      },
+      {
+        question: "3. Чем пользуется газотестер для проверки воздуха?",
+        options: ["Манометром", "Газоанализатором", "Термометром", "Дозиметром"],
+        answer: 1
+      },
+      {
+        question: "4. Как часто проводится проверка воздуха в замкнутом пространстве?",
+        options: ["Один раз перед началом работ", "Постоянно, с установленной периодичностью", "Раз в неделю", "По усмотрению работника"],
+        answer: 1
+      },
+      {
+        question: "5. Что обязан сделать наблюдатель при ЧС?",
+        options: ["Оказать помощь внутри", "Сообщить руководителю и вызвать помощь", "Продолжить наблюдать", "Закрыть место работ"],
+        answer: 1
+      },
+      {
+        question: "6. Где должен находиться наблюдатель во время работы?",
+        options: ["Внутри замкнутого пространства", "Вблизи, снаружи у входа", "На рабочем месте в цехе", "На проходной"],
+        answer: 1
+      },
+      {
+        question: "7. Сколько работников должно быть внутри при работах в ограниченном пространстве?",
+        options: ["Один", "Не менее двух", "Трое", "Сколько требуется"],
+        answer: 1
+      },
+      {
+        question: "8. Что запрещено наблюдателю?",
+        options: ["Покидать пост", "Вести журнал", "Иметь связь с руководителем", "Проверять СИЗ"],
+        answer: 0
+      },
+      {
+        question: "9. Какой документ оформляется перед началом работ в замкнутом пространстве?",
+        options: ["Наряд-допуск", "Акт", "Протокол", "Журнал"],
+        answer: 0
+      },
+      {
+        question: "10. Что должен проверить газотестер перед использованием прибора?",
+        options: ["Температуру воздуха", "Исправность и калибровку прибора", "Наличие допуска у работников", "График работ"],
+        answer: 1
+      },
+      {
+        question: "11. Какие газы наиболее опасны в замкнутых пространствах?",
+        options: ["Кислород и азот", "Метан и сероводород", "Углекислый газ и аргон", "Гелий и неон"],
+        answer: 1
+      },
+      {
+        question: "12. Что обязан иметь наблюдатель при себе?",
+        options: ["Фонарь", "Средства связи и СИЗОД", "Наряд-допуск", "Журнал учета"],
+        answer: 1
+      },
+      {
+        question: "13. При каком содержании кислорода запрещается работа?",
+        options: ["Менее 20%", "Менее 19%", "Менее 18%", "Менее 17%"],
+        answer: 1
+      },
+      {
+        question: "14. Как часто проводится инструктаж наблюдателей?",
+        options: ["Раз в месяц", "Перед каждым нарядом", "Раз в год", "Раз в квартал"],
+        answer: 1
+      },
+      {
+        question: "15. Кто утверждает наряд-допуск?",
+        options: ["Наблюдатель", "Газотестер", "Ответственный руководитель работ", "Оператор"],
+        answer: 2
+      },
+      {
+        question: "16. Что делает газотестер при обнаружении превышения ПДК?",
+        options: ["Сообщает и запрещает работы", "Продолжает замеры", "Записывает в журнал", "Выдает новый наряд"],
+        answer: 0
+      },
+      {
+        question: "17. Что проверяет наблюдатель перед допуском работников внутрь?",
+        options: ["Документы", "Наличие и исправность СИЗ", "Квалификацию", "График работ"],
+        answer: 1
+      },
+      {
+        question: "18. Когда проводятся повторные замеры воздуха?",
+        options: ["Только перед началом", "По установленной периодичности и при изменении условий", "Раз в смену", "Раз в неделю"],
+        answer: 1
+      },
+      {
+        question: "19. Что обязан делать наблюдатель всё время работ?",
+        options: ["Проверять оборудование", "Вести наблюдение и обеспечивать связь", "Помогать внутри", "Составлять отчёты"],
+        answer: 1
+      },
+      {
+        question: "20. Какие знания обязательны для газотестера?",
+        options: ["Правила охраны труда и работы с газоанализатором", "Только правила пожарной безопасности", "Только инструкцию по СИЗ", "Только правила электробезопасности"],
+        answer: 0
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 30;
+
+    function loadQuestion() {
+      clearInterval(timer);
+      timeLeft = 30;
+      document.getElementById("timer").innerText = "Время: " + timeLeft;
+
+      const q = questions[currentQuestion];
+      let quizDiv = document.getElementById("quiz");
+      quizDiv.innerHTML = `
+        <div class="question">${q.question}</div>
+        <div class="options">
+          ${q.options.map((opt, i) => `
+            <label><input type="radio" name="option" value="${i}"> ${opt}</label>
+          `).join('')}
+        </div>
+      `;
+      timer = setInterval(updateTimer, 1000);
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById("timer").innerText = "Время: " + timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        nextQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      clearInterval(timer);
+      const selected = document.querySelector('input[name="option"]:checked');
+      if (selected && parseInt(selected.value) === questions[currentQuestion].answer) {
+        score++;
+      }
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById("quiz").innerHTML = "";
+      document.getElementById("timer").style.display = "none";
+      document.getElementById("nextBtn").style.display = "none";
+      document.getElementById("result").innerHTML =
+        `Ваш результат: ${score} из ${questions.length}`;
+    }
+
+    window.onload = loadQuestion;
+  </script>
+</body>
+</html>
