@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Тест: Безопасность в офисе и дома</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f4f4f9; margin:0; padding:0; }
+    .container {
+      max-width: 800px; margin:30px auto; background:#fff;
+      padding:20px 30px; border-radius:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 { text-align:center; margin-bottom:20px; }
+    .question { font-size:18px; margin-bottom:15px; }
+    .options label {
+      display:block; padding:8px; margin-bottom:8px;
+      background:#f0f0f0; border-radius:6px; cursor:pointer;
+    }
+    .options input { margin-right:10px; }
+    .navigation { margin-top:20px; display:flex; justify-content:space-between; }
+    button {
+      padding:10px 20px; border:none; border-radius:6px;
+      cursor:pointer; font-size:16px;
+    }
+    .btn-prev { background:#bbb; }
+    .btn-next { background:#4CAF50; color:#fff; }
+    .btn-finish { background:#2196F3; color:#fff; width:100%; margin-top:20px; }
+    #timer { font-size:18px; font-weight:bold; text-align:right; margin-bottom:15px; }
+    #result { text-align:center; font-size:20px; font-weight:bold; margin-top:20px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тест: Безопасность в офисе и дома</h1>
+  <div id="timer">Время: 30</div>
+  <div id="quiz"></div>
+  <div class="navigation">
+    <button class="btn-prev" onclick="prevQuestion()">Назад</button>
+    <button class="btn-next" onclick="nextQuestion()">Далее</button>
+  </div>
+  <button class="btn-finish" onclick="finishTest()">Завершить тест</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const questions = [
+  { question:"1. Какой модуль посвящен безопасности в офисе и дома?",
+    options:["Модуль № 5","Модуль № 10","Модуль № 15","Модуль № 20"], answer:1 },
+  { question:"2. Какое действие необходимо выполнить в первую очередь при аварийном сигнале тревоги?",
+    options:["Позвонить начальнику","Прекратить работу и выключить оборудование","Продолжить работу","Закрыть помещение на ключ"], answer:1 },
+  { question:"3. Где разрешено курить согласно политике компании?",
+    options:["В любом месте офиса","Только в специально обозначенных местах","В коридорах","В санузлах"], answer:1 },
+  { question:"4. Какое расстояние должно быть между глазами пользователя и экраном монитора?",
+    options:["20-30 см","45-60 см","70-80 см","90-100 см"], answer:1 },
+  { question:"5. Как правильно хранить тяжелые предметы в шкафах?",
+    options:["В верхней части шкафа","В нижней части шкафа","На подоконнике","На столе"], answer:1 },
+  { question:"6. Что может стать причиной травм из-за незакрепленных кабелей?",
+    options:["Спотыкание","Улучшение интерьера","Повышение производительности","Уменьшение освещенности"], answer:0 },
+  { question:"7. Какое правило электробезопасности запрещено?",
+    options:["Использовать исправные приборы","Перегружать розетки","Проверять состояние кабелей","Отключать оборудование при неисправности"], answer:1 },
+  { question:"8. Какой угол должен быть между локтевым суставом и клавиатурой?",
+    options:["45 градусов","90 градусов","120 градусов","180 градусов"], answer:1 },
+  { question:"9. Что необходимо сделать при разливе жидкости на пол?",
+    options:["Игнорировать","Немедленно убрать и сообщить горничным","Оставить на потом","Накрыть бумагой"], answer:1 },
+  { question:"10. Как правильно подниматься по лестнице с материалами в руках?",
+    options:["Держать материалы так, чтобы они ограничивали обзор","Убедиться, что материалы не ограничивают обзорность","Бежать по лестнице","Не держаться за поручни"], answer:1 },
+  { question:"11. Какое правило безопасности при работе с шредерами?",
+    options:["Держать руки близко к бумагоприемнику","Держать руки на безопасном расстоянии от бумагоприемника","Работать без отключения питания","Игнорировать заедания"], answer:1 },
+  { question:"12. Как правильно хранить острые предметы?",
+    options:["В открытом доступе","В контейнерах, обеспечивающих безопасность","На столе","В кармане"], answer:1 },
+  { question:"13. Какое правило безопасности при работе с битым стеклом?",
+    options:["Собрать руками","Завернуть в плотную бумагу и подписать","Оставить на полу","Выбросить в мусорное ведро без упаковки"], answer:1 },
+  { question:"14. Какое правило пожарной безопасности важно соблюдать дома?",
+    options:["Сушить одежду над обогревателем","Не курить в постели","Хранить спички в доступном для детей месте","Использовать неисправные электроприборы"], answer:1 },
+  { question:"15. Как часто нужно проверять электропроводку дома?",
+    options:["Раз в 10 лет","Не реже чем раз в 5 лет","Только при поломке","Никогда"], answer:1 },
+  { question:"16. Какое устройство защищает от удара током в ванной?",
+    options:["Обычная розетка","Выключатель цепи короткого замыкания на землю (GFCI)","Удлинитель","Переключатель"], answer:1 },
+  { question:"17. Как хранить медикаменты?",
+    options:["В любом месте","В оригинальных упаковках с четкими labels","В ванной комнате","В доступных для детей местах"], answer:1 },
+  { question:"18. Какой симптом может указывать на отравление угарным газом?",
+    options:["Гриппоподобные симптомы","Повышенный аппетит","Улучшение зрения","Отсутствие симптомов"], answer:0 },
+  { question:"19. Какое правило безопасности при использовании аэрозолей?",
+    options:["Хранить на солнце","Не распылять вблизи огня","Прокалывать пустые баллончики","Бросать в костер"], answer:1 },
+  { question:"20. Какой элемент эргономики важен для рабочего места?",
+    options:["Хорошая опора для поясницы","Высокий стол без регулировки","Неудобное кресло","Отсутствие подставки для монитора"], answer:0 }
+];
+
+let currentQuestion = 0;
+let userAnswers = new Array(questions.length).fill(null);
+let timer;
+let timeLeft = 30;
+
+function showQuestion(index) {
+  clearInterval(timer);
+  timeLeft = 30;
+  document.getElementById("timer").textContent = "Время: " + timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").textContent = "Время: " + timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      nextQuestion();
+    }
+  }, 1000);
+
+  const q = questions[index];
+  const quizDiv = document.getElementById("quiz");
+  quizDiv.innerHTML = `
+    <div class="question">${q.question}</div>
+    <div class="options">
+      ${q.options.map((opt, i) => `
+        <label>
+          <input type="radio" name="option" value="${i}" ${userAnswers[index]===i ? "checked":""}
+          onchange="selectAnswer(${index}, ${i})"> ${opt}
+        </label>
+      `).join("")}
+    </div>
+  `;
+}
+
+function selectAnswer(qIndex, answerIndex) {
+  userAnswers[qIndex] = answerIndex;
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    showQuestion(currentQuestion);
+  }
+}
+
+function nextQuestion() {
+  if (currentQuestion < questions.length - 1) {
+    currentQuestion++;
+    showQuestion(currentQuestion);
+  } else {
+    finishTest();
+  }
+}
+
+function finishTest() {
+  clearInterval(timer);
+  let score = 0;
+  questions.forEach((q, i) => {
+    if (userAnswers[i] === q.answer) score++;
+  });
+  document.getElementById("quiz").innerHTML = "";
+  document.querySelector(".navigation").style.display = "none";
+  document.querySelector(".btn-finish").style.display = "none";
+  document.getElementById("timer").style.display = "none";
+  document.getElementById("result").textContent =
+    "Ваш результат: " + score + " из " + questions.length;
+}
+
+// запуск
+showQuestion(currentQuestion);
+</script>
+</body>
+</html>
