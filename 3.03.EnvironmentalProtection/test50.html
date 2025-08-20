@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Тест: Основы охраны окружающей среды</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      padding: 24px;
+    }
+    .container {
+      max-width: 920px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+      overflow: hidden;
+    }
+    .header {
+      padding: 28px 24px;
+      color: #fff;
+      background: linear-gradient(90deg, #2e7d32 0%, #43a047 100%);
+      text-align: center;
+    }
+    .header h1 { margin: 0 0 8px; font-size: 22px; }
+    .header p { margin: 0; opacity: .95; }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 20px;
+      background: #f3f7f4;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .bar .pill {
+      padding: 6px 10px;
+      background: #e8f5e9;
+      border: 1px solid #c8e6c9;
+      border-radius: 999px;
+      font-size: 14px;
+      color: #2e7d32;
+      white-space: nowrap;
+    }
+    .progress {
+      flex: 1;
+      height: 10px;
+      background: #e0e0e0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress > div {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2e7d32 0%, #43a047 100%);
+      transition: width .4s ease;
+    }
+
+    .body {
+      padding: 24px;
+    }
+    .question {
+      font-size: 18px;
+      font-weight: 600;
+      color: #263238;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    .options {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fafafa;
+      border: 2px solid #eeeeee;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .2s ease;
+      user-select: none;
+    }
+    .option:hover {
+      background: #f0fff3;
+      border-color: #81c784;
+    }
+    .option input { margin-top: 3px; }
+    .option .label {
+      font-weight: 700;
+      color: #2e7d32;
+      width: 22px;
+      flex: 0 0 22px;
+    }
+    .option .text { color: #37474f; }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .06s ease, background .2s ease, opacity .2s ease;
+    }
+    button:active { transform: translateY(1px); }
+    .btn-secondary { background: #90a4ae; color: #fff; }
+    .btn-secondary:hover { background: #78909c; }
+    .btn-primary { background: #2e7d32; color: #fff; }
+    .btn-primary:hover { background: #256b2a; }
+    .btn-finish { background: #1b5e20; color: #fff; display: none; }
+    .btn-finish:hover { background: #134a18; }
+
+    .result {
+      display: none;
+      padding: 28px;
+      text-align: center;
+    }
+    .score {
+      font-size: 44px;
+      font-weight: 800;
+      color: #1b5e20;
+      margin: 10px 0 6px;
+    }
+    .msg { color: #37474f; margin-bottom: 10px; }
+    .cert {
+      margin: 22px auto 0;
+      max-width: 520px;
+      background: #fafafa;
+      border: 2px dashed #81c784;
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 18px;
+      color: #2e7d32;
+      font-weight: 800;
+      background: #fff;
+      border: 1px solid #c8e6c9;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: inline-block;
+      letter-spacing: 2px;
+    }
+
+    @media (max-width: 560px) {
+      .header h1 { font-size: 18px; }
+      .question { font-size: 16px; }
+      .controls { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Тест: Основы охраны окружающей среды</h1>
+      <p>Выберите один правильный ответ для каждого вопроса</p>
+    </div>
+
+    <div class="bar">
+      <div class="pill" id="pill-q">Вопрос 1 из 20</div>
+      <div class="progress"><div id="bar"></div></div>
+      <div class="pill" id="pill-score">0%</div>
+      <div class="pill" id="pill-timer">⏳ 30 c</div>
+    </div>
+
+    <div class="body" id="quiz">
+      <div class="question" id="qtext"></div>
+      <div class="options" id="opts"></div>
+      <div class="controls">
+        <button class="btn-secondary" id="prev">Назад</button>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-primary" id="next">Вперёд</button>
+          <button class="btn-finish" id="finish">Завершить тест</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="result" id="result">
+      <h2>Результаты теста</h2>
+      <div class="score" id="final"></div>
+      <div class="msg" id="msg"></div>
+      <div class="cert">
+        <div>Код сертификата:</div>
+        <div class="code" id="cert"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Вопросы
+    const questions = [
+      { q: "1. Почему воздух важен для окружающей среды?", o: ["Только для дыхания растений", "Используется в техпроцессах", "Поддерживает жизнь всех организмов", "Только для охлаждения оборудования"], c: 2 },
+      { q: "2. Какой компонент НЕ относится к основным частям окружающей среды?", o: ["Воздух", "Электричество", "Вода", "Земля"], c: 1 },
+      { q: "3. Почему вода так важна?", o: ["Используется только в быту", "Является основой жизни", "Нужно только для растений", "Заполняет океаны"], c: 1 },
+      { q: "4. Что означает взаимосвязь компонентов окружающей среды?", o: ["Они конкурируют", "Не влияют друг на друга", "Влияют друг на друга", "Работают автономно"], c: 2 },
+      { q: "5. Какие зоны считаются чувствительными к изменениям климата?", o: ["Только степи", "Только пустыни", "Арктика и тропические леса", "Сельские районы"], c: 2 },
+      { q: "6. Какое природное явление может загрязнять воздух?", o: ["Наводнение", "Сель", "Вулкан", "Осадки"], c: 2 },
+      { q: "7. Что из перечисленного является источником загрязнения почвы?", o: ["Деревья", "Лесные массивы", "Свалки", "Озера"], c: 2 },
+      { q: "8. Что может загрязнять воду при бурении?", o: ["Свет", "Звук", "Химикаты", "Температура"], c: 2 },
+      { q: "9. Какое негативное последствие загрязнения почвы указано в курсе?", o: ["Рост деревьев", "Улучшение урожая", "Угнетение растительности", "Понижение температуры"], c: 2 },
+      { q: "10. Как уменьшить воздействие на окружающую среду при строительстве?", o: ["Снимать растительный слой", "Поливать территорию", "Сохранять растительность", "Уплотнять почву"], c: 2 },
+      { q: "11. Что означает принцип «3R» в управлении отходами?", o: ["Разлить, Разложить, Распылить", "Удалить, Растворить, Разбросать", "Сократить, Повторно использовать, Переработать", "Разделить, Растопить, Разбить"], c: 2 },
+      { q: "12. Что считается отходом в нефтегазовой отрасли?", o: ["Газ", "Вода", "Использованные фильтры", "Углеводородное сырьё"], c: 2 },
+      { q: "13. Какой из вариантов относится к опасным веществам?", o: ["Вода", "Воздух", "Серная кислота", "Бумага"], c: 2 },
+      { q: "14. Что обязательно при работе с опасными веществами?", o: ["Быстрое использование", "Минимальный контакт", "Соблюдение инструкций и СИЗ", "Игнорирование маркировки"], c: 2 },
+      { q: "15. Что следует сделать при разливе вещества?", o: ["Закрыть глаза", "Продолжить работу", "Немедленно локализовать", "Промыть водой без уведомлений"], c: 2 },
+      { q: "16. Что относится к профилактическим мерам против утечек?", o: ["Хранение без маркировки", "Случайная проверка", "Поддержание чистоты", "Смена сотрудников"], c: 2 },
+      { q: "17. Какой из пунктов — приоритет при утечке?", o: ["Спасение оборудования", "Защита окружающей среды", "Уведомление прессы", "Переход на удалёнку"], c: 1 },
+      { q: "18. Что из перечисленного НЕ является источником загрязнения?", o: ["Лесной пожар", "Электровоз", "Промышленность", "Транспорт"], c: 1 },
+      { q: "19. Как можно предотвратить эрозию при строительстве?", o: ["Снять всё покрытие", "Не укреплять откосы", "Сохранять растительный слой", "Залить бетоном"], c: 2 },
+      { q: "20. Какой цвет символизирует экологичность по стандарту “Паркера”?", o: ["Синий", "Красный", "Зелёный", "Жёлтый"], c: 2 }
+    ];
+
+    // Элементы
+    const qText = document.getElementById('qtext');
+    const opts = document.getElementById('opts');
+    const pillQ = document.getElementById('pill-q');
+    const pillScore = document.getElementById('pill-score');
+    const pillTimer = document.getElementById('pill-timer');
+    const bar = document.getElementById('bar');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const finishBtn = document.getElementById('finish');
+    const quizBox = document.getElementById('quiz');
+    const resultBox = document.getElementById('result');
+    const finalEl = document.getElementById('final');
+    const msgEl = document.getElementById('msg');
+    const certEl = document.getElementById('cert');
+
+    // Состояние
+    let current = 0;
+    let answers = new Array(questions.length).fill(null);
+    let score = 0;
+    let timer = null;
+    let timeLeft = 30;
+    const letters = ['A', 'B', 'C', 'D'];
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 30;
+      pillTimer.textContent = `⏳ ${timeLeft} c`;
+      timer = setInterval(() => {
+        timeLeft--;
+        pillTimer.textContent = `⏳ ${timeLeft} c`;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          // авто-переход
+          goNext();
+        }
+      }, 1000);
+    }
+
+    function render() {
+      const q = questions[current];
+      qText.textContent = q.q;
+      opts.innerHTML = '';
+      q.o.forEach((text, i) => {
+        const wrap = document.createElement('label');
+        wrap.className = 'option';
+        wrap.onclick = () => select(i);
+
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'opt';
+        radio.checked = answers[current] === i;
+
+        const lbl = document.createElement('div');
+        lbl.className = 'label';
+        lbl.textContent = letters[i] + ')';
+
+        const t = document.createElement('div');
+        t.className = 'text';
+        t.textContent = text;
+
+        wrap.appendChild(radio);
+        wrap.appendChild(lbl);
+        wrap.appendChild(t);
+        opts.appendChild(wrap);
+      });
+
+      pillQ.textContent = `Вопрос ${current + 1} из ${questions.length}`;
+      bar.style.width = `${((current) / questions.length) * 100}%`;
+
+      prevBtn.style.display = current === 0 ? 'none' : 'inline-block';
+      nextBtn.style.display = current === questions.length - 1 ? 'none' : 'inline-block';
+      finishBtn.style.display = current === questions.length - 1 ? 'inline-block' : 'none';
+
+      updateScorePill();
+      startTimer();
+    }
+
+    function select(i) {
+      answers[current] = i;
+      updateScorePill();
+    }
+
+    function updateScorePill() {
+      // пересчёт очков на лету (по текущим ответам)
+      score = 0;
+      answers.forEach((a, idx) => { if (a === questions[idx].c) score++; });
+      const pct = Math.round((score / questions.length) * 100);
+      pillScore.textContent = `${pct}%`;
+    }
+
+    function goPrev() {
+      if (current > 0) {
+        current--;
+        render();
+      }
+    }
+
+    function goNext() {
+      if (current < questions.length - 1) {
+        current++;
+        render();
+      }
+    }
+
+    function finish() {
+      clearInterval(timer);
+      // финальный перерасчёт
+      score = 0;
+      answers.forEach((a, idx) => { if (a === questions[idx].c) score++; });
+      const pct = Math.round((score / questions.length) * 100);
+
+      quizBox.style.display = 'none';
+      resultBox.style.display = 'block';
+      finalEl.textContent = `${score}/${questions.length} (${pct}%)`;
+
+      let text =
+        pct >= 85 ? "Отлично! Прекрасное понимание основ охраны окружающей среды."
+      : pct >= 70 ? "Хорошо! Есть небольшие пробелы — рекомендуем освежить материал."
+      : pct >= 50 ? "Удовлетворительно. Требуется дополнительное изучение темы."
+      : "Недостаточно знаний. Рекомендуем пройти обучение по охране окружающей среды.";
+
+      msgEl.textContent = text;
+      certEl.textContent = genCertCode();
+    }
+
+    function genCertCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let out = '';
+      for (let i = 0; i < 12; i++) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+        if ((i + 1) % 4 === 0 && i !== 11) out += '-';
+      }
+      return out;
+    }
+
+    // Слушатели
+    prevBtn.addEventListener('click', goPrev);
+    nextBtn.addEventListener('click', goNext);
+    finishBtn.addEventListener('click', finish);
+
+    // Пуск
+    render();
+  </script>
+</body>
+</html>
