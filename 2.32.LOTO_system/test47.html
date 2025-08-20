@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тест: LOTO и электробезопасность</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f4f9;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; }
+    .question { font-weight: bold; margin: 15px 0; }
+    .options label { display: block; margin-bottom: 8px; cursor: pointer; }
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    #timer { font-weight: bold; color: red; float: right; }
+    #result { margin-top: 20px; font-size: 18px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Тест: Система LOTO и электробезопасность <span id="timer">30</span></h2>
+    <div id="quiz"></div>
+    <button id="nextBtn" onclick="nextQuestion()">Далее</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "1. Что означает система LOTO?",
+        options: [
+          "Lockout/Tagout — блокировка и маркировка",
+          "Local Operation Technical Order",
+          "Line of Technical Operations",
+          "Lock and Turn Off"
+        ],
+        correct: 0
+      },
+      {
+        question: "2. Какова основная цель LOTO?",
+        options: [
+          "Ускорение ремонтных работ",
+          "Обеспечение безопасности при обслуживании оборудования",
+          "Маркировка кабелей",
+          "Проверка документации"
+        ],
+        correct: 1
+      },
+      {
+        question: "3. Кто имеет право снимать замок при LOTO?",
+        options: [
+          "Любой сотрудник",
+          "Только руководитель",
+          "Только установивший замок работник",
+          "Электрик по согласованию"
+        ],
+        correct: 2
+      },
+      {
+        question: "4. Что обязательно используется в системе LOTO?",
+        options: [
+          "Знак опасности",
+          "Специальные замки и бирки",
+          "Лестницы и каски",
+          "Ключи от электрощитовой"
+        ],
+        correct: 1
+      },
+      {
+        question: "5. Что нужно сделать перед началом работ по LOTO?",
+        options: [
+          "Подписать журнал инструктажа",
+          "Полностью обесточить и заблокировать энергоисточники",
+          "Выдать каску и жилет",
+          "Проверить освещенность помещения"
+        ],
+        correct: 1
+      },
+      {
+        question: "6. Что указывает бирка в системе LOTO?",
+        options: [
+          "ФИО работника и причина блокировки",
+          "Место хранения ключей",
+          "Срок службы оборудования",
+          "Марку электрощитка"
+        ],
+        correct: 0
+      },
+      {
+        question: "7. Как проверить отсутствие напряжения?",
+        options: [
+          "Визуально осмотреть кабель",
+          "Использовать указатель напряжения",
+          "Спросить у коллег",
+          "Посмотреть схему"
+        ],
+        correct: 1
+      },
+      {
+        question: "8. Что означает 'zero energy state'?",
+        options: [
+          "Нулевой счётчик электроэнергии",
+          "Полное отсутствие энергии в системе",
+          "Отключение одного автомата",
+          "Работа при минимальной мощности"
+        ],
+        correct: 1
+      },
+      {
+        question: "9. Какой документ регламентирует электробезопасность в РК?",
+        options: [
+          "Правила по охране труда при эксплуатации электроустановок",
+          "Кодекс о недрах",
+          "Трудовой кодекс",
+          "Экологический кодекс"
+        ],
+        correct: 0
+      },
+      {
+        question: "10. Что означает знак ⚡ на оборудовании?",
+        options: [
+          "Опасность поражения электрическим током",
+          "Высокое напряжение – внимание",
+          "Требуется каска",
+          "Место для заземления"
+        ],
+        correct: 0
+      },
+      {
+        question: "11. Какой минимальный СИЗ обязателен при работе с электричеством?",
+        options: [
+          "Перчатки диэлектрические",
+          "Каска",
+          "Жилет",
+          "Наушники"
+        ],
+        correct: 0
+      },
+      {
+        question: "12. Что запрещено при работах под напряжением?",
+        options: [
+          "Применять изолированный инструмент",
+          "Использовать диэлектрические перчатки",
+          "Работать в одиночку",
+          "Работать по наряду"
+        ],
+        correct: 2
+      },
+      {
+        question: "13. Как часто проводится проверка знаний по электробезопасности?",
+        options: [
+          "Раз в год",
+          "Раз в 3 года",
+          "Раз в 5 лет",
+          "По усмотрению руководителя"
+        ],
+        correct: 0
+      },
+      {
+        question: "14. Что делать, если обнаружен несанкционированный замок на оборудовании?",
+        options: [
+          "Снять его и продолжить работу",
+          "Сообщить руководителю или ответственному",
+          "Оставить без внимания",
+          "Заклеить изолентой"
+        ],
+        correct: 1
+      },
+      {
+        question: "15. Какая последовательность действий LOTO верная?",
+        options: [
+          "Обесточить – заблокировать – проверить – начать работу",
+          "Заблокировать – включить – начать работу",
+          "Проверить – обесточить – работать",
+          "Начать работу – потом обесточить"
+        ],
+        correct: 0
+      },
+      {
+        question: "16. Какой уровень допуска обязателен для работы в электроустановках выше 1000 В?",
+        options: [
+          "I группа",
+          "II группа",
+          "III группа",
+          "IV группа и выше"
+        ],
+        correct: 3
+      },
+      {
+        question: "17. Кто назначается ответственным за безопасность при работах в электроустановках?",
+        options: [
+          "Старший по возрасту",
+          "Работник с наибольшим стажем",
+          "Специально назначенное лицо приказом",
+          "Любой член бригады"
+        ],
+        correct: 2
+      },
+      {
+        question: "18. Что относится к средствам защиты от поражения током?",
+        options: [
+          "Изолирующие штанги, коврики, перчатки",
+          "Каски и очки",
+          "Респираторы",
+          "Сигнальные жилеты"
+        ],
+        correct: 0
+      },
+      {
+        question: "19. Что нужно сделать перед включением оборудования после работ по LOTO?",
+        options: [
+          "Убедиться, что все работники убрали свои замки и бирки",
+          "Сразу подать напряжение",
+          "Снять только бирки",
+          "Сообщить в отдел кадров"
+        ],
+        correct: 0
+      },
+      {
+        question: "20. Какой первый шаг при оказании помощи пострадавшему от электрического тока?",
+        options: [
+          "Сразу начать искусственное дыхание",
+          "Оттащить руками пострадавшего",
+          "Отключить источник напряжения или оттащить пострадавшего с помощью изолирующих предметов",
+          "Позвонить в бухгалтерию"
+        ],
+        correct: 2
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let timer;
+    let timeLeft = 30;
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = 30;
+      document.getElementById("timer").textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").textContent = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          nextQuestion();
+        }
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      if (currentQuestion >= questions.length) {
+        document.getElementById("quiz").innerHTML = "";
+        document.getElementById("nextBtn").style.display = "none";
+        document.getElementById("result").innerHTML =
+          "Вы набрали " + score + " из " + questions.length + " баллов.";
+        return;
+      }
+
+      let q = questions[currentQuestion];
+      let quizDiv = document.getElementById("quiz");
+      quizDiv.innerHTML = `
+        <div class="question">${q.question}</div>
+        <div class="options">
+          ${q.options
+            .map(
+              (opt, i) =>
+                `<label><input type="radio" name="q${currentQuestion}" value="${i}"> ${opt}</label>`
+            )
+            .join("")}
+        </div>
+      `;
+      startTimer();
+    }
+
+    function nextQuestion() {
+      let selected = document.querySelector(
+        `input[name="q${currentQuestion}"]:checked`
+      );
+      if (selected && parseInt(selected.value) === questions[currentQuestion].correct) {
+        score++;
+      }
+      currentQuestion++;
+      loadQuestion();
+    }
+
+    loadQuestion();
+  </script>
+</body>
+</html>
