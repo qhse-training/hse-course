@@ -5,38 +5,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Перенаправление | OHSMS Academy</title>
     <script>
-        // Проверяем доступность целевой страницы перед редиректом
+        // Улучшенная проверка доступности страницы
         function checkPageAvailability() {
             const targetUrl = 'login.html';
-            const fallbackUrl = 'https://github.com/qhse-training/hse-course';
-            const timeout = 3000; // 3 секунды таймаут
-            
-            fetch(targetUrl, { method: 'HEAD' })
-                .then(response => {
-                    if (response.ok) {
-                        window.location.href = targetUrl;
-                    } else {
-                        throw new Error('Страница входа недоступна');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                    document.getElementById('status').innerHTML = `
-                        <p style="color: #e74c3c;">Ошибка перенаправления</p>
-                        <p>Страница входа не найдена. Вы будете перенаправлены на GitHub через 5 секунд...</p>
-                    `;
-                    setTimeout(() => {
-                        window.location.href = fallbackUrl;
-                    }, 5000);
-                });
+            const fallbackUrl = 'landing.html'; // Резервная страница в вашем проекте
+            const timeout = 5000; // Увеличенный таймаут
+
+            // Показать состояние загрузки
+            document.getElementById('status').innerHTML = `
+                <div class="loader"></div>
+                <p>Проверяем доступность системы...</p>
+            `;
+
+            // Проверка с таймаутом
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Таймаут проверки')), timeout);
+            });
+
+            Promise.race([
+                fetch(targetUrl, { method: 'HEAD', cache: 'no-cache' }),
+                timeoutPromise
+            ])
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = targetUrl;
+                } else {
+                    throw new Error('Страница недоступна');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                document.getElementById('status').innerHTML = `
+                    <div class="error-icon">⚠️</div>
+                    <p style="color: #e74c3c;">Система временно недоступна</p>
+                    <p>Попробуйте <a href="${targetUrl}">обновить страницу</a> или перейдите на <a href="${fallbackUrl}">резервную страницу</a></p>
+                    <p>Техническая информация: ${error.message}</p>
+                `;
+            });
         }
 
-        // Запускаем проверку при загрузке страницы
-        window.onload = checkPageAvailability;
+        // Запуск при полной загрузке страницы
+        document.addEventListener('DOMContentLoaded', checkPageAvailability);
     </script>
     <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --error: #e74c3c;
+            --success: #27ae60;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -45,19 +64,36 @@
             background-color: #f5f7fa;
             text-align: center;
             line-height: 1.6;
+            color: var(--primary);
         }
         .container {
             max-width: 600px;
             padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .loader {
             border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border-top: 5px solid var(--secondary);
             border-radius: 50%;
             width: 50px;
             height: 50px;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
+        }
+        .error-icon {
+            font-size: 3rem;
+            color: var(--error);
+            margin-bottom: 1rem;
+        }
+        a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        a:hover {
+            text-decoration: underline;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -68,16 +104,21 @@
 <body>
     <div class="container">
         <div id="status">
-            <div class="loader"></div>
-            <p>Идёт перенаправление на страницу входа...</p>
-            <p>Если перенаправление не работает, <a href="login.html">нажмите сюда</a></p>
+            <!-- Сюда подставится контент скриптом -->
         </div>
     </div>
 
-    <!-- Альтернативный редирект для старых браузеров -->
+    <!-- Альтернатива для браузеров без JavaScript -->
     <noscript>
         <meta http-equiv="refresh" content="0; url=login.html" />
-        <p>Ваш браузер не поддерживает JavaScript. Перенаправление на <a href="login.html">страницу входа</a>...</p>
+        <style>
+            .container { display: block !important; }
+        </style>
+        <div class="container">
+            <div class="error-icon">⚠️</div>
+            <p>Ваш браузер не поддерживает JavaScript. Пытаемся перенаправить...</p>
+            <p>Если перенаправление не сработало, перейдите вручную: <a href="login.html">Страница входа</a></p>
+        </div>
     </noscript>
 </body>
 </html>

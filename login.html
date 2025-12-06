@@ -9,6 +9,7 @@
             --primary: #2c3e50;
             --secondary: #3498db;
             --error: #e74c3c;
+            --success: #2ecc71;
         }
         body {
             font-family: Arial, sans-serif;
@@ -52,11 +53,34 @@
             font-size: 1rem;
             cursor: pointer;
             margin-top: 1rem;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
         }
         .error {
             color: var(--error);
             margin-top: 1rem;
             text-align: center;
+        }
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--secondary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -67,18 +91,23 @@
         
         <div class="form-group">
             <label for="email">Email</label>
-            <input type="email" id="email" placeholder="Ваш email">
+            <input type="email" id="email" placeholder="Ваш email" autocomplete="username">
         </div>
         
         <div class="form-group">
             <label for="password">Пароль</label>
-            <input type="password" id="password" placeholder="Ваш пароль">
+            <input type="password" id="password" placeholder="Ваш пароль" autocomplete="current-password">
         </div>
         
-        <button id="loginBtn">Войти</button>
+        <button id="loginBtn">
+            <span id="loginText">Войти</span>
+        </button>
         
         <div style="text-align: center; margin-top: 1rem;">
-            <a href="signup.html" style="color: var(--secondary);">Нет аккаунта? Зарегистрируйтесь</a>
+            <a href="signup.html" style="color: var(--secondary); text-decoration: none;">Нет аккаунта? Зарегистрируйтесь</a>
+        </div>
+        <div style="text-align: center; margin-top: 0.5rem;">
+            <a href="forgot-password.html" style="color: var(--secondary); text-decoration: none; font-size: 0.9rem;">Забыли пароль?</a>
         </div>
     </div>
 
@@ -107,6 +136,7 @@
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
         const loginBtn = document.getElementById('loginBtn');
+        const loginText = document.getElementById('loginText');
         const errorMsg = document.getElementById('errorMsg');
 
         // Login function
@@ -122,12 +152,19 @@
             try {
                 // Show loading state
                 loginBtn.disabled = true;
-                loginBtn.textContent = "Вход...";
+                loginText.innerHTML = '<div class="loader"></div> Вход...';
                 errorMsg.style.display = 'none';
 
                 // Sign in with Firebase Auth
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
+
+                // Check if user is admin first
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                if (adminDoc.exists) {
+                    window.location.href = "admin.html";
+                    return;
+                }
 
                 // Check if user exists in approved_users
                 const userDoc = await db.collection('approved_users').doc(user.uid).get();
@@ -136,17 +173,21 @@
                     // Redirect to dashboard if approved
                     window.location.href = "dashboard.html";
                 } else {
-                    // If not in approved_users, log them out and show error
+                    // If not in approved_users or admins, log them out and show error
                     await auth.signOut();
                     showError("Ваш аккаунт ожидает подтверждения администратора");
                 }
             } catch (error) {
                 console.error("Ошибка входа:", error);
                 showError(getFriendlyError(error.code));
+                
+                // Clear password field on error
+                passwordInput.value = '';
+                passwordInput.focus();
             } finally {
                 // Reset button state
                 loginBtn.disabled = false;
-                loginBtn.textContent = "Войти";
+                loginText.textContent = "Войти";
             }
         }
 
@@ -154,14 +195,22 @@
         function showError(message) {
             errorMsg.textContent = message;
             errorMsg.style.display = 'block';
+            
+            // Add animation to highlight error
+            errorMsg.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                errorMsg.style.animation = '';
+            }, 500);
         }
 
         function getFriendlyError(code) {
             const errors = {
                 'auth/invalid-email': 'Неверный формат email',
-                'auth/user-not-found': 'Пользователь не найден',
+                'auth/user-not-found': 'Пользователь с таким email не найден',
                 'auth/wrong-password': 'Неверный пароль',
                 'auth/too-many-requests': 'Слишком много попыток. Попробуйте позже.',
+                'auth/user-disabled': 'Аккаунт отключен',
+                'auth/network-request-failed': 'Ошибка сети. Проверьте подключение к интернету',
                 'permission-denied': 'Недостаточно прав доступа'
             };
             return errors[code] || 'Ошибка входа. Пожалуйста, попробуйте снова.';
@@ -176,19 +225,35 @@
         });
 
         // Check auth state on load
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // If already logged in, check approval status
-                db.collection('approved_users').doc(user.uid).get()
-                    .then((doc) => {
-                        if (doc.exists) {
-                            window.location.href = "dashboard.html";
-                        } else {
-                            auth.signOut();
-                        }
-                    });
+                // Check if user is admin first
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                if (adminDoc.exists) {
+                    window.location.href = "admin.html";
+                    return;
+                }
+
+                // If not admin, check approval status
+                const userDoc = await db.collection('approved_users').doc(user.uid).get();
+                if (userDoc.exists) {
+                    window.location.href = "dashboard.html";
+                } else {
+                    await auth.signOut();
+                }
             }
         });
+
+        // Add shake animation for errors
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
