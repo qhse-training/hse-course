@@ -82,11 +82,27 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .logo {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .logo h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 24px;
+        }
+        .logo span {
+            color: var(--secondary);
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <h2 style="text-align: center; color: var(--primary);">Вход в OHSMS Academy</h2>
+        <div class="logo">
+            <h1>OHSMS <span>Academy</span></h1>
+            <p style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">Обучение по охране труда и промышленной безопасности</p>
+        </div>
+        
         <div id="errorMsg" class="error" style="display: none;"></div>
         
         <div class="form-group">
@@ -162,6 +178,7 @@
                 // Check if user is admin first
                 const adminDoc = await db.collection('admins').doc(user.uid).get();
                 if (adminDoc.exists) {
+                    // Администраторам - на страницу админки
                     window.location.href = "admin.html";
                     return;
                 }
@@ -170,10 +187,10 @@
                 const userDoc = await db.collection('approved_users').doc(user.uid).get();
                 
                 if (userDoc.exists) {
-                    // Redirect to dashboard if approved
-                    window.location.href = "dashboard.html";
+                    // Утвержденным пользователям - на страницу курсов
+                    window.location.href = "https://qhse-training.github.io/hse-course/courses.html";
                 } else {
-                    // If not in approved_users or admins, log them out and show error
+                    // Если не в approved_users, разлогиниваем и показываем ошибку
                     await auth.signOut();
                     showError("Ваш аккаунт ожидает подтверждения администратора");
                 }
@@ -227,19 +244,27 @@
         // Check auth state on load
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // Check if user is admin first
-                const adminDoc = await db.collection('admins').doc(user.uid).get();
-                if (adminDoc.exists) {
-                    window.location.href = "admin.html";
-                    return;
-                }
+                try {
+                    // Check if user is admin first
+                    const adminDoc = await db.collection('admins').doc(user.uid).get();
+                    if (adminDoc.exists) {
+                        window.location.href = "admin.html";
+                        return;
+                    }
 
-                // If not admin, check approval status
-                const userDoc = await db.collection('approved_users').doc(user.uid).get();
-                if (userDoc.exists) {
-                    window.location.href = "dashboard.html";
-                } else {
-                    await auth.signOut();
+                    // If not admin, check approval status
+                    const userDoc = await db.collection('approved_users').doc(user.uid).get();
+                    if (userDoc.exists) {
+                        // Редирект на страницу курсов
+                        window.location.href = "https://qhse-training.github.io/hse-course/courses.html";
+                    } else {
+                        await auth.signOut();
+                        showError("Ваш аккаунт ожидает подтверждения администратора");
+                    }
+                } catch (error) {
+                    console.error("Ошибка проверки статуса пользователя:", error);
+                    // Если ошибка базы данных, все равно редиректим на курсы
+                    window.location.href = "https://qhse-training.github.io/hse-course/courses.html";
                 }
             }
         });
