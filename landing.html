@@ -1,15 +1,14 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Выбор курсов и регистрация</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
+    body { font-family: sans-serif; margin: 20px; max-width: 1200px; margin: 0 auto; padding: 20px; }
     h2 {
       margin-top: 30px;
       background: #f2f2f2;
@@ -20,34 +19,90 @@
       width: 100%; border-collapse: collapse; margin-bottom: 30px;
     }
     th, td {
-      padding: 10px; border: 1px solid #ccc; text-align: left;
+      padding: 12px; border: 1px solid #ccc; text-align: left;
     }
     th { background: #f9f9f9; }
-    input[type="submit"] {
-      padding: 10px 20px;
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="password"],
+    textarea {
+      width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+    }
+    textarea { min-height: 100px; }
+    .submit-btn {
+      padding: 12px 30px;
       background: #007bff;
       border: none;
       color: white;
       font-size: 16px;
       cursor: pointer;
+      border-radius: 4px;
+      margin-top: 20px;
     }
-    input[type="submit"]:hover { background: #0056b3; }
-    label { display: block; margin: 10px 0; }
+    .submit-btn:hover { background: #0056b3; }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .login-link {
+      text-align: center; margin-top: 30px; padding: 20px;
+      background: #f8f9fa; border-radius: 8px;
+    }
+    .success-message {
+      background: #d4edda; color: #155724; padding: 15px; border-radius: 4px;
+      margin: 20px 0; display: none;
+    }
+    .error-message {
+      background: #f8d7da; color: #721c24; padding: 15px; border-radius: 4px;
+      margin: 20px 0; display: none;
+    }
   </style>
 </head>
 <body>
   <h1>Выберите курсы и зарегистрируйтесь</h1>
+  
+  <div class="success-message" id="successMessage"></div>
+  <div class="error-message" id="errorMessage"></div>
+  
+  <div id="coursesContainer">Загрузка курсов...</div>
+  
   <form id="courseForm">
-    <div id="coursesContainer">Загрузка курсов...</div>
+    <h2>Контактная информация</h2>
+    
+    <div class="form-group">
+      <label>ФИО: *</label>
+      <input type="text" name="fullName" required placeholder="Иванов Иван Иванович">
+    </div>
+    
+    <div class="form-group">
+      <label>Телефон: *</label>
+      <input type="tel" name="phone" required placeholder="+7 (777) 123-45-67">
+    </div>
+    
+    <div class="form-group">
+      <label>Email: *</label>
+      <input type="email" name="email" required placeholder="example@mail.com">
+    </div>
+    
+    <div class="form-group">
+      <label>Придумайте пароль: *</label>
+      <input type="password" name="password" required placeholder="Минимум 6 символов">
+      <small>Пароль понадобится для доступа к курсам после оплаты</small>
+    </div>
+    
+    <div class="form-group">
+      <label>Комментарий или вопросы:</label>
+      <textarea name="comment" placeholder="Ваши вопросы или пожелания..."></textarea>
+    </div>
 
-    <label>ФИО: <input type="text" name="fullName" required></label>
-    <label>Телефон: <input type="tel" name="phone" required></label>
-    <label>Email: <input type="email" name="email" required></label>
-    <label>Пароль: <input type="password" name="password" required></label>
-    <label>Комментарий: <textarea name="comment"></textarea></label>
-
-    <input type="submit" value="Зарегистрироваться и отправить заявку">
+    <button type="submit" class="submit-btn" id="submitBtn">Отправить заявку</button>
   </form>
+  
+  <div class="login-link">
+    <h3>Уже зарегистрированы?</h3>
+    <p>Если вы уже оплатили курс, перейдите на страницу входа:</p>
+    <a href="login.html" style="color: #007bff; font-weight: bold;">Войти в личный кабинет →</a>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -55,68 +110,81 @@
       authDomain: "qhse-training.firebaseapp.com",
       projectId: "qhse-training",
     };
+    
+    // Инициализация Firebase без авторизации
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
     const db = firebase.firestore();
 
     async function loadCourses() {
-      const snapshot = await db.collection("courses").get();
-      const modules = {};
-      snapshot.forEach(doc => {
-        const course = doc.data();
-        const id = doc.id;
-        const module = course.module || "Прочее";
-        if (!modules[module]) modules[module] = [];
-        modules[module].push({
-          id,
-          title: course.title || id,
-          description: course.description || "",
-          price: course.price || 0
-        });
-      });
-
-      const container = document.getElementById("coursesContainer");
-      container.innerHTML = "";
-
-      if (Object.keys(modules).length === 0) {
-        container.innerHTML = "<p>Курсы не найдены.</p>";
-        return;
-      }
-
-      for (const [moduleName, courses] of Object.entries(modules)) {
-        const header = document.createElement("h2");
-        header.textContent = moduleName;
-        container.appendChild(header);
-
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = `
-          <tr>
-            <th>Название курса</th>
-            <th>Описание</th>
-            <th>Цена</th>
-            <th>Выбрать</th>
-          </tr>`;
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-        courses.forEach(course => {
-          const tr = document.createElement("tr");
-
-          tr.innerHTML = `
-            <td>${course.title}</td>
-            <td>${course.description}</td>
-            <td>${course.price} ₸</td>
-            <td><input type="checkbox" name="selectedCourses" value="${course.id}"></td>
-          `;
-          tbody.appendChild(tr);
+      try {
+        const container = document.getElementById("coursesContainer");
+        container.innerHTML = "<p>Загрузка курсов...</p>";
+        
+        const snapshot = await db.collection("courses").get();
+        const modules = {};
+        
+        snapshot.forEach(doc => {
+          const course = doc.data();
+          const id = doc.id;
+          const module = course.module || "Прочее";
+          if (!modules[module]) modules[module] = [];
+          modules[module].push({
+            id,
+            title: course.title || id,
+            description: course.description || "",
+            price: course.price || 0
+          });
         });
 
-        table.appendChild(tbody);
-        container.appendChild(table);
+        container.innerHTML = "";
+
+        if (Object.keys(modules).length === 0) {
+          container.innerHTML = "<p>Курсы временно недоступны. Пожалуйста, попробуйте позже.</p>";
+          return;
+        }
+
+        for (const [moduleName, courses] of Object.entries(modules)) {
+          const header = document.createElement("h2");
+          header.textContent = moduleName;
+          container.appendChild(header);
+
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+            <tr>
+              <th>Название курса</th>
+              <th>Описание</th>
+              <th>Цена</th>
+              <th>Выбрать</th>
+            </tr>`;
+          table.appendChild(thead);
+
+          const tbody = document.createElement("tbody");
+          courses.forEach(course => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+              <td><strong>${course.title}</strong></td>
+              <td>${course.description}</td>
+              <td>${course.price ? course.price + ' ₸' : 'По запросу'}</td>
+              <td><input type="checkbox" name="selectedCourses" value="${course.id}"></td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          container.appendChild(table);
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки курсов:", error);
+        const container = document.getElementById("coursesContainer");
+        container.innerHTML = `
+          <p style="color: red;">Ошибка загрузки курсов. Пожалуйста, обновите страницу или свяжитесь с нами.</p>
+        `;
       }
     }
 
+    // Загружаем курсы при загрузке страницы
     loadCourses();
 
     document.getElementById("courseForm").addEventListener("submit", async (e) => {
@@ -125,61 +193,110 @@
 
       const fullName = form.fullName.value.trim();
       const phone = form.phone.value.trim();
-      const email = form.email.value.trim();
+      const email = form.email.value.trim().toLowerCase();
       const password = form.password.value;
       const comment = form.comment.value.trim();
       const selectedCourses = Array.from(
         form.querySelectorAll('input[name="selectedCourses"]:checked')
       ).map(cb => cb.value);
 
+      // Валидация
       if (!email || !password || !fullName || !phone) {
-        alert("Пожалуйста, заполните все поля.");
+        showError("Пожалуйста, заполните все обязательные поля (отмечены *)");
+        return;
+      }
+
+      if (password.length < 6) {
+        showError("Пароль должен содержать минимум 6 символов");
         return;
       }
 
       if (selectedCourses.length === 0) {
-        alert("Пожалуйста, выберите хотя бы один курс.");
+        showError("Пожалуйста, выберите хотя бы один курс");
         return;
       }
 
+      const submitBtn = document.getElementById("submitBtn");
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = "Отправка заявки...";
+      submitBtn.disabled = true;
+
       try {
-        let userCredential;
-
-        // Проверка: существует ли уже пользователь с таким email?
-        const methods = await auth.fetchSignInMethodsForEmail(email);
-        if (methods.length === 0) {
-          // Новый пользователь — регистрация
-          userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        } else {
-          // Уже существует — вход
-          userCredential = await auth.signInWithEmailAndPassword(email, password);
-        }
-
+        // Создаем пользователя через Email/Password
+        // ВАЖНО: Нужно добавить модуль аутентификации в Firebase Console
+        // И включить Email/Password провайдер
+        const auth = firebase.auth();
+        
+        // Создаем пользователя (Firebase автоматически отправит письмо подтверждения если включено)
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Отправка заявки
+        // Сохраняем информацию о пользователе
+        await db.collection("users").doc(user.uid).set({
+          fullName,
+          phone,
+          email,
+          role: "student",
+          status: "pending",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Отправляем заявку
         await db.collection("requests").add({
           fullName,
           phone,
           email,
           comment,
           selectedCourses,
-          approved: false,
+          status: "new",
           userId: user.uid,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        alert("Заявка успешно отправлена! Вы вошли в систему.");
+        // Показываем успешное сообщение
+        showSuccess(`
+          <h3>✅ Заявка успешно отправлена!</h3>
+          <p>Мы получили вашу заявку на курсы: <strong>${selectedCourses.join(', ')}</strong></p>
+          <p>Наш менеджер свяжется с вами в течение 24 часов для подтверждения.</p>
+          <p>Данные для входа отправлены на email: <strong>${email}</strong></p>
+          <p><a href="login.html" style="color: #007bff;">Войти в личный кабинет →</a></p>
+        `);
+
+        // Очищаем форму
         form.reset();
+        
       } catch (error) {
-        console.error("Ошибка:", error);
-        if (error.code === "auth/wrong-password") {
-          alert("Неверный пароль. Пожалуйста, используйте правильный или зарегистрируйтесь с другим email.");
+        console.error("Ошибка отправки заявки:", error);
+        
+        if (error.code === "auth/email-already-in-use") {
+          showError("Этот email уже зарегистрирован. <a href='login.html' style='color: #007bff;'>Войдите</a> или используйте другой email.");
+        } else if (error.code === "auth/invalid-email") {
+          showError("Неверный формат email");
+        } else if (error.code === "auth/weak-password") {
+          showError("Пароль слишком слабый. Используйте минимум 6 символов");
+        } else if (error.code === "auth/operation-not-allowed") {
+          showError("Регистрация по email временно недоступна. Пожалуйста, свяжитесь с администратором.");
         } else {
-          alert("Ошибка: " + error.message);
+          showError("Ошибка: " + error.message);
         }
+      } finally {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
       }
     });
+
+    function showError(message) {
+      const errorEl = document.getElementById("errorMessage");
+      errorEl.innerHTML = message;
+      errorEl.style.display = "block";
+      setTimeout(() => errorEl.style.display = "none", 5000);
+    }
+
+    function showSuccess(message) {
+      const successEl = document.getElementById("successMessage");
+      successEl.innerHTML = message;
+      successEl.style.display = "block";
+    }
   </script>
 </body>
 </html>
