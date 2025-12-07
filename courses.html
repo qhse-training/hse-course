@@ -1,666 +1,57 @@
 <!DOCTYPE html>
-<!-- saved from url=(0041)file:///F:/QHSE%20training/dashboard.html -->
-<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Курсы</title>
+  <title>Мои курсы</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f8f8; margin: 0; }
     header { background: #3498db; color: #fff; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
     .course-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; padding: 20px; }
-    .course-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-    .course-image { height: 160px; background-size: cover; background-position: center; }
+    .course-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; }
+    .course-image { height: 160px; background-size: cover; background-position: center; position: relative; }
+    .progress-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(52, 152, 219, 0.8); height: 4px; }
+    .progress-bar { background: #2ecc71; height: 100%; width: 0%; transition: width 0.3s; }
     .course-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
     .course-title { margin: 0 0 10px; font-size: 18px; }
-    .course-desc { flex: 1; color: #555; }
+    .course-desc { flex: 1; color: #555; margin-bottom: 10px; }
+    .course-status { font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+    .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+    .status-not-started { background: #e74c3c; color: white; }
+    .status-in-progress { background: #f39c12; color: white; }
+    .status-test-available { background: #3498db; color: white; }
+    .status-completed { background: #2ecc71; color: white; }
     .course-actions { margin-top: 10px; display: flex; gap: 10px; }
-    .btn { padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; text-align: center; }
+    .btn { padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; text-align: center; cursor: pointer; border: none; font-size: 14px; }
+    .btn:hover { opacity: 0.9; }
     .btn-test { background: #e67e22; }
+    .btn-test:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
+    .btn-certificate { background: #9b59b6; }
+    .btn-certificate:hover { background: #8e44ad; }
+    #searchInput { width: 100%; padding: 10px; border: none; border-bottom: 1px solid #ccc; font-size: 16px; }
+    .course-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; font-size: 12px; color: #7f8c8d; }
+    .loading { text-align: center; padding: 40px; color: #7f8c8d; }
+    .certificate-preview { cursor: pointer; text-decoration: underline; color: #3498db; }
   </style>
 </head>
 <body>
   <header>
-    <div id="userInfo">Nazerke Qapay (nazerkekapay@gmail.com)</div>
+    <div>
+      <div id="userInfo">Загрузка...</div>
+      <div id="userProgress" style="font-size: 12px; opacity: 0.9;"></div>
+    </div>
     <button id="logoutBtn" style="background:#e74c3c;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;">Выйти</button>
   </header>
 
-  <input type="text" id="searchInput" placeholder="Поиск курсов..." style="width:100%;padding:10px;border:none;border-bottom:1px solid #ccc;">
+  <input type="text" id="searchInput" placeholder="Поиск курсов...">
 
-  <div class="course-list" id="courseList"><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Система управления охраной труда (СУОТ)	</h3>
-            <p class="course-desc">Разработка и внедрение системы управления охраной труда</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=0EFXo6H4N1mbA1jBJwOK" class="btn">Пройти курс</a>
-              <a href="https://qhse-training.github.io/hse-course/1.01.Occupational_Health_and_Safety_Management_System/test1.html?id=0EFXo6H4N1mbA1jBJwOK" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Иерархия контроля опасности</h3>
-            <p class="course-desc">Методы контроля и снижения производственных рисков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=0Jqmw9JvD6lXB1EM1lcD" class="btn">Пройти курс</a>
-              <a href="https://qhse-training.github.io/hse-course/1.02.Hierarchy_of_hazard_controls/test2.html?id=0Jqmw9JvD6lXB1EM1lcD" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Колесо энергий</h3>
-            <p class="course-desc">Управление опасными источниками энергии</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=1TjKZJXk54ZDa3MbPQ3T" class="btn">Пройти курс</a>
-              <a href="https://qhse-training.github.io/hse-course/1.03.Energy_Wheel/test3.html?id=1TjKZJXk54ZDa3MbPQ3T" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Знаки безопасности</h3>
-            <p class="course-desc">Требования к знакам безопасности</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=1U93p8leXCKsP7yKCadK" class="btn">Пройти курс</a>
-              <a href="https://qhse-training.github.io/hse-course/1.04.Safety_signs/test4.html?id=1U93p8leXCKsP7yKCadK" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Оценка риска</h3>
-            <p class="course-desc">Методики идентификации и оценки рисков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=3Qp2rMgMuUuhHg9VzteH" class="btn">Пройти курс</a>
-              <a href="https://qhse-training.github.io/hse-course/1.05.Risk_assessment/test5.html?id=3Qp2rMgMuUuhHg9VzteH" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Карты наблюдения</h3>
-            <p class="course-desc">Система наблюдения за безопасным поведением и состоянием</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=3YbaAYU7UriqBQ2DaW87" class="btn">Пройти курс</a>
-              <a href="file:///F:/QHSE%20training/dashboard.html" https:="" qhse-training.github.io="" hse-course="" 1.06.observation_cards="" test6.html?id="3YbaAYU7UriqBQ2DaW87&quot;&quot;" target="_blank" class="btn btn-test">Тест</a>
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Средства индивидуальной защиты (СИЗ)</h3>
-            <p class="course-desc">Выбор и использование средств индивидуальной защиты</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=4DXzvkvViBMLPsBS2YzX" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Наряд-допуск</h3>
-            <p class="course-desc">Организация системы наряд-допусков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=6jSXsQUV3gH4pQLfqVXN" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Мониторинг и измерение показателей БиОТ</h3>
-            <p class="course-desc">Контроль показателей безопасности</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=8mbH3EikSQcB5b8BdRBP" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Расследования несчастных случаев и отчетность</h3>
-            <p class="course-desc">Методика расследования инцидентов</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=8tWkPPEV1Hp7Be32UYsM" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Действия персонала в аварийных ситуациях</h3>
-            <p class="course-desc">Планирование действий при чрезвычайных ситуациях</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=8uh9uOk1vAwu2FDJ3HAY" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Первая помощь</h3>
-            <p class="course-desc">Оказание первой помощи на рабочем месте</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=93u8hfoVkYGnJe3mEeDY" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Проверка рабочих мест</h3>
-            <p class="course-desc">Проведение инспекций рабочих мест</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=99pe29Bp9BIBIE80lM3f" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Проведение аудита</h3>
-            <p class="course-desc">Проведение внутренних аудитов</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=A1HCB6zML92PMjbP8vDX" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Анализ и улучшение управления</h3>
-            <p class="course-desc">Анализ и улучшение системы управления</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=BLxvUqYFAbEMMkhONBga" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Шум и защита слуха</h3>
-            <p class="course-desc">Профилактика потери слуха на производстве</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=CLtfvUbaqPgvaMKrjmLs" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Вибрация</h3>
-            <p class="course-desc">Защита от локальной и общей вибрации</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=FkBfU7iHqSzSkEug2tue" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Радиационная опасность</h3>
-            <p class="course-desc">Защита от радиации на рабочем месте</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=Gm7KymJU7Jpm1XW7zvsw" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Психологические факторы</h3>
-            <p class="course-desc">Профилактика стресса и усталости</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=HlxAjjLtHzqguBxJYFyM" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Политика по алкоголю и наркотикам</h3>
-            <p class="course-desc">Профилактика злоупотребления веществами</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=IXJ4pptmEYHBaN6zCxTn" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Ручное перемещение</h3>
-            <p class="course-desc">Безопасное выполнение ручных погрузочно-разгрузочных работ</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=J9UlsMSVjKgoX5EE5xyK" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Эргономика</h3>
-            <p class="course-desc">Оптимизация рабочего места</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=JG7dSXlb88XIlsbd4Wfl" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Грузоподъемные работы</h3>
-            <p class="course-desc">Безопасность при работе с ГПМ</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=JezUr19PPW7OfvBnwHP8" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Биологическая опасность</h3>
-            <p class="course-desc">Защита от биологических рисков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=KOYgG79QMCEQo6e2OSA2" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Химическая опасность</h3>
-            <p class="course-desc">Работа с опасными химикатами</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=MBb6ZkqPRe7YnaYUExMQ" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Защита органов дыхания</h3>
-            <p class="course-desc">Использование средств защиты дыхания</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=MTBZvkWFQ33bcRrxtEg4" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Аттестация рабочих мест и производственный контроль</h3>
-            <p class="course-desc">Методы оценки условий труда</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=NfIYkrGcdkuF64GOfon5" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Работа в жаркую погоду</h3>
-            <p class="course-desc">Профилактика теплового удара</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=O02gNRBCjTr2iItEmIuJ" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Работа в холодную погоду</h3>
-            <p class="course-desc">Профилактика переохлаждения</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=QRdIKX66zrcYEqyn7qGK" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Работа на высоте</h3>
-            <p class="course-desc">Безопасность при работе на высоте</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=QTtCZ8P6YC9oeu4kXA0P" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Падающие предметы</h3>
-            <p class="course-desc">Защита от падающих объектов</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=QyntiQU9xx8KvdaQ88gF" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Работа в замкнутом пространстве</h3>
-            <p class="course-desc">Безопасность в замкнутых пространствах</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=R0VD6ZBngvoTIbWExUFk" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Огневые работы</h3>
-            <p class="course-desc">Безопасность при выполнении огневых работ</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=Rd3h4MfTdoOitnzauGdC" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Земляные работы</h3>
-            <p class="course-desc">Безопасность при земляных работах</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=S7g0HJK6w9r8arhI7LXD" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Уязвимые работники</h3>
-            <p class="course-desc">Специальные меры защиты для уязвимых групп</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=SBblrcD95MMASxGoNxCC" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Скользкие поверхности, спотыкания и падения</h3>
-            <p class="course-desc">Профилактика травм от падений</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=UOHi4yYBXn0DSEeeR2oo" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Уборка рабочего места</h3>
-            <p class="course-desc">Поддержание чистоты на рабочем месте</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=Vc40PyoRkBQTbVoYdBMK" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Экологические аспекты</h3>
-            <p class="course-desc">Экологические аспекты производства</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=WXCTiDwwzmVDBnpOUUam" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Безопасное вождение</h3>
-            <p class="course-desc">Профилактика аварий с рабочим транспортом</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=X0yAZVuvxYl0h8nSQLXx" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Работа с тяжёлой техникой</h3>
-            <p class="course-desc">Безопасная эксплуатация тяжелого оборудования</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=XZKBk94DGaKYkgegrodR" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Ручные инструменты</h3>
-            <p class="course-desc">Безопасное использование ручных инструментов</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=XyFjHFbvHEPSDPR8tIP7" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Переносные инструменты</h3>
-            <p class="course-desc">Безопасное использование переносных электроинструментов</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=YOPtgwG8engZnJqNbRuu" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Крутящиеся и вращающиеся механизмы</h3>
-            <p class="course-desc">Защита от опасных движущихся частей</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=YfQwZDrs6h8AQEBhT7Tg" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Защита рук и пальцев</h3>
-            <p class="course-desc">Профилактика травм рук и пальцев</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=YrJiEIxtLD1QRwJ4PAgN" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Пожарная безопасность</h3>
-            <p class="course-desc">Профилактика и тушение пожаров</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=Z1jjisAWM8fUOzAkjq9H" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Электробезопасность</h3>
-            <p class="course-desc">Безопасная работа с электроустановками</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=Z8QB5uROIWEpR3DPzalO" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Система блокировки/маркировки</h3>
-            <p class="course-desc">Безопасное обслуживание оборудования</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=bY3i83AH5VOMzA7fVypu" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Авторизованный газоанализаторщик (OPITO)</h3>
-            <p class="course-desc">Навыки работы с  газоанализаторами</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=btnmRkSssyrp2Xp1iAxL" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Правила спасения жизни (IOGP)</h3>
-            <p class="course-desc">Критические правила безопасности</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=dJnF8QoOUTdFIOMzes54" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Охрана окружающей среды</h3>
-            <p class="course-desc">Экологические требования</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=ecHl72GJoxVDYnE4P5An" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Лидерство и приверженность</h3>
-            <p class="course-desc">Роль руководства в безопасности</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=f1tBGLaFRasCCK5Y2lBE" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Безопасность в офисе и дома</h3>
-            <p class="course-desc">Профилактика травм в офисе и дома</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=fM4dPOiuYThCkv11IVWh" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Основы технологической безопасности (IOGP)</h3>
-            <p class="course-desc">Анализ технологических рисков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=fxQLsjuiXLfv3WmuJ4Yp" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Базовый курс безопасности для буровых работ (IADC)</h3>
-            <p class="course-desc">Основы безопасности при бурении</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=g7xzDETi5Ps3QaGTlI0g" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Опытный пользователь ПК</h3>
-            <p class="course-desc">Навыки работы с компьютером</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=ggCFRGIwKRdllFiYlfst" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Нулевая смертность (ISSA)</h3>
-            <p class="course-desc">Глобальная инициатива по нулевому травматизму</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=iacHQzkwuJwNoP50FZis" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">IOSH - Управление безопасностью</h3>
-            <p class="course-desc">Управление безопасностью для руководителей</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=kDddEN9oi5QK14U6xD6l" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">IOSH - Безопасная работа</h3>
-            <p class="course-desc">Безопасность труда для сотрудников</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=kJoG2494mjYtVNk8Az5n" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">NEBOSH IGC1 - Управление охраной труда</h3>
-            <p class="course-desc">Управление охраной труда</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=kM6pTPf6yuvxTw6EYPMB" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">NEBOSH IGC2 - Контроль опасностей</h3>
-            <p class="course-desc">Контроль опасностей на рабочем месте</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=lCYxh58tafmhjzVqCrd8" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Наблюдатель замкнутого пространства</h3>
-            <p class="course-desc">Обучение наблюдателей замкнутых пространств</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=ltu8Gvp3ka2bNTDdQhOR" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Пожарный наблюдатель</h3>
-            <p class="course-desc">Обучение пожарных наблюдателей	</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=m0Yq87gHm99a2UXLkzSc" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div><div class="course-card">
-          <div class="course-image" style="background-image:url(&#39;https://via.placeholder.com/300x160?text=Нет+превью&#39;)"></div>
-          <div class="course-body">
-            <h3 class="course-title">Сигнальщик</h3>
-            <p class="course-desc">Обучение сигнальщиков</p>
-            <div class="course-actions">
-              <a href="file:///F:/QHSE%20training/course.html?id=pEFG0KXa6ZkjpogBhZiv" class="btn">Пройти курс</a>
-              
-            </div>
-          </div>
-        </div></div>
+  <div class="course-list" id="courseList">
+    <div class="loading">Загрузка курсов...</div>
+  </div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="./Курсы_files/firebase-auth-compat.js.Без названия"></script>
-  <script src="./Курсы_files/firebase-firestore-compat.js.Без названия"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -671,16 +62,27 @@
       messagingSenderId: "4501351718",
       appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
     };
+    
+    // Инициализация Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // DOM элементы
     const courseList = document.getElementById('courseList');
     const searchInput = document.getElementById('searchInput');
+    const userInfo = document.getElementById('userInfo');
+    const userProgress = document.getElementById('userProgress');
 
+    // Глобальные переменные
+    let allCourses = [];
+    let userData = null;
+    let userProgressData = {};
+
+    // Получение URL превью курса
     async function getPreviewUrl(folder) {
       const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folder}`;
-      const variants = ["Slide1.JPG", "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG"];
+      const variants = ["Slide1.JPG", "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG", "slide1.jpg", "cover.jpg", "Slide1.jpeg", "slide1.jpeg"];
       for (let file of variants) {
         try {
           const res = await fetch(`${base}/${file}`, { method: 'HEAD' });
@@ -690,69 +92,435 @@
       return 'https://via.placeholder.com/300x160?text=Нет+превью';
     }
 
-    async function loadAllCourses() {
-      const snapshot = await db.collection('courses').get();
-      const courses = [];
-      for (let doc of snapshot.docs) {
-        const courseData = doc.data();
-        const preview = await getPreviewUrl(doc.id);
-        courses.push({ id: doc.id, ...courseData, slideUrl: preview });
+    // Определение статуса курса
+    function getCourseStatus(courseId) {
+      const progress = userProgressData[courseId] || {};
+      const slidesProgress = progress.slidesViewed || 0;
+      const testPassed = progress.testPassed || false;
+      const certificateGenerated = progress.certificateGenerated || false;
+      const certificateId = progress.certificateId || null;
+
+      if (certificateGenerated) {
+        return { 
+          status: 'completed', 
+          progress: 100, 
+          testAvailable: false,
+          certificateId: certificateId
+        };
+      } else if (testPassed) {
+        return { 
+          status: 'test-passed', 
+          progress: 100, 
+          testAvailable: false 
+        };
+      } else if (slidesProgress >= 100) {
+        return { 
+          status: 'test-available', 
+          progress: 100, 
+          testAvailable: true 
+        };
+      } else if (slidesProgress > 0) {
+        return { 
+          status: 'in-progress', 
+          progress: slidesProgress, 
+          testAvailable: false 
+        };
+      } else {
+        return { 
+          status: 'not-started', 
+          progress: 0, 
+          testAvailable: false 
+        };
       }
-      return courses;
     }
 
+    // Получение текста статуса
+    function getStatusText(status) {
+      const texts = {
+        'not-started': 'Не начат',
+        'in-progress': 'В процессе',
+        'test-available': 'Тест доступен',
+        'test-passed': 'Тест сдан',
+        'completed': 'Завершен'
+      };
+      return texts[status] || status;
+    }
+
+    // Получение класса для бейджа статуса
+    function getStatusClass(status) {
+      const classes = {
+        'not-started': 'status-not-started',
+        'in-progress': 'status-in-progress',
+        'test-available': 'status-test-available',
+        'test-passed': 'status-in-progress',
+        'completed': 'status-completed'
+      };
+      return classes[status] || 'status-not-started';
+    }
+
+    // Формирование правильного URL для курса
+    function getCourseUrl(courseId) {
+      // Используем относительный путь для GitHub Pages
+      return `course.html?id=${encodeURIComponent(courseId)}`;
+    }
+
+    // Формирование правильного URL для теста
+    function getTestUrl(course) {
+      if (!course.testHtml) return '#';
+      
+      // Если testHtml уже полный URL, используем его
+      if (course.testHtml.startsWith('http')) {
+        return `${course.testHtml}?id=${encodeURIComponent(course.id)}`;
+      }
+      
+      // Иначе формируем путь относительно GitHub Pages
+      const baseUrl = 'https://qhse-training.github.io/hse-course';
+      return `${baseUrl}/${course.testHtml}?id=${encodeURIComponent(course.id)}`;
+    }
+
+    // Показать существующий сертификат
+    function showCertificate(certificateId, courseName, userName, date) {
+      const certificateWindow = window.open('', '_blank');
+      certificateWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Сертификат - ${courseName}</title>
+          <style>
+            body { 
+              font-family: 'Arial', sans-serif; 
+              padding: 40px; 
+              text-align: center; 
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              min-height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            }
+            .certificate-container {
+              background: white;
+              border-radius: 20px;
+              padding: 40px;
+              max-width: 800px;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+              border: 15px solid #3498db;
+              position: relative;
+            }
+            .certificate-container:before {
+              content: '';
+              position: absolute;
+              top: -15px;
+              left: -15px;
+              right: -15px;
+              bottom: -15px;
+              border: 5px solid #2ecc71;
+              border-radius: 30px;
+              pointer-events: none;
+            }
+            h1 { 
+              color: #2c3e50; 
+              margin-bottom: 30px;
+              font-size: 2.5em;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+            }
+            h2 { 
+              color: #3498db; 
+              margin: 20px 0;
+              font-size: 1.8em;
+            }
+            h3 { 
+              color: #e74c3c; 
+              margin: 30px 0;
+              font-size: 2em;
+              padding: 10px;
+              border-bottom: 2px solid #3498db;
+              display: inline-block;
+            }
+            .signature { 
+              margin-top: 60px; 
+              display: flex; 
+              justify-content: space-around;
+              align-items: center;
+              padding-top: 30px;
+              border-top: 2px solid #eee;
+            }
+            .signature div {
+              text-align: center;
+            }
+            .signature div:first-child {
+              font-size: 1.2em;
+              color: #2c3e50;
+              font-weight: bold;
+            }
+            .certificate-id {
+              background: #f8f9fa;
+              padding: 10px 20px;
+              border-radius: 10px;
+              font-family: monospace;
+              color: #7f8c8d;
+              margin-top: 20px;
+              display: inline-block;
+            }
+            .watermark {
+              position: absolute;
+              opacity: 0.1;
+              font-size: 120px;
+              transform: rotate(-45deg);
+              top: 30%;
+              left: 10%;
+              white-space: nowrap;
+              color: #3498db;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="certificate-container">
+            <div class="watermark">СЕРТИФИКАТ</div>
+            <h1>Сертификат о прохождении курса</h1>
+            <h2>${courseName}</h2>
+            <p style="font-size: 1.2em; margin: 30px 0;">Настоящим удостоверяется, что</p>
+            <h3>${userName}</h3>
+            <p style="font-size: 1.2em; margin: 20px 0;">успешно завершил(а) обучение по курсу</p>
+            <p style="font-size: 1.1em; color: #7f8c8d; margin: 20px 0;">
+              и продемонстрировал(а) необходимые знания и навыки
+            </p>
+            <p style="font-size: 1.3em; margin: 30px 0; color: #2c3e50;">
+              ${date}
+            </p>
+            <div class="signature">
+              <div>
+                <div style="margin-bottom: 10px;">_________________________</div>
+                <div>Подпись руководителя</div>
+              </div>
+              <div>
+                <div style="margin-bottom: 10px;">_________________________</div>
+                <div>Печать организации</div>
+              </div>
+            </div>
+            <div class="certificate-id">ID сертификата: ${certificateId}</div>
+          </div>
+          <script>
+            window.onload = function() {
+              // Автоматически предлагаем печать
+              setTimeout(() => {
+                if (confirm('Распечатать сертификат?')) {
+                  window.print();
+                }
+              }, 500);
+            }
+          <\/script>
+        </body>
+        </html>
+      `);
+    }
+
+    // Рендеринг карточек курсов
     function renderCourses(courses) {
       if (!courses.length) {
-        courseList.innerHTML = `<div>Курсы не найдены</div>`;
+        courseList.innerHTML = '<div class="loading">Курсы не найдены</div>';
         return;
       }
+      
       courseList.innerHTML = '';
+      
       courses.forEach(course => {
+        const status = getCourseStatus(course.id);
         const card = document.createElement('div');
         card.className = 'course-card';
+        
         card.innerHTML = `
-          <div class="course-image" style="background-image:url('${course.slideUrl}')"></div>
+          <div class="course-image" style="background-image:url('${course.slideUrl}')">
+            <div class="progress-overlay">
+              <div class="progress-bar" style="width: ${status.progress}%"></div>
+            </div>
+          </div>
           <div class="course-body">
             <h3 class="course-title">${course.title || 'Без названия'}</h3>
+            <div class="course-status">
+              <span class="status-badge ${getStatusClass(status.status)}">
+                ${getStatusText(status.status)}
+              </span>
+              <span>${Math.round(status.progress)}%</span>
+            </div>
             <p class="course-desc">${course.description || 'Описание отсутствует'}</p>
+            <div class="course-meta">
+              <span>${course.duration || 'Длительность не указана'}</span>
+              <span>${course.modules || 0} модулей</span>
+            </div>
             <div class="course-actions">
-              <a href="course.html?id=${course.id}" class="btn">Пройти курс</a>
-              ${course.testHtml ? `<a href="${course.testHtml}" target="_blank" class="btn btn-test">Тест</a>` : ''}
+              <a href="${getCourseUrl(course.id)}" class="btn">${status.progress > 0 ? 'Продолжить' : 'Начать курс'}</a>
+              ${course.testHtml ? `
+                <button class="btn btn-test" ${status.testAvailable ? '' : 'disabled'} 
+                  onclick="window.open('${getTestUrl(course)}', '_blank')">
+                  Пройти тест
+                </button>
+              ` : ''}
+              ${status.status === 'completed' ? `
+                <button class="btn btn-certificate" onclick="showExistingCertificate('${course.id}')">
+                  Сертификат
+                </button>
+              ` : ''}
             </div>
           </div>
         `;
+        
         courseList.appendChild(card);
       });
     }
 
-    let allCourses = [];
+    // Загрузка данных пользователя и курсов
+    async function loadUserData(user) {
+      try {
+        // Загрузка данных пользователя
+        const userDoc = await db.collection("approved_users").doc(user.uid).get();
+        
+        if (!userDoc.exists) {
+          console.error("Пользователь не найден в approved_users");
+          courseList.innerHTML = `
+            <div class="loading">
+              <h3>Доступ запрещен</h3>
+              <p>Ваша учетная запись не найдена в системе</p>
+            </div>
+          `;
+          return false;
+        }
+        
+        userData = userDoc.data();
+        userInfo.textContent = `${userData.fullName || user.email} (${user.email})`;
+        
+        // Загрузка прогресса пользователя
+        const progressDoc = await db.collection("user_progress").doc(user.uid).get();
+        userProgressData = progressDoc.exists ? progressDoc.data() : {};
+        
+        // Расчет общего прогресса
+        const courseIds = userData.courses || [];
+        const totalProgress = courseIds.reduce((sum, courseId) => {
+          const progress = userProgressData[courseId] || {};
+          return sum + (progress.slidesViewed || 0);
+        }, 0);
+        
+        const completedCourses = courseIds.filter(courseId => {
+          const progress = userProgressData[courseId] || {};
+          return progress.certificateGenerated === true;
+        }).length;
+        
+        const avgProgress = courseIds.length > 0 ? Math.round(totalProgress / courseIds.length) : 0;
+        
+        userProgress.textContent = `Прогресс: ${avgProgress}% | Завершено: ${completedCourses}/${courseIds.length} курсов`;
+        
+        // Если нет назначенных курсов
+        if (courseIds.length === 0) {
+          courseList.innerHTML = `
+            <div class="loading" style="grid-column: 1 / -1;">
+              <h3>Курсы не назначены</h3>
+              <p>Обратитесь к администратору для назначения курсов</p>
+            </div>
+          `;
+          return true;
+        }
+        
+        // Загрузка данных курсов
+        const courses = [];
+        for (let courseId of courseIds) {
+          try {
+            const courseDoc = await db.collection('courses').doc(courseId).get();
+            if (courseDoc.exists) {
+              const courseData = courseDoc.data();
+              const preview = await getPreviewUrl(courseId);
+              courses.push({
+                id: courseId,
+                title: courseData.title || `Курс ${courseId}`,
+                description: courseData.description || '',
+                testHtml: courseData.testHtml || null,
+                duration: courseData.duration || 'Не указано',
+                modules: courseData.modules || 0,
+                slideUrl: preview
+              });
+            }
+          } catch (error) {
+            console.error(`Ошибка загрузки курса ${courseId}:`, error);
+          }
+        }
+        
+        allCourses = courses;
+        renderCourses(allCourses);
+        return true;
+        
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+        courseList.innerHTML = `
+          <div class="loading">
+            <h3>Ошибка загрузки данных</h3>
+            <p>Попробуйте обновить страницу</p>
+          </div>
+        `;
+        return false;
+      }
+    }
+
+    // Показать существующий сертификат
+    async function showExistingCertificate(courseId) {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        
+        const progress = userProgressData[courseId] || {};
+        if (!progress.certificateGenerated || !progress.certificateId) {
+          alert('Сертификат еще не был сгенерирован');
+          return;
+        }
+        
+        const course = allCourses.find(c => c.id === courseId);
+        const userName = userData.fullName || user.email;
+        const courseName = course?.title || 'Курс';
+        const date = progress.certificateDate ? 
+          new Date(progress.certificateDate).toLocaleDateString('ru-RU') : 
+          new Date().toLocaleDateString('ru-RU');
+        
+        showCertificate(progress.certificateId, courseName, userName, date);
+        
+      } catch (error) {
+        console.error("Ошибка показа сертификата:", error);
+        alert('Ошибка при открытии сертификата');
+      }
+    }
+
+    // Основная инициализация
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = 'login.html';
         return;
       }
 
-      const userDoc = await db.collection("approved_users").doc(user.uid).get();
-      const fullName = userDoc.exists ? userDoc.data().fullName : (user.email || 'Пользователь');
-      document.getElementById('userInfo').textContent = `${fullName} (${user.email})`;
-
+      // Кнопка выхода
       document.getElementById('logoutBtn').addEventListener('click', () => {
         auth.signOut().then(() => location.href = 'login.html');
       });
 
-      allCourses = await loadAllCourses();
-      renderCourses(allCourses);
+      // Загрузка данных
+      await loadUserData(user);
+
+      // Поиск курсов
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        if (!searchTerm) {
+          renderCourses(allCourses);
+          return;
+        }
+        
+        const filtered = allCourses.filter(c => 
+          (c.title || '').toLowerCase().includes(searchTerm) || 
+          (c.description || '').toLowerCase().includes(searchTerm)
+        );
+        renderCourses(filtered);
+      });
     });
 
-    searchInput.addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase();
-      const filtered = allCourses.filter(c => 
-        (c.title || '').toLowerCase().includes(searchTerm) || 
-        (c.description || '').toLowerCase().includes(searchTerm)
-      );
-      renderCourses(filtered);
+    // Обработка ошибок
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.error);
     });
   </script>
-
-
-</body></html>
+</body>
+</html>
