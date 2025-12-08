@@ -21,8 +21,8 @@
     .status-in-progress { background: #f39c12; color: white; }
     .status-test-available { background: #3498db; color: white; }
     .status-completed { background: #2ecc71; color: white; }
-    .course-actions { margin-top: 10px; display: flex; gap: 10px; }
-    .btn { padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; text-align: center; cursor: pointer; border: none; font-size: 14px; }
+    .course-actions { margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 8px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 5px; text-align: center; cursor: pointer; border: none; font-size: 14px; flex: 1; min-width: 120px; }
     .btn:hover { opacity: 0.9; transform: translateY(-2px); transition: all 0.3s; }
     .btn-test { background: #e67e22; }
     .btn-test:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; transform: none; }
@@ -106,39 +106,28 @@
 
     // Карта соответствия ID курса и папки курса
     const courseFolderMap = {
-      // Курс 1.01
       '0EFXo6H4N1mbA1jBJwOK': '1.01.Occupational_Health_and_Safety_Management_System',
       // Добавьте здесь соответствия для других курсов
-      // Пример:
-      // 'ДРУГОЙ_ID_КУРСА': '1.02.Hierarchy_of_hazard_controls',
     };
 
     // Получение папки курса по его ID
     function getCourseFolder(courseId) {
-      // Если есть в карте, используем из карты
-      if (courseFolderMap[courseId]) {
-        return courseFolderMap[courseId];
-      }
-      
-      // По умолчанию используем первую папку
-      return '1.01.Occupational_Health_and_Safety_Management_System';
+      return courseFolderMap[courseId] || '1.01.Occupational_Health_and_Safety_Management_System';
     }
 
     // Получение номера курса из папки
     function getCourseNumber(folderName) {
-      // Извлекаем номер из названия папки
       const match = folderName.match(/^(\d+\.\d+)/);
       if (match) {
         const parts = match[1].split('.');
-        return parts[1]; // Возвращаем вторую часть (01, 02, и т.д.)
+        return parts[1];
       }
-      return '1'; // По умолчанию
+      return '1';
     }
 
     // Получение URL превью курса
-    async function getPreviewUrl(courseId, folderName = null) {
-      const folder = folderName || getCourseFolder(courseId);
-      const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folder}`;
+    async function getPreviewUrl(folderName) {
+      const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}`;
       
       const variants = [
         "Slide1.JPG",
@@ -148,17 +137,25 @@
         "Slide1.jpeg",
         "slide1.jpeg",
         "Slide1.png",
-        "slide1.png"
+        "slide1.png",
+        "1.jpg",
+        "01.jpg",
+        "cover.png"
       ];
       
+      // Проверяем доступность файлов
       for (let file of variants) {
         try {
-          const res = await fetch(`${base}/${file}`, { method: 'HEAD' });
-          if (res.ok) return `${base}/${file}`;
-        } catch(e) {}
+          const url = `${base}/${file}`;
+          const res = await fetch(url, { method: 'HEAD' });
+          if (res.ok) return url;
+        } catch(e) {
+          continue;
+        }
       }
       
-      return 'https://via.placeholder.com/300x160?text=Курс';
+      // Если ничего не найдено, возвращаем заглушку
+      return 'https://via.placeholder.com/300x160/3498db/ffffff?text=Курс';
     }
 
     // Определение статуса курса
@@ -227,42 +224,70 @@
       return classes[status] || 'status-not-started';
     }
 
-    // Формирование правильного URL для курса - БЕЗ ID параметра
+    // Формирование URL для курса
     function getCourseUrl(course) {
-      const folderName = course.folderName || getCourseFolder(course.id);
+      const folderName = course.folderName;
       const courseNumber = getCourseNumber(folderName);
       
-      // Простая ссылка без ID параметра
+      // Проверяем, существует ли файл курса
       return `https://qhse-training.github.io/hse-course/${folderName}/course${courseNumber}.html`;
     }
 
-    // Формирование правильного URL для теста - БЕЗ ID параметра
+    // Формирование URL для теста
     function getTestUrl(course) {
-      const folderName = course.folderName || getCourseFolder(course.id);
+      const folderName = course.folderName;
       const courseNumber = getCourseNumber(folderName);
       
-      // Простая ссылка без ID параметра
+      // Проверяем, существует ли тест для этого курса
       return `https://qhse-training.github.io/hse-course/${folderName}/test${courseNumber}.html`;
+    }
+
+    // Проверка существования файла
+    async function checkFileExists(url) {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+      } catch (error) {
+        return false;
+      }
     }
 
     // Показать сертификат
     function showExistingCertificate(courseId) {
-      alert('Функция сертификата будет доступна после завершения курса и прохождения теста.');
+      const progress = userProgressData[courseId] || {};
+      const certificateId = progress.certificateId;
+      
+      if (certificateId) {
+        // Открываем страницу сертификата
+        window.open(`certificate.html?id=${certificateId}`, '_blank');
+      } else {
+        alert('Сертификат еще не сгенерирован. Завершите курс и пройдите тест для получения сертификата.');
+      }
     }
 
     // Рендеринг карточек курсов
-    function renderCourses(courses) {
-      if (!courses.length) {
+    async function renderCourses(courses) {
+      if (!courses || courses.length === 0) {
         courseList.innerHTML = '<div class="no-courses">Курсы не найдены</div>';
         return;
       }
       
       courseList.innerHTML = '';
       
-      courses.forEach(course => {
+      // Рендерим каждый курс
+      for (const course of courses) {
         const status = getCourseStatus(course.id);
         const card = document.createElement('div');
         card.className = 'course-card';
+        
+        // Проверяем доступность теста
+        let testAvailable = false;
+        let testUrl = '';
+        
+        if (course.testAvailable || status.testAvailable) {
+          testUrl = getTestUrl(course);
+          testAvailable = await checkFileExists(testUrl);
+        }
         
         card.innerHTML = `
           <div class="course-image" style="background-image:url('${course.slideUrl}')">
@@ -285,9 +310,9 @@
             </div>
             <div class="course-actions">
               <a href="${getCourseUrl(course)}" target="_blank" class="btn">${status.progress > 0 ? 'Продолжить' : 'Начать курс'}</a>
-              ${course.testHtml || status.testAvailable ? `
+              ${testAvailable ? `
                 <button class="btn btn-test" ${status.testAvailable ? '' : 'disabled'} 
-                  onclick="window.open('${getTestUrl(course)}', '_blank')">
+                  onclick="window.open('${testUrl}', '_blank')">
                   Пройти тест
                 </button>
               ` : ''}
@@ -301,7 +326,7 @@
         `;
         
         courseList.appendChild(card);
-      });
+      }
     }
 
     // Загрузка данных пользователя и курсов
@@ -343,9 +368,11 @@
           
           // Загружаем данные каждого курса
           const courses = [];
-          const coursePromises = userCourseIds.map(async (courseId) => {
+          
+          for (const courseId of userCourseIds) {
             try {
               const courseDoc = await db.collection('courses').doc(courseId).get();
+              
               if (courseDoc.exists) {
                 const courseData = courseDoc.data();
                 
@@ -356,32 +383,60 @@
                 }
                 
                 // Получаем превью
-                const preview = await getPreviewUrl(courseId, folderName);
+                const preview = await getPreviewUrl(folderName);
                 
-                return {
+                courses.push({
                   id: courseId,
                   folderName: folderName,
-                  title: courseData.title || `Курс`,
-                  description: courseData.description || 'Описание курса',
-                  testHtml: courseData.testHtml || null,
+                  title: courseData.title || `Курс ${courseId.substring(0, 8)}`,
+                  description: courseData.description || 'Описание курса будет добавлено позже',
+                  testAvailable: courseData.testAvailable || false,
                   duration: courseData.duration || 'Не указано',
                   modules: courseData.modules || 0,
                   slideUrl: preview,
                   slides: courseData.slides || []
-                };
+                });
               } else {
                 console.warn(`Курс ${courseId} не найден в коллекции courses`);
-                return null;
+                
+                // Создаем базовый объект курса
+                const folderName = getCourseFolder(courseId);
+                const preview = await getPreviewUrl(folderName);
+                
+                courses.push({
+                  id: courseId,
+                  folderName: folderName,
+                  title: `Курс ${courseId.substring(0, 8)}`,
+                  description: 'Курс находится в разработке',
+                  testAvailable: false,
+                  duration: 'Не указано',
+                  modules: 0,
+                  slideUrl: preview,
+                  slides: []
+                });
               }
             } catch (error) {
               console.error(`Ошибка загрузки курса ${courseId}:`, error);
-              return null;
+              
+              // Создаем базовый объект курса при ошибке
+              const folderName = getCourseFolder(courseId);
+              const preview = await getPreviewUrl(folderName);
+              
+              courses.push({
+                id: courseId,
+                folderName: folderName,
+                title: `Курс ${courseId.substring(0, 8)}`,
+                description: 'Ошибка загрузки данных курса',
+                testAvailable: false,
+                duration: 'Не указано',
+                modules: 0,
+                slideUrl: preview,
+                slides: []
+              });
             }
-          });
+          }
           
-          // Ждем загрузки всех курсов
-          const courseResults = await Promise.all(coursePromises);
-          allCourses = courseResults.filter(course => course !== null);
+          allCourses = courses;
           
           // Расчет статистики
           const totalProgress = userCourseIds.reduce((sum, courseId) => {
@@ -399,7 +454,7 @@
           userProgress.textContent = `Прогресс: ${avgProgress}% | Завершено: ${completedCourses}/${userCourseIds.length} курсов`;
           
           // Рендеринг курсов
-          renderCourses(allCourses);
+          await renderCourses(allCourses);
           return true;
           
         } catch (dbError) {
@@ -430,7 +485,7 @@
     // Показать сообщение об ошибке
     function showErrorMessage(error) {
       let message = "Ошибка загрузки данных";
-      let details = "";
+      let details = "Попробуйте обновить страницу позже.";
       
       if (error.code === 'permission-denied') {
         message = "Недостаточно прав доступа";
@@ -438,13 +493,14 @@
       } else if (error.code === 'unavailable') {
         message = "Сервис временно недоступен";
         details = "Проверьте подключение к интернету.";
+      } else if (error.message) {
+        details = error.message;
       }
       
       courseList.innerHTML = `
         <div class="error-container">
           <h3>${message}</h3>
           <p>${details}</p>
-          <p style="font-size: 12px; color: #95a5a6;">Код: ${error.code || 'неизвестно'}</p>
           <button class="retry-btn" onclick="window.location.reload()">⟳ Обновить страницу</button>
         </div>
       `;
