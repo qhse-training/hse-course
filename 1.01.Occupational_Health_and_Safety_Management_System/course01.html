@@ -367,18 +367,12 @@
       return '01';
     }
 
-    // Формирование URL для GitHub Pages курса
-    function getCourseUrl(folder) {
-      if (!folder) return '#';
-      const courseNumber = getCourseNumber(folder);
-      return `https://qhse-training.github.io/hse-course/${folder}/course${courseNumber}.html`;
-    }
-
-    // Формирование URL для GitHub Pages теста
-    function getTestUrl(folder) {
-      if (!folder) return '#';
-      const courseNumber = getCourseNumber(folder);
-      return `https://qhse-training.github.io/hse-course/${folder}/test${courseNumber}.html`;
+    // Формирование правильного URL для теста (без параметра id)
+    function getCorrectTestUrl() {
+      if (!courseFolder) return '#';
+      
+      // Всегда используем формат test01.html (с ведущим нулем)
+      return `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`;
     }
 
     // Create course HTML structure
@@ -461,6 +455,13 @@
                 courseFolder = courseData.folderName;
               }
             }
+            
+            // Исправляем testHtml если он содержит старый формат
+            if (courseData.testHtml && courseData.testHtml.includes('test1.html?id=')) {
+              console.log('Fixing test URL from old format to new format');
+              // Заменяем test1.html?id=... на test01.html
+              courseData.testHtml = `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`;
+            }
           } else {
             console.log('Course not found in Firestore');
             // Если курс не найден, создаем базовые данные
@@ -469,7 +470,8 @@
               description: 'Разработка и внедрение системы управления охраной труда',
               module: 'MODULE 1',
               duration: '1 час',
-              slides: []
+              slides: [],
+              testHtml: `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`
             };
           }
         } catch (error) {
@@ -480,7 +482,8 @@
             description: 'Разработка и внедрение системы управления охраной труда',
             module: 'MODULE 1',
             duration: '1 час',
-            slides: []
+            slides: [],
+            testHtml: `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`
           };
         }
 
@@ -532,33 +535,8 @@
       }
       courseMetaEl.innerHTML = metaHTML;
 
-      // Add course resources
-      const courseNumber = getCourseNumber(courseFolder);
-      const courseUrl = getCourseUrl(courseFolder);
-      const testUrl = getTestUrl(courseFolder);
-      
-      console.log('Course resources:', {
-        folder: courseFolder,
-        number: courseNumber,
-        courseUrl: courseUrl,
-        testUrl: testUrl
-      });
-      
-      const resourcesHTML = `
-        <div class="course-resources">
-          <p style="margin-bottom: 10px; font-weight: bold;">Ресурсы курса:</p>
-          <a href="${courseUrl}" target="_blank" class="resource-link">
-            <i class="fas fa-external-link-alt"></i> Интерактивная версия курса
-          </a>
-          <a href="${testUrl}" target="_blank" class="resource-link">
-            <i class="fas fa-clipboard-check"></i> Пройти тест
-          </a>
-          <a href="https://github.com/qhse-training/hse-course/tree/main/${courseFolder}" target="_blank" class="resource-link">
-            <i class="fab fa-github"></i> Исходные файлы на GitHub
-          </a>
-        </div>
-      `;
-      courseResourcesEl.innerHTML = resourcesHTML;
+      // Add course resources - УДАЛЕНО (оставляем только кнопки внизу)
+      courseResourcesEl.innerHTML = '';
     }
 
     // Load slides
@@ -693,11 +671,6 @@
             <strong>Папка курса:</strong> ${courseFolder || 'не определена'}<br>
             <strong>ID курса:</strong> ${courseId || 'не определен'}
           </p>
-          <p style="margin-top: 20px;">
-            <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link" style="display: inline-flex;">
-              <i class="fas fa-external-link-alt"></i> Перейти к интерактивной версии курса
-            </a>
-          </p>
         </div>
       `;
     }
@@ -785,6 +758,7 @@
       slideTitleEl.textContent = slide.title;
       currentSlideEl.textContent = currentSlideIndex + 1;
 
+      // Упрощенный вывод слайда без лишних ссылок
       slideContentEl.innerHTML = `
         <div style="text-align: center;">
           <img src="${slide.imageUrl}" 
@@ -797,11 +771,6 @@
             <p>${slide.description}</p>
             <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
               <i class="fas fa-info-circle"></i> Для навигации используйте стрелки ← → на клавиатуре, кнопки ниже или свайп на мобильных устройствах
-            </p>
-            <p style="margin-top: 15px; text-align: center;">
-              <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link" style="display: inline-flex;">
-                <i class="fas fa-external-link-alt"></i> Открыть интерактивную версию курса
-              </a>
             </p>
           </div>
         </div>
@@ -870,19 +839,21 @@
       }
     }
 
-    // Open test
+    // Open test - ИСПРАВЛЕНА
     function openTest() {
-      // Если в данных курса есть testHtml, используем его
+      // Всегда используем правильный URL теста
+      const testUrl = getCorrectTestUrl();
+      console.log('Opening correct test URL:', testUrl);
+      window.open(testUrl, '_blank');
+      
+      // Если нужно использовать testHtml из Firestore (исправленный)
+      /*
       if (courseData?.testHtml) {
         console.log('Opening test from course data:', courseData.testHtml);
         window.open(courseData.testHtml, '_blank');
         return;
       }
-      
-      // Иначе формируем URL
-      const testUrl = getTestUrl(courseFolder);
-      console.log('Opening test URL:', testUrl);
-      window.open(testUrl, '_blank');
+      */
     }
 
     // Logout
