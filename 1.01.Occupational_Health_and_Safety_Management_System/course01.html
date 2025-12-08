@@ -215,6 +215,14 @@
       border-color: #3498db;
       transform: translateY(-2px);
     }
+    .login-prompt {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin: 2rem 0;
+    }
     @media (max-width: 768px) {
       header { flex-direction: column; text-align: center; gap: 1rem; }
       nav ul { flex-direction: column; gap: 0.5rem; }
@@ -247,48 +255,8 @@
     </ul>
   </nav>
   
-  <div class="course-container">
-    <div class="course-header">
-      <h1 class="course-title" id="courseTitle">Загрузка курса...</h1>
-      <div class="course-description" id="courseDescription"></div>
-      <div class="course-meta" id="courseMeta"></div>
-      <div id="courseResources"></div>
-      <div class="progress-container">
-        <div class="progress-bar" id="progressBar">0%</div>
-      </div>
-    </div>
-    
-    <div class="slide-container">
-      <h2 class="slide-title" id="slideTitle">Загрузка слайда...</h2>
-      <div class="slide-content">
-        <div id="slideContent" class="loading">
-          <p>Загрузка материалов курса...</p>
-        </div>
-      </div>
-      <div class="slide-navigation">
-        <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled>
-          <i class="fas fa-arrow-left"></i> Назад
-        </button>
-        <button class="nav-btn" id="nextBtn" onclick="nextSlide()" disabled>
-          Вперед <i class="fas fa-arrow-right"></i>
-        </button>
-        <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreenBtn">
-          <i class="fas fa-expand"></i> Полный экран
-        </button>
-      </div>
-      <div class="slide-info">
-        Слайд <span id="currentSlide">0</span> из <span id="totalSlides">0</span>
-      </div>
-    </div>
-    
-    <div class="actions">
-      <a href="https://qhse-training.github.io/hse-course/courses.html" class="action-btn btn-back">
-        <i class="fas fa-arrow-left"></i> К списку курсов
-      </a>
-      <button class="action-btn btn-test" id="testBtn" onclick="openTest()" disabled>
-        <i class="fas fa-clipboard-check"></i> Пройти тест
-      </button>
-    </div>
+  <div class="course-container" id="mainContent">
+    <!-- Контент будет загружен динамически -->
   </div>
 
   <!-- Firebase SDK -->
@@ -312,23 +280,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // DOM elements
-    const courseTitleEl = document.getElementById('courseTitle');
-    const courseDescriptionEl = document.getElementById('courseDescription');
-    const courseMetaEl = document.getElementById('courseMeta');
-    const courseResourcesEl = document.getElementById('courseResources');
-    const slideTitleEl = document.getElementById('slideTitle');
-    const slideContentEl = document.getElementById('slideContent');
-    const currentSlideEl = document.getElementById('currentSlide');
-    const totalSlidesEl = document.getElementById('totalSlides');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const progressBar = document.getElementById('progressBar');
-    const testBtn = document.getElementById('testBtn');
-    const usernameEl = document.getElementById('username');
-    const userAvatarEl = document.getElementById('userAvatar');
-
-    // Global variables
+    // Глобальные переменные
     let courseId = null;
     let courseFolder = null;
     let slides = [];
@@ -337,16 +289,54 @@
     let courseData = null;
     let userProgress = {};
 
-    // Карта соответствия ID курса и папки курса (запасной вариант)
+    // Карта соответствия ID курса и папки курса
     const courseFolderMap = {
       '0EFXo6H4N1mbA1jBJwOK': '1.01.Occupational_Health_and_Safety_Management_System',
       // Добавьте здесь другие курсы по мере необходимости
     };
 
-    // Get course ID from URL
-    function getCourseIdFromUrl() {
+    // Обратная карта: папка -> ID курса
+    const folderToIdMap = {
+      '1.01.Occupational_Health_and_Safety_Management_System': '0EFXo6H4N1mbA1jBJwOK',
+      // Добавьте здесь другие соответствия
+    };
+
+    // Get course ID from URL or folder name
+    function getCourseId() {
       const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get('id');
+      let id = urlParams.get('id');
+      
+      // Если ID не передан в параметрах, пробуем определить из URL
+      if (!id) {
+        // Извлекаем название папки из URL
+        const pathParts = window.location.pathname.split('/');
+        for (let i = pathParts.length - 1; i >= 0; i--) {
+          const part = pathParts[i];
+          if (part && part !== 'course01.html' && part !== 'course.html' && !part.endsWith('.html')) {
+            // Это может быть название папки
+            courseFolder = part;
+            // Пробуем найти ID по папке
+            id = folderToIdMap[part];
+            if (id) {
+              console.log('Found course ID from folder:', part, '->', id);
+              break;
+            }
+          }
+        }
+        
+        // Если все еще не нашли, используем дефолтное значение
+        if (!id) {
+          id = '0EFXo6H4N1mbA1jBJwOK'; // ID первого курса по умолчанию
+          console.log('Using default course ID:', id);
+        }
+      }
+      
+      return id;
+    }
+
+    // Get course folder from ID
+    function getCourseFolderFromId(courseId) {
+      return courseFolderMap[courseId] || courseId;
     }
 
     // Get course number from folder name
@@ -354,106 +344,179 @@
       const match = folderName.match(/^(\d+\.\d+)/);
       if (match) {
         const parts = match[1].split('.');
-        return parts[1] || '01'; // Возвращаем вторую часть (01, 02, и т.д.)
+        return parts[1] || '01';
       }
       return '01';
     }
 
     // Формирование URL для GitHub Pages курса
-    function getCourseUrl() {
-      if (!courseFolder) return '#';
-      const courseNumber = getCourseNumber(courseFolder);
-      return `https://qhse-training.github.io/hse-course/${courseFolder}/course${courseNumber}.html`;
+    function getCourseUrl(folder) {
+      if (!folder) return '#';
+      const courseNumber = getCourseNumber(folder);
+      return `https://qhse-training.github.io/hse-course/${folder}/course${courseNumber}.html`;
     }
 
     // Формирование URL для GitHub Pages теста
-    function getTestUrl() {
-      if (!courseFolder) return '#';
-      const courseNumber = getCourseNumber(courseFolder);
-      return `https://qhse-training.github.io/hse-course/${courseFolder}/test${courseNumber}.html`;
+    function getTestUrl(folder) {
+      if (!folder) return '#';
+      const courseNumber = getCourseNumber(folder);
+      return `https://qhse-training.github.io/hse-course/${folder}/test${courseNumber}.html`;
+    }
+
+    // Create course HTML structure
+    function createCourseHTML() {
+      return `
+        <div class="course-header">
+          <h1 class="course-title" id="courseTitle">Загрузка курса...</h1>
+          <div class="course-description" id="courseDescription"></div>
+          <div class="course-meta" id="courseMeta"></div>
+          <div id="courseResources"></div>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0%</div>
+          </div>
+        </div>
+        
+        <div class="slide-container">
+          <h2 class="slide-title" id="slideTitle">Загрузка слайда...</h2>
+          <div class="slide-content">
+            <div id="slideContent" class="loading">
+              <p>Загрузка материалов курса...</p>
+            </div>
+          </div>
+          <div class="slide-navigation">
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled>
+              <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()" disabled>
+              Вперед <i class="fas fa-arrow-right"></i>
+            </button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreenBtn">
+              <i class="fas fa-expand"></i> Полный экран
+            </button>
+          </div>
+          <div class="slide-info">
+            Слайд <span id="currentSlide">0</span> из <span id="totalSlides">0</span>
+          </div>
+        </div>
+        
+        <div class="actions">
+          <a href="https://qhse-training.github.io/hse-course/courses.html" class="action-btn btn-back">
+            <i class="fas fa-arrow-left"></i> К списку курсов
+          </a>
+          <button class="action-btn btn-test" id="testBtn" onclick="openTest()" disabled>
+            <i class="fas fa-clipboard-check"></i> Пройти тест
+          </button>
+        </div>
+      `;
     }
 
     // Load course data
     async function loadCourseData() {
       try {
-        courseId = getCourseIdFromUrl();
-        console.log('Course ID from URL:', courseId);
+        courseId = getCourseId();
+        console.log('Course ID:', courseId);
         
         if (!courseId) {
-          showError('ID курса не указан в URL. Пожалуйста, перейдите к курсу из списка курсов.');
+          showError('Не удалось определить курс. Пожалуйста, перейдите к курсу из списка курсов.');
           return;
         }
+
+        // Определяем папку курса
+        courseFolder = getCourseFolderFromId(courseId);
+        console.log('Course folder:', courseFolder);
 
         // Получаем данные курса из Firestore
-        const courseDoc = await db.collection('courses').doc(courseId).get();
+        let courseDoc;
+        try {
+          courseDoc = await db.collection('courses').doc(courseId).get();
+        } catch (error) {
+          console.warn('Ошибка загрузки из Firestore:', error);
+          // Если не удалось загрузить из Firestore, создаем базовые данные
+          courseData = {
+            title: 'Курс по охране труда и технике безопасности',
+            description: 'Интерактивный курс по системе управления охраной труда и промышленной безопасностью',
+            module: 'Модуль 1.01',
+            duration: '1 час'
+          };
+          
+          // Загружаем слайды и обновляем интерфейс
+          await updateCourseInterface();
+          await loadSlides();
+          await loadUserProgress();
+          return;
+        }
         
         if (!courseDoc.exists) {
-          showError('Курс не найден в базе данных. Пожалуйста, обратитесь к администратору.');
-          return;
+          console.log('Course not found in Firestore, using default data');
+          // Используем базовые данные, если курс не найден в Firestore
+          courseData = {
+            title: 'Курс по охране труда и технике безопасности',
+            description: 'Интерактивный курс по системе управления охраной труда и промышленной безопасностью',
+            module: 'Модуль 1.01',
+            duration: '1 час'
+          };
+        } else {
+          courseData = courseDoc.data();
+          console.log('Course data loaded:', courseData);
         }
 
-        courseData = courseDoc.data();
-        console.log('Course data loaded:', courseData);
-        
-        // Определяем папку курса
-        courseFolder = courseData.folderName || courseFolderMap[courseId];
-        
-        if (!courseFolder) {
-          showError('Папка курса не определена. Пожалуйста, обратитесь к администратору.');
-          return;
-        }
-        
-        console.log('Course folder:', courseFolder);
-        
-        // Update course info
-        courseTitleEl.textContent = courseData.title || 'Курс без названия';
-        courseDescriptionEl.textContent = courseData.description || 'Описание курса будет добавлено позже';
-        
-        // Update course metadata
-        let metaHTML = '';
-        if (courseData.module) {
-          metaHTML += `<div class="meta-item"><i class="fas fa-layer-group"></i> ${courseData.module}</div>`;
-        }
-        if (courseData.duration) {
-          metaHTML += `<div class="meta-item"><i class="fas fa-clock"></i> ${courseData.duration}</div>`;
-        }
-        if (courseData.slides && courseData.slides.length) {
-          metaHTML += `<div class="meta-item"><i class="fas fa-images"></i> ${courseData.slides.length} слайдов</div>`;
-        }
-        courseMetaEl.innerHTML = metaHTML;
+        // Обновляем интерфейс
+        await updateCourseInterface();
 
-        // Add course resources
-        const courseNumber = getCourseNumber(courseFolder);
-        const resourcesHTML = `
-          <div class="course-resources">
-            <p style="margin-bottom: 10px; font-weight: bold;">Ресурсы курса:</p>
-            <a href="${getCourseUrl()}" target="_blank" class="resource-link">
-              <i class="fas fa-external-link-alt"></i> Интерактивная версия курса
-            </a>
-            <a href="${getTestUrl()}" target="_blank" class="resource-link">
-              <i class="fas fa-clipboard-check"></i> Пройти тест
-            </a>
-            <a href="https://github.com/qhse-training/hse-course/tree/main/${courseFolder}" target="_blank" class="resource-link">
-              <i class="fab fa-github"></i> Исходные файлы на GitHub
-            </a>
-          </div>
-        `;
-        courseResourcesEl.innerHTML = resourcesHTML;
-
-        // Load slides
+        // Загружаем слайды
         await loadSlides();
 
-        // Load user progress
+        // Загружаем прогресс пользователя
         await loadUserProgress();
 
-        // Enable test button
-        testBtn.disabled = false;
-        testBtn.title = 'Перейти к тестированию';
+        // Включаем кнопку теста
+        document.getElementById('testBtn').disabled = false;
+        document.getElementById('testBtn').title = 'Перейти к тестированию';
 
       } catch (error) {
         console.error('Ошибка загрузки курса:', error);
         showError(`Ошибка загрузки курса: ${error.message}. Проверьте подключение к интернету.`);
       }
+    }
+
+    // Update course interface
+    async function updateCourseInterface() {
+      const courseTitleEl = document.getElementById('courseTitle');
+      const courseDescriptionEl = document.getElementById('courseDescription');
+      const courseMetaEl = document.getElementById('courseMeta');
+      const courseResourcesEl = document.getElementById('courseResources');
+
+      // Update course info
+      courseTitleEl.textContent = courseData?.title || 'Курс по охране труда и технике безопасности';
+      courseDescriptionEl.textContent = courseData?.description || 'Интерактивный курс по системе управления охраной труда';
+      
+      // Update course metadata
+      let metaHTML = '';
+      if (courseData?.module) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-layer-group"></i> ${courseData.module}</div>`;
+      }
+      if (courseData?.duration) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-clock"></i> ${courseData.duration}</div>`;
+      }
+      courseMetaEl.innerHTML = metaHTML;
+
+      // Add course resources
+      const courseNumber = getCourseNumber(courseFolder);
+      const resourcesHTML = `
+        <div class="course-resources">
+          <p style="margin-bottom: 10px; font-weight: bold;">Ресурсы курса:</p>
+          <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link">
+            <i class="fas fa-external-link-alt"></i> Интерактивная версия курса
+          </a>
+          <a href="${getTestUrl(courseFolder)}" target="_blank" class="resource-link">
+            <i class="fas fa-clipboard-check"></i> Пройти тест
+          </a>
+          <a href="https://github.com/qhse-training/hse-course/tree/main/${courseFolder}" target="_blank" class="resource-link">
+            <i class="fab fa-github"></i> Исходные файлы на GitHub
+          </a>
+        </div>
+      `;
+      courseResourcesEl.innerHTML = resourcesHTML;
     }
 
     // Load slides
@@ -470,8 +533,9 @@
         // Пытаемся найти слайды
         let slideNumber = 1;
         const maxSlides = 50;
+        let consecutiveFails = 0;
         
-        while (slideNumber <= maxSlides) {
+        while (slideNumber <= maxSlides && consecutiveFails < 3) {
           const slideUrls = [
             // GitHub Pages URL
             `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.JPG`,
@@ -483,9 +547,6 @@
             `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpg`,
             `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.png`,
             `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpeg`,
-            // Русские названия
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/%D0%A1%D0%BB%D0%B0%D0%B9%D0%B4${slideNumber}.JPG`,
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/%D0%A1%D0%BB%D0%B0%D0%B9%D0%B4${slideNumber}.jpg`,
           ];
           
           let foundSlide = false;
@@ -498,10 +559,11 @@
                   number: slideNumber,
                   title: `Слайд ${slideNumber}`,
                   imageUrl: slideUrl,
-                  description: `Слайд ${slideNumber} курса "${courseData.title}"`
+                  description: `Слайд ${slideNumber} курса "${courseData?.title || 'Курс'}"`
                 });
-                console.log(`Found slide: ${slideUrl}`);
+                console.log(`Found slide ${slideNumber}: ${slideUrl}`);
                 foundSlide = true;
+                consecutiveFails = 0;
                 break;
               }
             } catch (e) {
@@ -509,10 +571,9 @@
             }
           }
           
-          // Если не нашли слайд с этим номером и уже нашли несколько слайдов
-          if (!foundSlide && slideNumber >= 3) {
-            console.log(`Stopping search after not finding slide ${slideNumber}`);
-            break;
+          if (!foundSlide) {
+            consecutiveFails++;
+            console.log(`Slide ${slideNumber} not found, consecutive fails: ${consecutiveFails}`);
           }
           
           slideNumber++;
@@ -524,7 +585,7 @@
         }
 
         console.log(`Loaded ${slides.length} slides`);
-        totalSlidesEl.textContent = slides.length;
+        document.getElementById('totalSlides').textContent = slides.length;
         updateSlide();
 
       } catch (error) {
@@ -535,6 +596,7 @@
 
     // Show message when no slides found
     function showNoSlidesMessage() {
+      const slideContentEl = document.getElementById('slideContent');
       slideContentEl.innerHTML = `
         <div class="error">
           <h3>Слайды не найдены</h3>
@@ -547,10 +609,9 @@
           </ul>
           <p style="margin-top: 10px;">
             <strong>Папка курса:</strong> ${courseFolder || 'не определена'}<br>
-            <strong>ID курса:</strong> ${courseId}
           </p>
           <p style="margin-top: 20px;">
-            <a href="${getCourseUrl()}" target="_blank" class="resource-link" style="display: inline-flex;">
+            <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link" style="display: inline-flex;">
               <i class="fas fa-external-link-alt"></i> Перейти к интерактивной версии курса
             </a>
           </p>
@@ -632,9 +693,10 @@
       if (slides.length === 0) return;
 
       const slide = slides[currentSlideIndex];
-      slideTitleEl.textContent = slide.title;
-      currentSlideEl.textContent = currentSlideIndex + 1;
+      document.getElementById('slideTitle').textContent = slide.title;
+      document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
 
+      const slideContentEl = document.getElementById('slideContent');
       slideContentEl.innerHTML = `
         <div style="text-align: center;">
           <img src="${slide.imageUrl}" 
@@ -643,13 +705,13 @@
                onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600/2c3e50/ffffff?text=Слайд+${currentSlideIndex + 1}+не+загружен';"
                loading="lazy">
           <div class="slide-description">
-            <p><strong>${courseData.title}</strong> - Слайд ${currentSlideIndex + 1} из ${slides.length}</p>
+            <p><strong>${courseData?.title || 'Курс'}</strong> - Слайд ${currentSlideIndex + 1} из ${slides.length}</p>
             <p>${slide.description}</p>
             <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
               <i class="fas fa-info-circle"></i> Для навигации используйте стрелки ← → на клавиатуре, кнопки ниже или свайп на мобильных устройствах
             </p>
             <p style="margin-top: 15px; text-align: center;">
-              <a href="${getCourseUrl()}" target="_blank" class="resource-link" style="display: inline-flex;">
+              <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link" style="display: inline-flex;">
                 <i class="fas fa-external-link-alt"></i> Открыть интерактивную версию курса
               </a>
             </p>
@@ -658,8 +720,8 @@
       `;
 
       // Update navigation buttons
-      prevBtn.disabled = currentSlideIndex === 0;
-      nextBtn.disabled = currentSlideIndex === slides.length - 1;
+      document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
+      document.getElementById('nextBtn').disabled = currentSlideIndex === slides.length - 1;
 
       // Save progress
       saveUserProgress();
@@ -670,6 +732,7 @@
       if (slides.length === 0) return;
 
       const progress = userProgress.slidesViewed || 0;
+      const progressBar = document.getElementById('progressBar');
       progressBar.style.width = `${progress}%`;
       progressBar.textContent = `${progress}%`;
       
@@ -717,7 +780,7 @@
 
     // Open test
     function openTest() {
-      const testUrl = getTestUrl();
+      const testUrl = getTestUrl(courseFolder);
       console.log('Opening test URL:', testUrl);
       window.open(testUrl, '_blank');
     }
@@ -731,7 +794,8 @@
 
     // Show error
     function showError(message) {
-      slideContentEl.innerHTML = `
+      const mainContent = document.getElementById('mainContent');
+      mainContent.innerHTML = `
         <div class="error">
           <h3>Ошибка загрузки курса</h3>
           <p>${message}</p>
@@ -748,19 +812,46 @@
       `;
     }
 
+    // Show login prompt
+    function showLoginPrompt() {
+      const mainContent = document.getElementById('mainContent');
+      mainContent.innerHTML = `
+        <div class="login-prompt">
+          <h2>Требуется авторизация</h2>
+          <p>Для доступа к материалам курса необходимо войти в систему.</p>
+          <p style="margin-top: 20px;">
+            <a href="https://qhse-training.github.io/hse-course/login.html" class="action-btn" style="display: inline-flex;">
+              <i class="fas fa-sign-in-alt"></i> Войти в систему
+            </a>
+          </p>
+          <p style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+            Нет аккаунта? Обратитесь к администратору для получения доступа.
+          </p>
+        </div>
+      `;
+    }
+
     // Initialize
     auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        window.location.href = 'https://qhse-training.github.io/hse-course/login.html';
-        return;
+      // Update user info in header
+      const usernameEl = document.getElementById('username');
+      const userAvatarEl = document.getElementById('userAvatar');
+      
+      if (user) {
+        usernameEl.textContent = user.email;
+        userAvatarEl.textContent = user.email.charAt(0).toUpperCase();
+        
+        // Initialize main content
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = createCourseHTML();
+        
+        // Load course data
+        await loadCourseData();
+      } else {
+        usernameEl.textContent = 'Не авторизован';
+        userAvatarEl.textContent = '?';
+        showLoginPrompt();
       }
-
-      // Update user info
-      usernameEl.textContent = user.email;
-      userAvatarEl.textContent = user.email.charAt(0).toUpperCase();
-
-      // Load course data
-      await loadCourseData();
     });
 
     // Handle keyboard navigation
@@ -791,12 +882,14 @@
     // Handle fullscreen change
     document.addEventListener('fullscreenchange', () => {
       const fullscreenBtn = document.getElementById('fullscreenBtn');
-      if (document.fullscreenElement) {
-        fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> Обычный режим';
-        fullscreenBtn.title = 'Выйти из полноэкранного режима (Esc)';
-      } else {
-        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> Полный экран';
-        fullscreenBtn.title = 'Перейти в полноэкранный режим';
+      if (fullscreenBtn) {
+        if (document.fullscreenElement) {
+          fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> Обычный режим';
+          fullscreenBtn.title = 'Выйти из полноэкранного режима (Esc)';
+        } else {
+          fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> Полный экран';
+          fullscreenBtn.title = 'Перейти в полноэкранный режим';
+        }
       }
     });
     
