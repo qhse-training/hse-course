@@ -120,15 +120,11 @@
         return courseFolderMap[courseId];
       }
       
-      // Иначе пробуем определить по данным из Firebase
-      // Для этого нужно загрузить данные курса
-      console.warn(`Папка для курса ${courseId} не найдена в карте`);
-      
       // По умолчанию используем первую папку
       return '1.01.Occupational_Health_and_Safety_Management_System';
     }
 
-    // Получение номера курса из папки (для формирования правильного имени файла)
+    // Получение номера курса из папки
     function getCourseNumber(folderName) {
       // Извлекаем номер из названия папки
       const match = folderName.match(/^(\d+\.\d+)/);
@@ -144,7 +140,6 @@
       const folder = folderName || getCourseFolder(courseId);
       const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folder}`;
       
-      // Пробуем разные варианты имен файлов
       const variants = [
         "Slide1.JPG",
         "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG",
@@ -163,7 +158,6 @@
         } catch(e) {}
       }
       
-      // Если ничего не нашли, возвращаем заглушку
       return 'https://via.placeholder.com/300x160?text=Курс';
     }
 
@@ -233,33 +227,22 @@
       return classes[status] || 'status-not-started';
     }
 
-    // Формирование правильного URL для курса
+    // Формирование правильного URL для курса - БЕЗ ID параметра
     function getCourseUrl(course) {
       const folderName = course.folderName || getCourseFolder(course.id);
       const courseNumber = getCourseNumber(folderName);
       
-      // Формируем правильное имя файла: course1.html, course2.html и т.д.
-      return `https://qhse-training.github.io/hse-course/${folderName}/course${courseNumber}.html?id=${encodeURIComponent(course.id)}`;
+      // Простая ссылка без ID параметра
+      return `https://qhse-training.github.io/hse-course/${folderName}/course${courseNumber}.html`;
     }
 
-    // Формирование правильного URL для теста
+    // Формирование правильного URL для теста - БЕЗ ID параметра
     function getTestUrl(course) {
-      if (!course.testHtml) {
-        // Если нет прямого URL, формируем его
-        const folderName = course.folderName || getCourseFolder(course.id);
-        const courseNumber = getCourseNumber(folderName);
-        
-        return `https://qhse-training.github.io/hse-course/${folderName}/test${courseNumber}.html?id=${encodeURIComponent(course.id)}`;
-      }
-      
-      // Если testHtml уже полный URL, используем его
-      if (course.testHtml.startsWith('http')) {
-        return course.testHtml;
-      }
-      
-      // Иначе формируем URL
       const folderName = course.folderName || getCourseFolder(course.id);
-      return `https://qhse-training.github.io/hse-course/${folderName}/${course.testHtml}?id=${encodeURIComponent(course.id)}`;
+      const courseNumber = getCourseNumber(folderName);
+      
+      // Простая ссылка без ID параметра
+      return `https://qhse-training.github.io/hse-course/${folderName}/test${courseNumber}.html`;
     }
 
     // Показать сертификат
@@ -369,7 +352,6 @@
                 // Определяем папку курса
                 let folderName = courseData.folderName;
                 if (!folderName) {
-                  // Пробуем определить по названию или другим данным
                   folderName = getCourseFolder(courseId);
                 }
                 
