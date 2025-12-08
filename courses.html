@@ -104,19 +104,67 @@
     let userProgressData = {};
     let currentUser = null;
 
+    // Карта соответствия ID курса и папки курса
+    const courseFolderMap = {
+      // Курс 1.01
+      '0EFXo6H4N1mbA1jBJwOK': '1.01.Occupational_Health_and_Safety_Management_System',
+      // Добавьте здесь соответствия для других курсов
+      // Пример:
+      // 'ДРУГОЙ_ID_КУРСА': '1.02.Hierarchy_of_hazard_controls',
+    };
+
+    // Получение папки курса по его ID
+    function getCourseFolder(courseId) {
+      // Если есть в карте, используем из карты
+      if (courseFolderMap[courseId]) {
+        return courseFolderMap[courseId];
+      }
+      
+      // Иначе пробуем определить по данным из Firebase
+      // Для этого нужно загрузить данные курса
+      console.warn(`Папка для курса ${courseId} не найдена в карте`);
+      
+      // По умолчанию используем первую папку
+      return '1.01.Occupational_Health_and_Safety_Management_System';
+    }
+
+    // Получение номера курса из папки (для формирования правильного имени файла)
+    function getCourseNumber(folderName) {
+      // Извлекаем номер из названия папки
+      const match = folderName.match(/^(\d+\.\d+)/);
+      if (match) {
+        const parts = match[1].split('.');
+        return parts[1]; // Возвращаем вторую часть (01, 02, и т.д.)
+      }
+      return '1'; // По умолчанию
+    }
+
     // Получение URL превью курса
-    async function getPreviewUrl(folder) {
-      // Используем правильный путь к папке курса
-      const folderName = '1.01.Occupational_Health_and_Safety_Management_System';
-      const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}`;
-      const variants = ["Slide1.JPG", "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG", "slide1.jpg", "cover.jpg", "Slide1.jpeg", "slide1.jpeg"];
+    async function getPreviewUrl(courseId, folderName = null) {
+      const folder = folderName || getCourseFolder(courseId);
+      const base = `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folder}`;
+      
+      // Пробуем разные варианты имен файлов
+      const variants = [
+        "Slide1.JPG",
+        "%D0%A1%D0%BB%D0%B0%D0%B9%D0%B41.JPG",
+        "slide1.jpg",
+        "cover.jpg",
+        "Slide1.jpeg",
+        "slide1.jpeg",
+        "Slide1.png",
+        "slide1.png"
+      ];
+      
       for (let file of variants) {
         try {
           const res = await fetch(`${base}/${file}`, { method: 'HEAD' });
           if (res.ok) return `${base}/${file}`;
         } catch(e) {}
       }
-      return 'https://via.placeholder.com/300x160?text=Курс+СУОТ';
+      
+      // Если ничего не нашли, возвращаем заглушку
+      return 'https://via.placeholder.com/300x160?text=Курс';
     }
 
     // Определение статуса курса
@@ -185,25 +233,33 @@
       return classes[status] || 'status-not-started';
     }
 
-    // Формирование правильного URL для курса (GitHub Pages)
-    function getCourseUrl(courseId) {
-      // Используем правильный путь к курсу на GitHub Pages
-      return `https://qhse-training.github.io/hse-course/1.01.Occupational_Health_and_Safety_Management_System/course.html?id=${encodeURIComponent(courseId)}`;
+    // Формирование правильного URL для курса
+    function getCourseUrl(course) {
+      const folderName = course.folderName || getCourseFolder(course.id);
+      const courseNumber = getCourseNumber(folderName);
+      
+      // Формируем правильное имя файла: course1.html, course2.html и т.д.
+      return `https://qhse-training.github.io/hse-course/${folderName}/course${courseNumber}.html?id=${encodeURIComponent(course.id)}`;
     }
 
-    // Формирование правильного URL для теста (GitHub Pages)
+    // Формирование правильного URL для теста
     function getTestUrl(course) {
-      if (!course.testHtml) return '#';
+      if (!course.testHtml) {
+        // Если нет прямого URL, формируем его
+        const folderName = course.folderName || getCourseFolder(course.id);
+        const courseNumber = getCourseNumber(folderName);
+        
+        return `https://qhse-training.github.io/hse-course/${folderName}/test${courseNumber}.html?id=${encodeURIComponent(course.id)}`;
+      }
       
       // Если testHtml уже полный URL, используем его
       if (course.testHtml.startsWith('http')) {
         return course.testHtml;
       }
       
-      // Используем правильный путь к тесту на GitHub Pages
-      const baseUrl = 'https://qhse-training.github.io/hse-course';
-      const folderName = '1.01.Occupational_Health_and_Safety_Management_System';
-      return `${baseUrl}/${folderName}/test1.html?id=${encodeURIComponent(course.id)}`;
+      // Иначе формируем URL
+      const folderName = course.folderName || getCourseFolder(course.id);
+      return `https://qhse-training.github.io/hse-course/${folderName}/${course.testHtml}?id=${encodeURIComponent(course.id)}`;
     }
 
     // Показать сертификат
@@ -232,20 +288,20 @@
             </div>
           </div>
           <div class="course-body">
-            <h3 class="course-title">${course.title || 'Система управления охраной труда (СУОТ)'}</h3>
+            <h3 class="course-title">${course.title || 'Курс'}</h3>
             <div class="course-status">
               <span class="status-badge ${getStatusClass(status.status)}">
                 ${getStatusText(status.status)}
               </span>
               <span>${Math.round(status.progress)}%</span>
             </div>
-            <p class="course-desc">${course.description || 'Разработка и внедрение системы управления охраной труда'}</p>
+            <p class="course-desc">${course.description || 'Описание курса'}</p>
             <div class="course-meta">
-              <span>${course.duration || '4 часа'}</span>
-              <span>${course.modules || 5} модулей</span>
+              <span>${course.duration || 'Не указано'}</span>
+              <span>${course.modules || 0} модулей</span>
             </div>
             <div class="course-actions">
-              <a href="${getCourseUrl(course.id)}" target="_blank" class="btn">${status.progress > 0 ? 'Продолжить' : 'Начать курс'}</a>
+              <a href="${getCourseUrl(course)}" target="_blank" class="btn">${status.progress > 0 ? 'Продолжить' : 'Начать курс'}</a>
               ${course.testHtml || status.testAvailable ? `
                 <button class="btn btn-test" ${status.testAvailable ? '' : 'disabled'} 
                   onclick="window.open('${getTestUrl(course)}', '_blank')">
@@ -265,110 +321,79 @@
       });
     }
 
-    // Показать ошибку загрузки
-    function showError(error) {
-      console.error("Ошибка загрузки данных:", error);
-      
-      let errorMessage = "Ошибка загрузки данных. Пожалуйста, попробуйте позже.";
-      let detailedMessage = "";
-      
-      if (error.code === 'permission-denied') {
-        errorMessage = "Недостаточно прав доступа";
-        detailedMessage = "Пожалуйста, обратитесь к администратору для предоставления доступа.";
-      } else if (error.code === 'unavailable') {
-        errorMessage = "Сервис временно недоступен";
-        detailedMessage = "Проверьте подключение к интернету и попробуйте снова.";
-      }
-      
-      courseList.innerHTML = `
-        <div class="error-container">
-          <h3>${errorMessage}</h3>
-          <p>${detailedMessage}</p>
-          <p style="font-size: 12px; color: #95a5a6;">Код ошибки: ${error.code || 'неизвестно'}</p>
-          <button class="retry-btn" onclick="retryLoadData()">⟳ Попробовать снова</button>
-        </div>
-      `;
-      
-      userProgress.textContent = "Ошибка загрузки данных";
-    }
-
-    // Повторная попытка загрузки данных
-    async function retryLoadData() {
-      if (!currentUser) {
-        window.location.href = 'login.html';
-        return;
-      }
-      
-      courseList.innerHTML = '<div class="loading">Загрузка курсов...</div>';
-      await loadUserData(currentUser);
-    }
-
     // Загрузка данных пользователя и курсов
     async function loadUserData(user) {
       try {
         currentUser = user;
         
-        // Обновляем информацию пользователя
         userInfo.textContent = `${user.email}`;
         
         try {
-          // Пробуем загрузить данные пользователя
+          // Загружаем данные пользователя
           const userDoc = await db.collection("approved_users").doc(user.uid).get();
           
           if (!userDoc.exists) {
-            // Если пользователь не найден, создаем демо-режим
-            showDemoCourses(user);
-            userProgress.textContent = "Демо-режим. Для полного доступа обратитесь к администратору.";
+            showNoAccessMessage(user);
             return false;
           }
           
           userData = userDoc.data();
           userInfo.textContent = `${userData.fullName || user.email} (${user.email})`;
           
-          // Пробуем загрузить прогресс пользователя
+          // Загружаем прогресс пользователя
           const progressDoc = await db.collection("user_progress").doc(user.uid).get();
           userProgressData = progressDoc.exists ? progressDoc.data() : {};
           
           // Получаем ID курсов пользователя
           const userCourseIds = userData.courses || [];
           
-          // Если нет назначенных курсов, показываем демо-курс
           if (userCourseIds.length === 0) {
-            showDemoCourses(user);
-            userProgress.textContent = "Демо-режим. Курсы не назначены.";
+            courseList.innerHTML = `
+              <div class="no-courses">
+                <h3>Курсы не назначены</h3>
+                <p>Обратитесь к администратору для назначения курсов</p>
+              </div>
+            `;
+            userProgress.textContent = `Курсы: 0 назначено`;
             return true;
           }
           
-          // Загрузка данных курсов
+          // Загружаем данные каждого курса
           const courses = [];
           const coursePromises = userCourseIds.map(async (courseId) => {
             try {
               const courseDoc = await db.collection('courses').doc(courseId).get();
               if (courseDoc.exists) {
                 const courseData = courseDoc.data();
-                const preview = await getPreviewUrl(courseId);
+                
+                // Определяем папку курса
+                let folderName = courseData.folderName;
+                if (!folderName) {
+                  // Пробуем определить по названию или другим данным
+                  folderName = getCourseFolder(courseId);
+                }
+                
+                // Получаем превью
+                const preview = await getPreviewUrl(courseId, folderName);
+                
                 return {
                   id: courseId,
-                  title: courseData.title || "Система управления охраной труда (СУОТ)",
-                  description: courseData.description || "Разработка и внедрение системы управления охраной труда",
-                  testHtml: courseData.testHtml || `https://qhse-training.github.io/hse-course/1.01.Occupational_Health_and_Safety_Management_System/test1.html?id=${courseId}`,
-                  duration: courseData.duration || '4 часа',
-                  modules: courseData.slides ? courseData.slides.length : 5,
-                  slideUrl: preview
+                  folderName: folderName,
+                  title: courseData.title || `Курс`,
+                  description: courseData.description || 'Описание курса',
+                  testHtml: courseData.testHtml || null,
+                  duration: courseData.duration || 'Не указано',
+                  modules: courseData.modules || 0,
+                  slideUrl: preview,
+                  slides: courseData.slides || []
                 };
+              } else {
+                console.warn(`Курс ${courseId} не найден в коллекции courses`);
+                return null;
               }
             } catch (error) {
               console.error(`Ошибка загрузки курса ${courseId}:`, error);
-              // Возвращаем демо-курс при ошибке
-              return {
-                id: courseId,
-                title: "Система управления охраной труда (СУОТ)",
-                description: "Разработка и внедрение системы управления охраной труда",
-                testHtml: `https://qhse-training.github.io/hse-course/1.01.Occupational_Health_and_Safety_Management_System/test1.html?id=${courseId}`,
-                duration: '4 часа',
-                modules: 5,
-                slideUrl: 'https://raw.githubusercontent.com/qhse-training/hse-course/main/1.01.Occupational_Health_and_Safety_Management_System/Slide1.JPG'
-              };
+              return null;
             }
           });
           
@@ -396,47 +421,53 @@
           return true;
           
         } catch (dbError) {
-          // Если ошибка Firestore, показываем демо-курсы
-          console.warn("Ошибка Firestore, используем демо-режим:", dbError);
-          showDemoCourses(user);
+          console.error("Ошибка Firestore:", dbError);
+          showErrorMessage(dbError);
           return false;
         }
         
       } catch (error) {
-        showError(error);
+        console.error("Общая ошибка:", error);
+        showErrorMessage(error);
         return false;
       }
     }
 
-    // Демо-режим при ошибке Firestore
-    function showDemoCourses(user) {
-      const demoCourseId = "demo-course-suoht";
-      const demoProgress = {
-        [demoCourseId]: {
-          slidesViewed: 0,
-          progressPercentage: 0,
-          status: 'not-started'
-        }
-      };
+    // Показать сообщение об отсутствии доступа
+    function showNoAccessMessage(user) {
+      courseList.innerHTML = `
+        <div class="error-container">
+          <h3>Доступ не предоставлен</h3>
+          <p>Ваша учетная запись (${user.email}) не имеет доступа к курсам.</p>
+          <p>Обратитесь к администратору для получения доступа.</p>
+        </div>
+      `;
+      userProgress.textContent = "Ожидание доступа к курсам";
+    }
+
+    // Показать сообщение об ошибке
+    function showErrorMessage(error) {
+      let message = "Ошибка загрузки данных";
+      let details = "";
       
-      userProgressData = demoProgress;
+      if (error.code === 'permission-denied') {
+        message = "Недостаточно прав доступа";
+        details = "Проверьте настройки безопасности Firebase или обратитесь к администратору.";
+      } else if (error.code === 'unavailable') {
+        message = "Сервис временно недоступен";
+        details = "Проверьте подключение к интернету.";
+      }
       
-      const demoCourses = [
-        {
-          id: demoCourseId,
-          title: "Система управления охраной труда (СУОТ)",
-          description: "Разработка и внедрение системы управления охраной труда",
-          testHtml: "https://qhse-training.github.io/hse-course/1.01.Occupational_Health_and_Safety_Management_System/test1.html?id=demo-course-suoht",
-          duration: "4 часа",
-          modules: 5,
-          slideUrl: 'https://raw.githubusercontent.com/qhse-training/hse-course/main/1.01.Occupational_Health_and_Safety_Management_System/Slide1.JPG'
-        }
-      ];
+      courseList.innerHTML = `
+        <div class="error-container">
+          <h3>${message}</h3>
+          <p>${details}</p>
+          <p style="font-size: 12px; color: #95a5a6;">Код: ${error.code || 'неизвестно'}</p>
+          <button class="retry-btn" onclick="window.location.reload()">⟳ Обновить страницу</button>
+        </div>
+      `;
       
-      allCourses = demoCourses;
-      userInfo.textContent = `${user.email} (демо-режим)`;
-      userProgress.textContent = "Работа в демо-режиме";
-      renderCourses(allCourses);
+      userProgress.textContent = "Ошибка загрузки данных";
     }
 
     // Основная инициализация
