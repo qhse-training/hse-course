@@ -27,7 +27,7 @@
         }
         
         .test-container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -43,8 +43,14 @@
         }
         
         .test-header h1 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 10px;
+        }
+        
+        .course-info {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 15px;
         }
         
         .test-info {
@@ -62,6 +68,9 @@
             padding: 8px 15px;
             border-radius: 20px;
             font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .progress-container {
@@ -86,7 +95,7 @@
         
         .question {
             margin-bottom: 25px;
-            padding: 20px;
+            padding: 25px;
             border: 2px solid #eee;
             border-radius: 10px;
             transition: all 0.3s;
@@ -95,10 +104,11 @@
         .question.active {
             border-color: var(--secondary);
             background: #f8f9fa;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.1);
         }
         
         .question-number {
-            font-size: 18px;
+            font-size: 20px;
             font-weight: bold;
             color: var(--primary);
             margin-bottom: 15px;
@@ -108,9 +118,10 @@
         }
         
         .question-text {
-            font-size: 18px;
-            margin-bottom: 20px;
+            font-size: 20px;
+            margin-bottom: 25px;
             line-height: 1.5;
+            color: #2c3e50;
         }
         
         .options {
@@ -120,7 +131,7 @@
         }
         
         .option {
-            padding: 15px;
+            padding: 18px;
             border: 2px solid #ddd;
             border-radius: 8px;
             cursor: pointer;
@@ -133,6 +144,7 @@
         .option:hover {
             border-color: var(--secondary);
             background: #f0f8ff;
+            transform: translateX(5px);
         }
         
         .option.selected {
@@ -155,8 +167,8 @@
         }
         
         .option-label {
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             border: 2px solid #ccc;
             border-radius: 50%;
             display: flex;
@@ -164,6 +176,8 @@
             justify-content: center;
             font-weight: bold;
             color: #666;
+            font-size: 16px;
+            flex-shrink: 0;
         }
         
         .option.selected .option-label {
@@ -174,7 +188,8 @@
         
         .option-text {
             flex: 1;
-            font-size: 16px;
+            font-size: 18px;
+            line-height: 1.4;
         }
         
         .navigation {
@@ -186,12 +201,13 @@
         }
         
         .nav-btn {
-            padding: 12px 25px;
+            padding: 12px 30px;
             border: none;
             border-radius: 8px;
             background: var(--secondary);
             color: white;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
@@ -202,12 +218,14 @@
         .nav-btn:hover {
             background: #2980b9;
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         
         .nav-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
         
         .submit-btn {
@@ -224,28 +242,45 @@
         }
         
         .score-circle {
-            width: 150px;
-            height: 150px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
             margin: 0 auto 30px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            border: 12px solid;
+            position: relative;
+        }
+        
+        .score-percent {
+            font-size: 48px;
             font-weight: bold;
-            border: 10px solid;
+        }
+        
+        .score-label {
+            font-size: 18px;
+            margin-top: 5px;
+            color: #666;
         }
         
         .score-passed {
             border-color: var(--success);
-            color: var(--success);
             background: #e8f5e9;
+        }
+        
+        .score-passed .score-percent {
+            color: var(--success);
         }
         
         .score-failed {
             border-color: var(--error);
-            color: var(--error);
             background: #ffebee;
+        }
+        
+        .score-failed .score-percent {
+            color: var(--error);
         }
         
         .results-details {
@@ -259,26 +294,32 @@
         .result-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #eee;
+            font-size: 16px;
         }
         
         .certificate-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 15px 40px;
-            border-radius: 8px;
-            font-size: 18px;
+            padding: 18px 50px;
+            border-radius: 10px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            margin: 20px 0;
+            margin: 30px 0;
             transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .certificate-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
         }
         
         .loading {
@@ -300,12 +341,59 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .question-counter {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+            background: #f0f8ff;
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+        
+        .test-requirements {
+            background: #fff8e1;
+            border: 2px solid #ffd54f;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        
+        .requirement-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .requirement-item i {
+            color: #ff9800;
+        }
     </style>
 </head>
 <body>
     <div class="test-container">
         <div class="test-header">
             <h1 id="testTitle">Тест: Система управления охраной труда (СУОТ)</h1>
+            <div class="course-info" id="courseInfo"></div>
+            
+            <div class="test-requirements" id="requirementsInfo" style="display: none;">
+                <h3 style="margin-bottom: 10px; color: #ff6f00;">⚠️ Требования для прохождения теста:</h3>
+                <div class="requirement-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Необходимо просмотреть все слайды курса (100%)</span>
+                </div>
+                <div class="requirement-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Требуется набрать 100% правильных ответов</span>
+                </div>
+                <div class="requirement-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>При успешной сдаче будет выдан сертификат</span>
+                </div>
+            </div>
+            
             <div class="test-info">
                 <div>Вопросов: <span id="totalQuestions">0</span></div>
                 <div class="timer" id="timer">⏰ 60:00</div>
@@ -316,14 +404,17 @@
         </div>
         
         <div id="testContent">
-            <!-- Контент теста будет загружен сюда -->
+            <div class="loading">
+                <div class="loader"></div>
+                <p>Загрузка теста...</p>
+            </div>
         </div>
         
         <div class="navigation" id="navigation" style="display: none;">
             <button class="nav-btn" id="prevBtn" onclick="prevQuestion()">
                 <i class="fas fa-arrow-left"></i> Назад
             </button>
-            <div>
+            <div class="question-counter">
                 Вопрос <span id="currentQuestionNum">1</span> из <span id="totalQuestionsNum">0</span>
             </div>
             <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">
@@ -355,13 +446,15 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Test data - правильные ответы
+        // Test data - 20 правильных ответов для СУОТ
         const correctAnswers = {
             1: 'b', 2: 'c', 3: 'a', 4: 'd', 5: 'b',
-            6: 'c', 7: 'a', 8: 'b', 9: 'd', 10: 'a'
+            6: 'c', 7: 'a', 8: 'b', 9: 'd', 10: 'a',
+            11: 'c', 12: 'b', 13: 'd', 14: 'a', 15: 'c',
+            16: 'b', 17: 'd', 18: 'a', 19: 'c', 20: 'b'
         };
 
-        // Test questions
+        // Test questions - 20 вопросов по СУОТ
         const testQuestions = [
             {
                 id: 1,
@@ -385,22 +478,22 @@
             },
             {
                 id: 3,
-                question: "Кто несет ответственность за безопасность на рабочем месте?",
+                question: "Кто несет основную ответственность за безопасность на рабочем месте?",
                 options: [
-                    { id: 'a', text: "Все работники организации" },
-                    { id: 'b', text: "Только руководитель" },
-                    { id: 'c', text: "Только специалист по охране труда" },
-                    { id: 'd', text: "Только работники опасных производств" }
+                    { id: 'a', text: "Работодатель" },
+                    { id: 'b', text: "Работник" },
+                    { id: 'c', text: "Специалист по охране труда" },
+                    { id: 'd', text: "Профсоюз" }
                 ]
             },
             {
                 id: 4,
-                question: "Что включает в себя политика в области охраны труда?",
+                question: "Что является основной целью СУОТ?",
                 options: [
-                    { id: 'a', text: "Только финансовые цели" },
-                    { id: 'b', text: "Только производственные показатели" },
-                    { id: 'c', text: "Только требования законодательства" },
-                    { id: 'd', text: "Обязательства по обеспечению безопасных условий труда" }
+                    { id: 'a', text: "Снижение налогов" },
+                    { id: 'b', text: "Повышение прибыли" },
+                    { id: 'c', text: "Упрощение отчетности" },
+                    { id: 'd', text: "Предотвращение травматизма и профессиональных заболеваний" }
                 ]
             },
             {
@@ -425,7 +518,7 @@
             },
             {
                 id: 7,
-                question: "Каков минимальный проходной балл по тесту?",
+                question: "Каков минимальный проходной балл по тесту в данной системе?",
                 options: [
                     { id: 'a', text: "100%" },
                     { id: 'b', text: "80%" },
@@ -462,15 +555,116 @@
                     { id: 'c', text: "Только для новых работников" },
                     { id: 'd', text: "Только для опасных работ" }
                 ]
+            },
+            {
+                id: 11,
+                question: "Что такое идентификация опасностей?",
+                options: [
+                    { id: 'a', text: "Наказание за нарушение правил" },
+                    { id: 'b', text: "Выдача средств защиты" },
+                    { id: 'c', text: "Процесс выявления источников опасности" },
+                    { id: 'd', text: "Проведение медосмотров" }
+                ]
+            },
+            {
+                id: 12,
+                question: "Как часто проводятся периодические медицинские осмотры?",
+                options: [
+                    { id: 'a', text: "Ежегодно" },
+                    { id: 'b', text: "В зависимости от вредных факторов" },
+                    { id: 'c', text: "Раз в 3 года" },
+                    { id: 'd', text: "Только при ухудшении здоровья" }
+                ]
+            },
+            {
+                id: 13,
+                question: "Что такое план мероприятий по охране труда?",
+                options: [
+                    { id: 'a', text: "Список штрафов" },
+                    { id: 'b', text: "График отпусков" },
+                    { id: 'c', text: "Расписание работы" },
+                    { id: 'd', text: "Документ с конкретными мероприятиями и сроками их выполнения" }
+                ]
+            },
+            {
+                id: 14,
+                question: "Кто должен проводить вводный инструктаж по охране труда?",
+                options: [
+                    { id: 'a', text: "Специалист по охране труда" },
+                    { id: 'b', text: "Бухгалтер" },
+                    { id: 'c', text: "Начальник отдела" },
+                    { id: 'd', text: "Коллега по работе" }
+                ]
+            },
+            {
+                id: 15,
+                question: "Что такое расследование несчастного случая?",
+                options: [
+                    { id: 'a', text: "Поиск виновных" },
+                    { id: 'b', text: "Назначение штрафов" },
+                    { id: 'c', text: "Установление причин и разработка профилактических мер" },
+                    { id: 'd', text: "Оформление больничного" }
+                ]
+            },
+            {
+                id: 16,
+                question: "Какой орган осуществляет государственный надзор за охраной труда?",
+                options: [
+                    { id: 'a', text: "МВД" },
+                    { id: 'b', text: "Государственная инспекция труда" },
+                    { id: 'c', text: "Прокуратура" },
+                    { id: 'd', text: "Суд" }
+                ]
+            },
+            {
+                id: 17,
+                question: "Что такое профессиональный риск?",
+                options: [
+                    { id: 'a', text: "Возможность повышения зарплаты" },
+                    { id: 'b', text: "Вероятность карьерного роста" },
+                    { id: 'c', text: "Шанс получить премию" },
+                    { id: 'd', text: "Вероятность причинения вреда здоровью в процессе трудовой деятельности" }
+                ]
+            },
+            {
+                id: 18,
+                question: "Какой документ оформляется после проведения инструктажа?",
+                options: [
+                    { id: 'a', text: "Журнал регистрации инструктажа" },
+                    { id: 'b', text: "Приказ о назначении" },
+                    { id: 'c', text: "Трудовой договор" },
+                    { id: 'd', text: "Больничный лист" }
+                ]
+            },
+            {
+                id: 19,
+                question: "Что такое спецоценка условий труда?",
+                options: [
+                    { id: 'a', text: "Оценка квалификации работника" },
+                    { id: 'b', text: "Проверка знаний" },
+                    { id: 'c', text: "Оценка вредных и опасных производственных факторов" },
+                    { id: 'd', text: "Аттестация оборудования" }
+                ]
+            },
+            {
+                id: 20,
+                question: "Кому работник должен сообщить о несчастном случае на производстве?",
+                options: [
+                    { id: 'a', text: "Только коллегам" },
+                    { id: 'b', text: "Непосредственному руководителю" },
+                    { id: 'c', text: "Только в профсоюз" },
+                    { id: 'd', text: "Никому" }
+                ]
             }
         ];
 
         // Global variables
         let currentUser = null;
         let courseId = null;
+        let courseData = null;
         let userAnswers = {};
         let currentQuestionIndex = 0;
-        let timeLeft = 60 * 60; // 60 minutes in seconds
+        let timeLeft = 90 * 60; // 90 minutes in seconds
         let timerInterval = null;
         let testCompleted = false;
 
@@ -494,12 +688,22 @@
                 courseId = urlParams.get('id');
                 
                 if (!courseId) {
-                    showError('ID курса не указан');
+                    showError('ID курса не указан в URL. Проверьте ссылку.');
                     return;
                 }
 
+                // Load course data
+                await loadCourseData();
+
+                // Show requirements
+                document.getElementById('requirementsInfo').style.display = 'block';
+
                 // Load user progress to check if slides were viewed
-                await loadUserProgress();
+                const canTakeTest = await checkTestRequirements();
+                
+                if (!canTakeTest) {
+                    return;
+                }
 
                 // Start test
                 startTest();
@@ -513,8 +717,22 @@
             }
         }
 
-        // Load user progress
-        async function loadUserProgress() {
+        // Load course data
+        async function loadCourseData() {
+            try {
+                const courseDoc = await db.collection('courses').doc(courseId).get();
+                if (courseDoc.exists) {
+                    courseData = courseDoc.data();
+                    document.getElementById('testTitle').textContent = `Тест: ${courseData.title || 'Система управления охраной труда (СУОТ)'}`;
+                    document.getElementById('courseInfo').textContent = courseData.description || '';
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных курса:', error);
+            }
+        }
+
+        // Check test requirements
+        async function checkTestRequirements() {
             try {
                 const progressDoc = await db.collection('user_progress').doc(currentUser.uid).get();
                 if (progressDoc.exists) {
@@ -523,7 +741,13 @@
                     
                     // Check if user has viewed all slides
                     if (!courseProgress.slidesViewed || courseProgress.slidesViewed < 100) {
-                        showError('Для доступа к тесту необходимо просмотреть все материалы курса');
+                        showError('Для доступа к тесту необходимо просмотреть все материалы курса (100% слайдов)');
+                        return false;
+                    }
+                    
+                    // Check if user already passed the test
+                    if (courseProgress.testPassed) {
+                        showTestAlreadyPassed(courseProgress.testScore);
                         return false;
                     }
                     
@@ -533,8 +757,8 @@
                     return false;
                 }
             } catch (error) {
-                console.error('Ошибка загрузки прогресса:', error);
-                // Allow test even if progress cannot be loaded
+                console.error('Ошибка проверки требований:', error);
+                // For testing, allow test even if progress cannot be loaded
                 return true;
             }
         }
@@ -570,6 +794,7 @@
                 <div class="question-container">
                     <div class="question active">
                         <div class="question-number">
+                            <i class="fas fa-question-circle"></i>
                             <span>Вопрос ${question.id}</span>
                         </div>
                         <div class="question-text">${question.question}</div>
@@ -619,7 +844,17 @@
         function updateProgressBar() {
             const answeredCount = Object.keys(userAnswers).length;
             const progress = (answeredCount / testQuestions.length) * 100;
-            document.getElementById('progressBar').style.width = `${progress}%`;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = `${progress}%`;
+            
+            // Change color based on progress
+            if (progress >= 100) {
+                progressBar.style.background = '#2ecc71';
+            } else if (progress >= 50) {
+                progressBar.style.background = '#f39c12';
+            } else {
+                progressBar.style.background = '#3498db';
+            }
         }
 
         // Start timer
@@ -654,48 +889,70 @@
             // Calculate results
             const totalQuestions = testQuestions.length;
             let correctCount = 0;
+            let incorrectQuestions = [];
             
             testQuestions.forEach(question => {
-                if (userAnswers[question.id] === correctAnswers[question.id]) {
+                const userAnswer = userAnswers[question.id];
+                const correctAnswer = correctAnswers[question.id];
+                
+                if (userAnswer === correctAnswer) {
                     correctCount++;
+                } else {
+                    incorrectQuestions.push({
+                        question: question.question,
+                        userAnswer: userAnswer,
+                        correctAnswer: correctAnswer
+                    });
                 }
             });
             
             const score = Math.round((correctCount / totalQuestions) * 100);
             const passed = score >= 100; // 100% required
             
-            // Save results to Firestore
-            await saveTestResults(score, passed);
-            
-            // Update progress if passed
-            if (passed) {
-                await updateUserProgress(score);
+            try {
+                // Save results to Firestore
+                await saveTestResults(score, passed, correctCount);
+                
+                // Update progress if passed
+                if (passed) {
+                    await updateUserProgress(score);
+                }
+                
+                // Display results
+                displayResults(score, passed, correctCount, totalQuestions, incorrectQuestions);
+                
+            } catch (error) {
+                console.error('Ошибка при завершении теста:', error);
+                displayResults(score, passed, correctCount, totalQuestions, incorrectQuestions);
             }
-            
-            // Display results
-            displayResults(score, passed, correctCount, totalQuestions);
         }
 
         // Save test results to Firestore
-        async function saveTestResults(score, passed) {
+        async function saveTestResults(score, passed, correctCount) {
             try {
+                const resultId = `${currentUser.uid}_${courseId}_${Date.now()}`;
                 const resultData = {
                     userId: currentUser.uid,
                     userEmail: currentUser.email,
+                    userName: currentUser.displayName || currentUser.email.split('@')[0],
                     courseId: courseId,
+                    courseTitle: courseData?.title || 'Система управления охраной труда (СУОТ)',
                     score: score,
                     passed: passed,
+                    correctAnswers: correctCount,
+                    totalQuestions: testQuestions.length,
                     answers: userAnswers,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    completedAt: new Date().toISOString()
+                    completedAt: new Date().toISOString(),
+                    timeSpent: (90 * 60) - timeLeft // in seconds
                 };
                 
-                await db.collection('test_results').add(resultData);
-                console.log('Результаты теста сохранены');
+                await db.collection('test_results').doc(resultId).set(resultData);
+                console.log('Результаты теста сохранены:', resultId);
                 
             } catch (error) {
                 console.error('Ошибка сохранения результатов:', error);
-                // Continue even if save fails
+                throw error;
             }
         }
 
@@ -704,55 +961,61 @@
             try {
                 const progressDocRef = db.collection('user_progress').doc(currentUser.uid);
                 
-                const progressData = {
+                const progressUpdate = {
                     [courseId]: {
                         testPassed: true,
                         testScore: score,
                         testCompletedAt: new Date().toISOString(),
-                        lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+                        lastActivity: firebase.firestore.FieldValue.serverTimestamp(),
+                        answers: userAnswers
                     }
                 };
                 
-                await progressDocRef.set(progressData, { merge: true });
+                await progressDocRef.set(progressUpdate, { merge: true });
                 console.log('Прогресс обновлен');
                 
             } catch (error) {
                 console.error('Ошибка обновления прогресса:', error);
-                // Continue even if update fails
+                throw error;
             }
         }
 
         // Display results
-        function displayResults(score, passed, correctCount, totalQuestions) {
+        function displayResults(score, passed, correctCount, totalQuestions, incorrectQuestions = []) {
             const testContent = document.getElementById('testContent');
             const navigation = document.getElementById('navigation');
+            const requirementsInfo = document.getElementById('requirementsInfo');
             
             navigation.style.display = 'none';
+            if (requirementsInfo) requirementsInfo.style.display = 'none';
             
             let resultHTML = `
                 <div class="results-container">
                     <div class="score-circle ${passed ? 'score-passed' : 'score-failed'}">
-                        ${score}%
+                        <div class="score-percent">${score}%</div>
+                        <div class="score-label">${passed ? 'СДАНО' : 'НЕ СДАНО'}</div>
                     </div>
-                    <h2>${passed ? '🎉 Тест успешно пройден!' : '❌ Тест не пройден'}</h2>
-                    <p>${passed ? 'Поздравляем! Вы успешно прошли тест.' : 'К сожалению, вы не набрали достаточное количество баллов.'}</p>
+                    <h2 style="font-size: 32px; margin-bottom: 15px;">${passed ? '🎉 Тест успешно пройден!' : '❌ Тест не пройден'}</h2>
+                    <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+                        ${passed ? 'Поздравляем! Вы успешно прошли тест и получаете сертификат.' : 'К сожалению, вы не набрали 100% правильных ответов.'}
+                    </p>
                     
                     <div class="results-details">
                         <div class="result-item">
-                            <span>Правильных ответов:</span>
+                            <span><i class="fas fa-check-circle" style="color: #2ecc71;"></i> Правильных ответов:</span>
                             <span><strong>${correctCount} из ${totalQuestions}</strong></span>
                         </div>
                         <div class="result-item">
-                            <span>Процент выполнения:</span>
+                            <span><i class="fas fa-percentage" style="color: #3498db;"></i> Процент выполнения:</span>
                             <span><strong>${score}%</strong></span>
                         </div>
                         <div class="result-item">
-                            <span>Требуемый минимум:</span>
+                            <span><i class="fas fa-target" style="color: #e74c3c;"></i> Требуемый минимум:</span>
                             <span><strong>100%</strong></span>
                         </div>
                         <div class="result-item">
-                            <span>Статус:</span>
-                            <span><strong>${passed ? 'ПРОЙДЕН' : 'НЕ ПРОЙДЕН'}</strong></span>
+                            <span><i class="fas fa-flag" style="color: #9b59b6;"></i> Статус:</span>
+                            <span><strong style="color: ${passed ? '#2ecc71' : '#e74c3c'}">${passed ? 'ПРОЙДЕН' : 'НЕ ПРОЙДЕН'}</strong></span>
                         </div>
                     </div>
             `;
@@ -762,32 +1025,110 @@
                     <button class="certificate-btn" onclick="generateCertificate(${score})">
                         <i class="fas fa-award"></i> Получить сертификат
                     </button>
-                    <p style="color: #666; margin-top: 20px;">
+                    <p style="color: #666; margin-top: 20px; font-size: 16px;">
+                        <i class="fas fa-info-circle" style="color: #3498db;"></i>
                         Сертификат будет сгенерирован с уникальным идентификатором
                     </p>
                 `;
             } else {
                 resultHTML += `
+                    <div style="margin: 30px 0;">
+                        <h3 style="color: #e74c3c; margin-bottom: 15px;">
+                            <i class="fas fa-exclamation-triangle"></i> Неправильные ответы:
+                        </h3>
+                        <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                            ${incorrectQuestions.map((item, index) => `
+                                <div style="background: #ffebee; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #e74c3c;">
+                                    <p><strong>Вопрос ${index + 1}:</strong> ${item.question}</p>
+                                    <p style="color: #e74c3c;"><i class="fas fa-times"></i> Ваш ответ: ${item.userAnswer ? item.userAnswer.toUpperCase() : 'Нет ответа'}</p>
+                                    <p style="color: #2ecc71;"><i class="fas fa-check"></i> Правильный ответ: ${item.correctAnswer.toUpperCase()}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
                     <button class="certificate-btn" onclick="retryTest()" style="background: var(--warning);">
                         <i class="fas fa-redo"></i> Попробовать снова
                     </button>
-                    <p style="color: #666; margin-top: 20px;">
+                    <p style="color: #666; margin-top: 20px; font-size: 16px;">
                         Для успешной сдачи теста необходимо ответить правильно на все вопросы
                     </p>
                 `;
             }
             
             resultHTML += `
-                    <div style="margin-top: 30px;">
+                    <div style="margin-top: 40px; display: flex; justify-content: center; gap: 20px;">
                         <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
-                                style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            <i class="fas fa-arrow-left"></i> Вернуться к курсам
+                                style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-arrow-left"></i> К списку курсов
+                        </button>
+                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/${courseId}/course.html?id=${courseId}'" 
+                                style="padding: 12px 25px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-book"></i> Повторить курс
                         </button>
                     </div>
                 </div>
             `;
             
             testContent.innerHTML = resultHTML;
+        }
+
+        // Show test already passed
+        function showTestAlreadyPassed(score) {
+            const testContent = document.getElementById('testContent');
+            const navigation = document.getElementById('navigation');
+            const requirementsInfo = document.getElementById('requirementsInfo');
+            
+            navigation.style.display = 'none';
+            if (requirementsInfo) requirementsInfo.style.display = 'none';
+            
+            testContent.innerHTML = `
+                <div class="results-container">
+                    <div class="score-circle score-passed">
+                        <div class="score-percent">${score}%</div>
+                        <div class="score-label">УЖЕ СДАНО</div>
+                    </div>
+                    <h2 style="font-size: 32px; margin-bottom: 15px;">🎉 Вы уже прошли этот тест!</h2>
+                    <p style="font-size: 18px; color: #666; margin-bottom: 30px;">
+                        Вы уже успешно прошли этот тест ${score}%. Для повторной сдачи необходимо обратиться к администратору.
+                    </p>
+                    
+                    <button class="certificate-btn" onclick="showExistingCertificate()">
+                        <i class="fas fa-award"></i> Посмотреть сертификат
+                    </button>
+                    
+                    <div style="margin-top: 40px;">
+                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                                style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+                            <i class="fas fa-arrow-left"></i> Вернуться к курсам
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show existing certificate
+        async function showExistingCertificate() {
+            try {
+                const progressDoc = await db.collection('user_progress').doc(currentUser.uid).get();
+                if (progressDoc.exists) {
+                    const allProgress = progressDoc.data();
+                    const courseProgress = allProgress[courseId] || {};
+                    
+                    if (courseProgress.certificateId) {
+                        await showCertificate(
+                            courseProgress.certificateId,
+                            courseProgress.certificateScore || 100,
+                            courseProgress.certificateDate || new Date().toISOString()
+                        );
+                    } else {
+                        // Generate new certificate if not exists
+                        await generateCertificate(courseProgress.testScore || 100);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка показа сертификата:', error);
+                alert('Ошибка при открытии сертификата');
+            }
         }
 
         // Generate certificate
@@ -799,12 +1140,10 @@
                 // Get user data
                 const userDoc = await db.collection('approved_users').doc(currentUser.uid).get();
                 const userData = userDoc.exists ? userDoc.data() : {};
-                const userName = userData.fullName || currentUser.email.split('@')[0];
+                const userName = userData.fullName || currentUser.displayName || currentUser.email.split('@')[0];
                 
                 // Get course data
-                const courseDoc = await db.collection('courses').doc(courseId).get();
-                const courseData = courseDoc.exists ? courseDoc.data() : {};
-                const courseName = courseData.title || 'Система управления по охране труда (СУОТ)';
+                const courseTitle = courseData?.title || 'Система управления по охране труда (СУОТ)';
                 
                 // Update progress with certificate
                 await db.collection('user_progress').doc(currentUser.uid).set({
@@ -812,12 +1151,27 @@
                         certificateGenerated: true,
                         certificateId: certificateId,
                         certificateDate: new Date().toISOString(),
-                        certificateScore: score
+                        certificateScore: score,
+                        certificateDownloaded: true
                     }
                 }, { merge: true });
                 
+                // Save certificate to certificates collection
+                await db.collection('certificates').doc(certificateId).set({
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    userName: userName,
+                    courseId: courseId,
+                    courseTitle: courseTitle,
+                    score: score,
+                    certificateId: certificateId,
+                    issueDate: new Date().toISOString(),
+                    issuedBy: 'QHSE-Solutions.kz',
+                    status: 'active'
+                });
+                
                 // Show certificate
-                showCertificate(certificateId, userName, courseName, score);
+                await showCertificate(certificateId, score);
                 
             } catch (error) {
                 console.error('Ошибка генерации сертификата:', error);
@@ -826,15 +1180,25 @@
         }
 
         // Show certificate
-        function showCertificate(certificateId, userName, courseName, score) {
-            const certificateWindow = window.open('', '_blank', 'width=1000,height=800');
-            const currentDate = new Date().toLocaleDateString('ru-RU');
+        async function showCertificate(certificateId, score, certificateDate = null) {
+            // Get user data
+            const userDoc = await db.collection('approved_users').doc(currentUser.uid).get();
+            const userData = userDoc.exists ? userDoc.data() : {};
+            const userName = userData.fullName || currentUser.displayName || currentUser.email.split('@')[0];
+            
+            const courseTitle = courseData?.title || 'Система управления по охране труда (СУОТ)';
+            const currentDate = certificateDate ? new Date(certificateDate).toLocaleDateString('ru-RU') : new Date().toLocaleDateString('ru-RU');
+            
+            const certificateWindow = window.open('', '_blank', 'width=1000,height=800,scrollbars=yes');
             
             certificateWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Сертификат - ${courseName}</title>
+                    <title>Сертификат - ${courseTitle}</title>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500&display=swap');
                         
@@ -1008,6 +1372,41 @@
                             background: rgba(255,255,255,0.9);
                             transform: rotate(15deg);
                         }
+                        
+                        .print-btn {
+                            background: #3498db;
+                            color: white;
+                            border: none;
+                            padding: 12px 25px;
+                            border-radius: 5px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            margin-top: 30px;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            margin-left: auto;
+                            margin-right: auto;
+                        }
+                        
+                        .print-btn:hover {
+                            background: #2980b9;
+                        }
+                        
+                        @media print {
+                            body {
+                                background: white !important;
+                            }
+                            .certificate-container {
+                                box-shadow: none !important;
+                                border: 15px solid #2c3e50 !important;
+                                margin: 0;
+                                padding: 30px;
+                            }
+                            .print-btn {
+                                display: none !important;
+                            }
+                        }
                     </style>
                 </head>
                 <body>
@@ -1025,7 +1424,7 @@
                         <div class="certificate-content">
                             <div class="certificate-name">${userName}</div>
                             <p style="font-size: 20px; margin: 20px 0;">успешно прошёл(а) курс обучения по программе</p>
-                            <div class="certificate-course">"${courseName}"</div>
+                            <div class="certificate-course">"${courseTitle}"</div>
                             <p style="font-size: 16px; color: #7f8c8d; margin-top: 20px;">
                                 Результат тестирования: <strong>${score}%</strong>
                             </p>
@@ -1037,4 +1436,103 @@
                                 <div class="detail-value">${currentDate}</div>
                             </div>
                             <div class="detail-item">
-                                <div class="detail-label">ID сер
+                                <div class="detail-label">ID сертификата</div>
+                                <div class="detail-value">${certificateId}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Статус</div>
+                                <div class="detail-value" style="color: #2ecc71;">Действителен</div>
+                            </div>
+                        </div>
+                        
+                        <div class="certificate-footer">
+                            <div class="signature">
+                                <div class="signature-line"></div>
+                                <div class="issued-by">Выдано: QHSE-Solutions.kz</div>
+                                <div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">Центр обучения и сертификации</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: 700; color: #3498db; letter-spacing: 2px;">QHSE-SOLUTIONS</div>
+                                <div style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">Охрана труда и промышленная безопасность</div>
+                            </div>
+                        </div>
+                        
+                        <div class="certificate-id">ID: ${certificateId}</div>
+                        
+                        <button class="print-btn" onclick="window.print()">
+                            <i class="fas fa-print"></i> Распечатать сертификат
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            certificateWindow.focus();
+        }
+
+        // Retry test
+        function retryTest() {
+            window.location.reload();
+        }
+
+        // Show error
+        function showError(message) {
+            const testContent = document.getElementById('testContent');
+            testContent.innerHTML = `
+                <div class="results-container">
+                    <div style="color: var(--error); font-size: 48px; margin-bottom: 20px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h2 style="color: var(--error); margin-bottom: 20px;">Ошибка</h2>
+                    <p style="font-size: 18px; color: #666; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                        ${message}
+                    </p>
+                    <div style="margin-top: 30px;">
+                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                                style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
+                            <i class="fas fa-arrow-left"></i> Вернуться к курсам
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initTest();
+        });
+
+        // Handle keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            
+            switch(e.key) {
+                case 'ArrowLeft':
+                    prevQuestion();
+                    break;
+                case 'ArrowRight':
+                case ' ':
+                    e.preventDefault();
+                    nextQuestion();
+                    break;
+                case 'Enter':
+                    if (currentQuestionIndex === testQuestions.length - 1) {
+                        submitTest();
+                    }
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                    const answer = e.key.toLowerCase();
+                    if (['a', 'b', 'c', 'd'].includes(answer)) {
+                        selectAnswer(testQuestions[currentQuestionIndex].id, answer);
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
