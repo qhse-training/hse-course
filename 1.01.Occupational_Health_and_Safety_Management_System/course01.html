@@ -297,38 +297,56 @@
 
     // Обратная карта: папка -> ID курса
     const folderToIdMap = {
-      '1.01.Occupational_Health_and_Safety_Management_System': '0EFXo6H4N1mbA1jBJwOK',
+      '1.01.occupational_health_and_safety_management_system': '0EFXo6H4N1mbA1jBJwOK',
+      '1.01.occupationalhealthandsafetymanagementsystem': '0EFXo6H4N1mbA1jBJwOK',
+      'occupational_health_and_safety_management_system': '0EFXo6H4N1mbA1jBJwOK',
       // Добавьте здесь другие соответствия
     };
 
     // Get course ID from URL or folder name
     function getCourseId() {
+      console.log('Getting course ID from URL...');
+      console.log('Full URL:', window.location.href);
+      console.log('Pathname:', window.location.pathname);
+      
       const urlParams = new URLSearchParams(window.location.search);
       let id = urlParams.get('id');
       
-      // Если ID не передан в параметрах, пробуем определить из URL
-      if (!id) {
-        // Извлекаем название папки из URL
-        const pathParts = window.location.pathname.split('/');
-        for (let i = pathParts.length - 1; i >= 0; i--) {
-          const part = pathParts[i];
-          if (part && part !== 'course01.html' && part !== 'course.html' && !part.endsWith('.html')) {
-            // Это может быть название папки
-            courseFolder = part;
-            // Пробуем найти ID по папке
-            id = folderToIdMap[part];
-            if (id) {
-              console.log('Found course ID from folder:', part, '->', id);
+      // Если ID передан в параметрах
+      if (id) {
+        console.log('Course ID from URL params:', id);
+        return id;
+      }
+      
+      // Если ID не передан, пробуем определить из URL path
+      const pathParts = window.location.pathname.split('/');
+      console.log('Path parts:', pathParts);
+      
+      // Ищем название папки в URL
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const part = pathParts[i];
+        if (part && part !== 'hse-course' && part !== '' && !part.endsWith('.html')) {
+          // Это может быть название папки
+          const folderName = part.toLowerCase().replace(/-/g, '_');
+          console.log('Found possible folder:', part, '-> normalized:', folderName);
+          
+          // Пробуем найти ID по папке
+          for (const [key, value] of Object.entries(folderToIdMap)) {
+            if (folderName.includes(key.toLowerCase()) || key.toLowerCase().includes(folderName)) {
+              id = value;
+              console.log('Found ID from folder mapping:', key, '->', id);
               break;
             }
           }
+          
+          if (id) break;
         }
-        
-        // Если все еще не нашли, используем дефолтное значение
-        if (!id) {
-          id = '0EFXo6H4N1mbA1jBJwOK'; // ID первого курса по умолчанию
-          console.log('Using default course ID:', id);
-        }
+      }
+      
+      // Если все еще не нашли, используем дефолтное значение
+      if (!id) {
+        id = '0EFXo6H4N1mbA1jBJwOK'; // ID первого курса по умолчанию
+        console.log('Using default course ID:', id);
       }
       
       return id;
@@ -414,7 +432,7 @@
     async function loadCourseData() {
       try {
         courseId = getCourseId();
-        console.log('Course ID:', courseId);
+        console.log('Final Course ID:', courseId);
         
         if (!courseId) {
           showError('Не удалось определить курс. Пожалуйста, перейдите к курсу из списка курсов.');
@@ -428,36 +446,42 @@
         // Получаем данные курса из Firestore
         let courseDoc;
         try {
+          console.log('Fetching course data from Firestore...');
           courseDoc = await db.collection('courses').doc(courseId).get();
+          
+          if (courseDoc.exists) {
+            courseData = courseDoc.data();
+            console.log('Course data loaded from Firestore:', courseData);
+            
+            // Если в данных курса есть slides, используем их
+            if (courseData.slides && Array.isArray(courseData.slides) && courseData.slides.length > 0) {
+              console.log('Using slides from Firestore data');
+              // Убедимся, что у нас правильная папка из данных
+              if (courseData.folderName) {
+                courseFolder = courseData.folderName;
+              }
+            }
+          } else {
+            console.log('Course not found in Firestore');
+            // Если курс не найден, создаем базовые данные
+            courseData = {
+              title: 'Система управления охраной труда (СУОТ)',
+              description: 'Разработка и внедрение системы управления охраной труда',
+              module: 'MODULE 1',
+              duration: '1 час',
+              slides: []
+            };
+          }
         } catch (error) {
           console.warn('Ошибка загрузки из Firestore:', error);
           // Если не удалось загрузить из Firestore, создаем базовые данные
           courseData = {
-            title: 'Курс по охране труда и технике безопасности',
-            description: 'Интерактивный курс по системе управления охраной труда и промышленной безопасностью',
-            module: 'Модуль 1.01',
-            duration: '1 час'
+            title: 'Система управления охраной труда (СУОТ)',
+            description: 'Разработка и внедрение системы управления охраной труда',
+            module: 'MODULE 1',
+            duration: '1 час',
+            slides: []
           };
-          
-          // Загружаем слайды и обновляем интерфейс
-          await updateCourseInterface();
-          await loadSlides();
-          await loadUserProgress();
-          return;
-        }
-        
-        if (!courseDoc.exists) {
-          console.log('Course not found in Firestore, using default data');
-          // Используем базовые данные, если курс не найден в Firestore
-          courseData = {
-            title: 'Курс по охране труда и технике безопасности',
-            description: 'Интерактивный курс по системе управления охраной труда и промышленной безопасностью',
-            module: 'Модуль 1.01',
-            duration: '1 час'
-          };
-        } else {
-          courseData = courseDoc.data();
-          console.log('Course data loaded:', courseData);
         }
 
         // Обновляем интерфейс
@@ -470,8 +494,11 @@
         await loadUserProgress();
 
         // Включаем кнопку теста
-        document.getElementById('testBtn').disabled = false;
-        document.getElementById('testBtn').title = 'Перейти к тестированию';
+        const testBtn = document.getElementById('testBtn');
+        if (testBtn) {
+          testBtn.disabled = false;
+          testBtn.title = 'Перейти к тестированию';
+        }
 
       } catch (error) {
         console.error('Ошибка загрузки курса:', error);
@@ -486,9 +513,11 @@
       const courseMetaEl = document.getElementById('courseMeta');
       const courseResourcesEl = document.getElementById('courseResources');
 
+      if (!courseTitleEl) return;
+
       // Update course info
-      courseTitleEl.textContent = courseData?.title || 'Курс по охране труда и технике безопасности';
-      courseDescriptionEl.textContent = courseData?.description || 'Интерактивный курс по системе управления охраной труда';
+      courseTitleEl.textContent = courseData?.title || 'Система управления охраной труда (СУОТ)';
+      courseDescriptionEl.textContent = courseData?.description || 'Разработка и внедрение системы управления охраной труда';
       
       // Update course metadata
       let metaHTML = '';
@@ -498,17 +527,30 @@
       if (courseData?.duration) {
         metaHTML += `<div class="meta-item"><i class="fas fa-clock"></i> ${courseData.duration}</div>`;
       }
+      if (courseData?.price) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-tag"></i> ${courseData.price} руб.</div>`;
+      }
       courseMetaEl.innerHTML = metaHTML;
 
       // Add course resources
       const courseNumber = getCourseNumber(courseFolder);
+      const courseUrl = getCourseUrl(courseFolder);
+      const testUrl = getTestUrl(courseFolder);
+      
+      console.log('Course resources:', {
+        folder: courseFolder,
+        number: courseNumber,
+        courseUrl: courseUrl,
+        testUrl: testUrl
+      });
+      
       const resourcesHTML = `
         <div class="course-resources">
           <p style="margin-bottom: 10px; font-weight: bold;">Ресурсы курса:</p>
-          <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link">
+          <a href="${courseUrl}" target="_blank" class="resource-link">
             <i class="fas fa-external-link-alt"></i> Интерактивная версия курса
           </a>
-          <a href="${getTestUrl(courseFolder)}" target="_blank" class="resource-link">
+          <a href="${testUrl}" target="_blank" class="resource-link">
             <i class="fas fa-clipboard-check"></i> Пройти тест
           </a>
           <a href="https://github.com/qhse-training/hse-course/tree/main/${courseFolder}" target="_blank" class="resource-link">
@@ -525,58 +567,93 @@
         slides = [];
         
         if (!courseFolder) {
+          console.error('Course folder not defined');
           throw new Error('Папка курса не определена');
         }
 
-        console.log('Loading slides from folder:', courseFolder);
+        console.log('Loading slides for folder:', courseFolder);
         
-        // Пытаемся найти слайды
-        let slideNumber = 1;
-        const maxSlides = 50;
-        let consecutiveFails = 0;
-        
-        while (slideNumber <= maxSlides && consecutiveFails < 3) {
-          const slideUrls = [
-            // GitHub Pages URL
-            `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.JPG`,
-            `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.jpg`,
-            `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.png`,
-            `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.jpeg`,
-            // Raw GitHub (резервный вариант)
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.JPG`,
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpg`,
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.png`,
-            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpeg`,
-          ];
+        // Сначала проверяем, есть ли слайды в данных курса из Firestore
+        if (courseData?.slides && Array.isArray(courseData.slides) && courseData.slides.length > 0) {
+          console.log('Using slides from course data:', courseData.slides.length);
+          courseData.slides.forEach((slideUrl, index) => {
+            slides.push({
+              number: index + 1,
+              title: `Слайд ${index + 1}`,
+              imageUrl: slideUrl,
+              description: `Слайд ${index + 1} курса "${courseData?.title || 'Курс'}"`
+            });
+          });
+        } else {
+          // Если нет слайдов в данных, ищем их в папке
+          console.log('Searching for slides in folder...');
           
-          let foundSlide = false;
-          
-          for (const slideUrl of slideUrls) {
-            try {
-              const response = await fetch(slideUrl, { method: 'HEAD' });
-              if (response.ok) {
+          // Сначала пробуем найти слайды в данных курса (если они там в другом формате)
+          if (courseData && typeof courseData === 'object') {
+            // Проверяем, есть ли поля с названиями slide1, slide2, и т.д.
+            for (let i = 1; i <= 50; i++) {
+              const slideKey = `slide${i}`;
+              if (courseData[slideKey]) {
                 slides.push({
-                  number: slideNumber,
-                  title: `Слайд ${slideNumber}`,
-                  imageUrl: slideUrl,
-                  description: `Слайд ${slideNumber} курса "${courseData?.title || 'Курс'}"`
+                  number: i,
+                  title: `Слайд ${i}`,
+                  imageUrl: courseData[slideKey],
+                  description: `Слайд ${i} курса "${courseData?.title || 'Курс'}"`
                 });
-                console.log(`Found slide ${slideNumber}: ${slideUrl}`);
-                foundSlide = true;
-                consecutiveFails = 0;
-                break;
               }
-            } catch (e) {
-              continue;
             }
           }
           
-          if (!foundSlide) {
-            consecutiveFails++;
-            console.log(`Slide ${slideNumber} not found, consecutive fails: ${consecutiveFails}`);
+          // Если все еще нет слайдов, ищем на GitHub
+          if (slides.length === 0) {
+            console.log('Searching for slides on GitHub...');
+            let slideNumber = 1;
+            const maxSlides = 50;
+            let consecutiveFails = 0;
+            
+            while (slideNumber <= maxSlides && consecutiveFails < 3) {
+              const slideUrls = [
+                // Raw GitHub
+                `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.JPG`,
+                `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpg`,
+                `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.png`,
+                `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.JPG`,
+                `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.jpg`,
+                // GitHub Pages
+                `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.JPG`,
+                `https://qhse-training.github.io/hse-course/${courseFolder}/Slide${slideNumber}.jpg`,
+              ];
+              
+              let foundSlide = false;
+              
+              for (const slideUrl of slideUrls) {
+                try {
+                  const response = await fetch(slideUrl, { method: 'HEAD' });
+                  if (response.ok) {
+                    slides.push({
+                      number: slideNumber,
+                      title: `Слайд ${slideNumber}`,
+                      imageUrl: slideUrl,
+                      description: `Слайд ${slideNumber} курса "${courseData?.title || 'Курс'}"`
+                    });
+                    console.log(`Found slide ${slideNumber}: ${slideUrl}`);
+                    foundSlide = true;
+                    consecutiveFails = 0;
+                    break;
+                  }
+                } catch (e) {
+                  continue;
+                }
+              }
+              
+              if (!foundSlide) {
+                consecutiveFails++;
+                console.log(`Slide ${slideNumber} not found, consecutive fails: ${consecutiveFails}`);
+              }
+              
+              slideNumber++;
+            }
           }
-          
-          slideNumber++;
         }
 
         if (slides.length === 0) {
@@ -585,7 +662,10 @@
         }
 
         console.log(`Loaded ${slides.length} slides`);
-        document.getElementById('totalSlides').textContent = slides.length;
+        const totalSlidesEl = document.getElementById('totalSlides');
+        if (totalSlidesEl) {
+          totalSlidesEl.textContent = slides.length;
+        }
         updateSlide();
 
       } catch (error) {
@@ -597,6 +677,8 @@
     // Show message when no slides found
     function showNoSlidesMessage() {
       const slideContentEl = document.getElementById('slideContent');
+      if (!slideContentEl) return;
+      
       slideContentEl.innerHTML = `
         <div class="error">
           <h3>Слайды не найдены</h3>
@@ -609,6 +691,7 @@
           </ul>
           <p style="margin-top: 10px;">
             <strong>Папка курса:</strong> ${courseFolder || 'не определена'}<br>
+            <strong>ID курса:</strong> ${courseId || 'не определен'}
           </p>
           <p style="margin-top: 20px;">
             <a href="${getCourseUrl(courseFolder)}" target="_blank" class="resource-link" style="display: inline-flex;">
@@ -693,10 +776,15 @@
       if (slides.length === 0) return;
 
       const slide = slides[currentSlideIndex];
-      document.getElementById('slideTitle').textContent = slide.title;
-      document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
-
+      const slideTitleEl = document.getElementById('slideTitle');
+      const currentSlideEl = document.getElementById('currentSlide');
       const slideContentEl = document.getElementById('slideContent');
+      
+      if (!slideTitleEl || !currentSlideEl || !slideContentEl) return;
+      
+      slideTitleEl.textContent = slide.title;
+      currentSlideEl.textContent = currentSlideIndex + 1;
+
       slideContentEl.innerHTML = `
         <div style="text-align: center;">
           <img src="${slide.imageUrl}" 
@@ -720,8 +808,10 @@
       `;
 
       // Update navigation buttons
-      document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
-      document.getElementById('nextBtn').disabled = currentSlideIndex === slides.length - 1;
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      if (prevBtn) prevBtn.disabled = currentSlideIndex === 0;
+      if (nextBtn) nextBtn.disabled = currentSlideIndex === slides.length - 1;
 
       // Save progress
       saveUserProgress();
@@ -733,6 +823,8 @@
 
       const progress = userProgress.slidesViewed || 0;
       const progressBar = document.getElementById('progressBar');
+      if (!progressBar) return;
+      
       progressBar.style.width = `${progress}%`;
       progressBar.textContent = `${progress}%`;
       
@@ -780,6 +872,14 @@
 
     // Open test
     function openTest() {
+      // Если в данных курса есть testHtml, используем его
+      if (courseData?.testHtml) {
+        console.log('Opening test from course data:', courseData.testHtml);
+        window.open(courseData.testHtml, '_blank');
+        return;
+      }
+      
+      // Иначе формируем URL
       const testUrl = getTestUrl(courseFolder);
       console.log('Opening test URL:', testUrl);
       window.open(testUrl, '_blank');
@@ -795,6 +895,8 @@
     // Show error
     function showError(message) {
       const mainContent = document.getElementById('mainContent');
+      if (!mainContent) return;
+      
       mainContent.innerHTML = `
         <div class="error">
           <h3>Ошибка загрузки курса</h3>
@@ -803,6 +905,7 @@
             <p><strong>Текущий URL:</strong> ${window.location.href}</p>
             <p><strong>ID курса:</strong> ${courseId || 'не определен'}</p>
             <p><strong>Папка курса:</strong> ${courseFolder || 'не определена'}</p>
+            <p><strong>Pathname:</strong> ${window.location.pathname}</p>
           </div>
           <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
                   class="action-btn btn-back" style="margin-top: 20px;">
@@ -815,6 +918,8 @@
     // Show login prompt
     function showLoginPrompt() {
       const mainContent = document.getElementById('mainContent');
+      if (!mainContent) return;
+      
       mainContent.innerHTML = `
         <div class="login-prompt">
           <h2>Требуется авторизация</h2>
@@ -833,6 +938,8 @@
 
     // Initialize
     auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed, user:', user);
+      
       // Update user info in header
       const usernameEl = document.getElementById('username');
       const userAvatarEl = document.getElementById('userAvatar');
