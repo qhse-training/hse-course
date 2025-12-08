@@ -367,10 +367,9 @@
       return '01';
     }
 
-    // Формирование правильного URL для теста (без параметра id)
-    function getCorrectTestUrl() {
+    // Формирование URL для GitHub Pages теста (исправленный формат)
+    function getTestUrl() {
       if (!courseFolder) return '#';
-      
       // Всегда используем формат test01.html (с ведущим нулем)
       return `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`;
     }
@@ -470,8 +469,7 @@
               description: 'Разработка и внедрение системы управления охраной труда',
               module: 'MODULE 1',
               duration: '1 час',
-              slides: [],
-              testHtml: `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`
+              slides: []
             };
           }
         } catch (error) {
@@ -482,8 +480,7 @@
             description: 'Разработка и внедрение системы управления охраной труда',
             module: 'MODULE 1',
             duration: '1 час',
-            slides: [],
-            testHtml: `https://qhse-training.github.io/hse-course/${courseFolder}/test01.html`
+            slides: []
           };
         }
 
@@ -509,7 +506,7 @@
       }
     }
 
-    // Update course interface
+    // Update course interface - УДАЛЕНЫ ВСЕ ССЫЛКИ
     async function updateCourseInterface() {
       const courseTitleEl = document.getElementById('courseTitle');
       const courseDescriptionEl = document.getElementById('courseDescription');
@@ -535,7 +532,7 @@
       }
       courseMetaEl.innerHTML = metaHTML;
 
-      // Add course resources - УДАЛЕНО (оставляем только кнопки внизу)
+      // Очищаем ресурсы курса - НИКАКИХ ССЫЛОК
       courseResourcesEl.innerHTML = '';
     }
 
@@ -652,7 +649,7 @@
       }
     }
 
-    // Show message when no slides found
+    // Show message when no slides found - УДАЛЕНЫ ССЫЛКИ
     function showNoSlidesMessage() {
       const slideContentEl = document.getElementById('slideContent');
       if (!slideContentEl) return;
@@ -744,7 +741,7 @@
       }
     }
 
-    // Update slide display
+    // Update slide display - УДАЛЕНЫ ССЫЛКИ
     function updateSlide() {
       if (slides.length === 0) return;
 
@@ -839,21 +836,12 @@
       }
     }
 
-    // Open test - ИСПРАВЛЕНА
+    // Open test - исправленный формат
     function openTest() {
       // Всегда используем правильный URL теста
-      const testUrl = getCorrectTestUrl();
-      console.log('Opening correct test URL:', testUrl);
+      const testUrl = getTestUrl();
+      console.log('Opening test URL:', testUrl);
       window.open(testUrl, '_blank');
-      
-      // Если нужно использовать testHtml из Firestore (исправленный)
-      /*
-      if (courseData?.testHtml) {
-        console.log('Opening test from course data:', courseData.testHtml);
-        window.open(courseData.testHtml, '_blank');
-        return;
-      }
-      */
     }
 
     // Logout
