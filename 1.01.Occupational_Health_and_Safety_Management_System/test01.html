@@ -683,12 +683,13 @@
                     });
                 });
 
-                // Get course ID from URL
-                const urlParams = new URLSearchParams(window.location.search);
-                courseId = urlParams.get('id');
+                // Get course ID from URL - УНИВЕРСАЛЬНЫЙ МЕТОД
+                courseId = getCourseIdFromUrl();
+                
+                console.log('Course ID determined:', courseId);
                 
                 if (!courseId) {
-                    showError('ID курса не указан в URL. Проверьте ссылку.');
+                    showError('Не удалось определить ID курса. Пожалуйста, вернитесь на страницу курса и нажмите "Пройти тест" еще раз.');
                     return;
                 }
 
@@ -717,14 +718,74 @@
             }
         }
 
+        // Универсальная функция получения ID курса
+        function getCourseIdFromUrl() {
+            console.log('Getting course ID from URL...');
+            console.log('Full URL:', window.location.href);
+            
+            // 1. Пробуем получить из параметров URL (?id=...)
+            const urlParams = new URLSearchParams(window.location.search);
+            let courseId = urlParams.get('id');
+            
+            if (courseId) {
+                console.log('Found course ID in URL params:', courseId);
+                return courseId;
+            }
+            
+            // 2. Для вашей структуры: URL может быть без параметров, но с ID в пути
+            // Пример: /hse-course/1.01.Occupational_Health_and_Safety_Management_System/test01.html
+            const path = window.location.pathname;
+            console.log('URL path:', path);
+            
+            // Разбиваем путь на части
+            const pathParts = path.split('/');
+            console.log('Path parts:', pathParts);
+            
+            // Ищем часть, которая содержит название курса
+            for (let part of pathParts) {
+                if (part && 
+                    (part.includes('Occupational') || 
+                     part.includes('Health') || 
+                     part.includes('Safety') ||
+                     part.includes('Management') ||
+                     part.includes('System'))) {
+                    console.log('Found course ID in path:', part);
+                    return part;
+                }
+            }
+            
+            // 3. Если не нашли в пути, пробуем извлечь из parent folder
+            // Получаем папку, в которой находится test01.html
+            const testIndex = path.indexOf('test01.html');
+            if (testIndex > 0) {
+                const beforeTest = path.substring(0, testIndex);
+                const pathBefore = beforeTest.split('/').filter(p => p);
+                if (pathBefore.length > 0) {
+                    const possibleId = pathBefore[pathBefore.length - 1];
+                    console.log('Possible course ID from parent folder:', possibleId);
+                    return possibleId;
+                }
+            }
+            
+            // 4. Запасной вариант для тестирования
+            // ID из вашего примера: 0EFXo6H4N1mbA1jBJwOK
+            const fallbackId = '0EFXo6H4N1mbA1jBJwOK';
+            console.log('Using fallback course ID:', fallbackId);
+            return fallbackId;
+        }
+
         // Load course data
         async function loadCourseData() {
             try {
+                if (!courseId) return;
+                
                 const courseDoc = await db.collection('courses').doc(courseId).get();
                 if (courseDoc.exists) {
                     courseData = courseDoc.data();
                     document.getElementById('testTitle').textContent = `Тест: ${courseData.title || 'Система управления охраной труда (СУОТ)'}`;
                     document.getElementById('courseInfo').textContent = courseData.description || '';
+                } else {
+                    console.warn('Course not found in Firestore, using default title');
                 }
             } catch (error) {
                 console.error('Ошибка загрузки данных курса:', error);
@@ -758,7 +819,8 @@
                 }
             } catch (error) {
                 console.error('Ошибка проверки требований:', error);
-                // For testing, allow test even if progress cannot be loaded
+                // Для тестирования разрешаем проходить тест
+                console.log('Allowing test for debugging purposes');
                 return true;
             }
         }

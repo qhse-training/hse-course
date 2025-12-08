@@ -184,6 +184,12 @@
       align-items: center;
       gap: 0.5rem;
     }
+    .course-folder {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-top: 10px;
+      text-align: center;
+    }
     @media (max-width: 768px) {
       header { flex-direction: column; text-align: center; gap: 1rem; }
       nav ul { flex-direction: column; gap: 0.5rem; }
@@ -219,6 +225,7 @@
       <h1 class="course-title" id="courseTitle">Загрузка курса...</h1>
       <div class="course-description" id="courseDescription"></div>
       <div class="course-meta" id="courseMeta"></div>
+      <div class="course-folder" id="courseFolder"></div>
       <div class="progress-container">
         <div class="progress-bar" id="progressBar">0%</div>
       </div>
@@ -282,6 +289,7 @@
     const courseTitleEl = document.getElementById('courseTitle');
     const courseDescriptionEl = document.getElementById('courseDescription');
     const courseMetaEl = document.getElementById('courseMeta');
+    const courseFolderEl = document.getElementById('courseFolder');
     const slideTitleEl = document.getElementById('slideTitle');
     const slideContentEl = document.getElementById('slideContent');
     const currentSlideEl = document.getElementById('currentSlide');
@@ -295,95 +303,90 @@
 
     // Global variables
     let courseId = null;
+    let courseFolder = null;
     let slides = [];
     let currentSlideIndex = 0;
     let userData = null;
     let courseData = null;
     let userProgress = {};
 
+    // Карта соответствия ID курса и папки курса (запасной вариант)
+    const courseFolderMap = {
+      '0EFXo6H4N1mbA1jBJwOK': '1.01.Occupational_Health_and_Safety_Management_System',
+      // Добавьте здесь другие курсы по мере необходимости
+    };
+
     // Get course ID from URL
     function getCourseIdFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('id');
+      const id = urlParams.get('id') || urlParams.get('course');
       
+      // Проверяем различные варианты параметров
       if (!id) {
-        // Если ID не передан, попробуем получить из hash
         const hash = window.location.hash.substring(1);
         if (hash) return hash;
         
-        // Или из последнего сегмента URL
+        // Пробуем извлечь из последнего сегмента URL
         const pathParts = window.location.pathname.split('/');
-        return pathParts[pathParts.length - 1].replace('.html', '');
+        const lastPart = pathParts[pathParts.length - 1];
+        
+        // Убираем расширение .html
+        if (lastPart.endsWith('.html')) {
+          return lastPart.replace('.html', '');
+        }
+        
+        return lastPart;
       }
       
       return id;
     }
 
-    // Debug function to show URL parameters
-    function debugUrl() {
-      console.log('URL:', window.location.href);
-      console.log('Search:', window.location.search);
-      console.log('Hash:', window.location.hash);
-      console.log('Pathname:', window.location.pathname);
-      const urlParams = new URLSearchParams(window.location.search);
-      console.log('URL Params:', Object.fromEntries(urlParams));
+    // Get course number from folder name
+    function getCourseNumber(folderName) {
+      const match = folderName.match(/^(\d+\.\d+)/);
+      if (match) {
+        const parts = match[1].split('.');
+        return parts[1]; // Возвращаем вторую часть (01, 02, и т.д.)
+      }
+      return '1'; // По умолчанию
     }
 
     // Load course data
     async function loadCourseData() {
       try {
-        debugUrl(); // Для отладки
         courseId = getCourseIdFromUrl();
         console.log('Course ID from URL:', courseId);
         
         if (!courseId) {
-          showError('ID курса не указан в URL. Проверьте ссылку.');
+          showError('ID курса не указан. Пожалуйста, перейдите к курсу из списка курсов.');
           return;
         }
 
-        // Пытаемся найти курс по ID в Firestore
-        let courseDoc;
+        // Получаем данные курса из Firestore
+        const courseDoc = await db.collection('courses').doc(courseId).get();
         
-        // Сначала ищем по точному совпадению ID
-        courseDoc = await db.collection('courses').doc(courseId).get();
-        
-        // Если не нашли, ищем все курсы и проверяем поле testHtml
         if (!courseDoc.exists) {
-          console.log('Course not found by ID, searching by testHtml...');
-          const allCourses = await db.collection('courses').get();
-          
-          for (let doc of allCourses.docs) {
-            const data = doc.data();
-            if (data.testHtml && data.testHtml.includes(courseId)) {
-              courseId = doc.id;
-              courseDoc = doc;
-              console.log('Found course by testHtml:', courseId);
-              break;
-            }
-          }
-          
-          // Если все еще не нашли, используем первый курс как запасной вариант
-          if (!courseDoc || !courseDoc.exists) {
-            console.log('Course not found, using first available course');
-            const firstCourse = allCourses.docs[0];
-            if (firstCourse) {
-              courseId = firstCourse.id;
-              courseDoc = firstCourse;
-            }
-          }
-        }
-
-        if (!courseDoc || !courseDoc.exists) {
-          showError('Курс не найден в базе данных');
+          showError('Курс не найден в базе данных. Пожалуйста, обратитесь к администратору.');
           return;
         }
 
         courseData = courseDoc.data();
         console.log('Course data loaded:', courseData);
         
+        // Определяем папку курса
+        courseFolder = courseData.folderName || courseFolderMap[courseId];
+        
+        if (!courseFolder) {
+          // Если папка не указана, используем ID курса как имя папки
+          courseFolder = courseId;
+        }
+        
+        console.log('Course folder:', courseFolder);
+        
         // Update course info
-        courseTitleEl.textContent = courseData.title || 'Без названия';
-        courseDescriptionEl.textContent = courseData.description || '';
+        courseTitleEl.textContent = courseData.title || 'Курс без названия';
+        courseDescriptionEl.textContent = courseData.description || 'Описание курса будет добавлено позже';
+        courseFolderEl.textContent = `Папка курса: ${courseFolder}`;
         
         // Update course metadata
         let metaHTML = '';
@@ -392,9 +395,6 @@
         }
         if (courseData.duration) {
           metaHTML += `<div class="meta-item"><i class="fas fa-clock"></i> ${courseData.duration}</div>`;
-        }
-        if (courseData.slides && courseData.slides.length) {
-          metaHTML += `<div class="meta-item"><i class="fas fa-images"></i> ${courseData.slides.length} слайдов</div>`;
         }
         courseMetaEl.innerHTML = metaHTML;
 
@@ -405,7 +405,7 @@
         await loadUserProgress();
 
         // Enable test button if course has test
-        if (courseData.testHtml || courseData.hasTest) {
+        if (courseData.testAvailable || courseData.hasTest) {
           testBtn.disabled = false;
           testBtn.title = 'Перейти к тестированию';
         } else {
@@ -415,7 +415,7 @@
 
       } catch (error) {
         console.error('Ошибка загрузки курса:', error);
-        showError(`Ошибка загрузки курса: ${error.message}`);
+        showError(`Ошибка загрузки курса: ${error.message}. Проверьте подключение к интернету.`);
       }
     }
 
@@ -424,64 +424,106 @@
       try {
         slides = [];
         
-        // Если в courseData есть массив slides с URL
-        if (courseData.slides && Array.isArray(courseData.slides) && courseData.slides.length > 0) {
-          console.log('Loading slides from course data:', courseData.slides.length);
+        if (!courseFolder) {
+          throw new Error('Папка курса не определена');
+        }
+
+        console.log('Loading slides from folder:', courseFolder);
+        
+        // Пытаемся найти слайды в папке курса
+        let slideNumber = 1;
+        const maxSlides = 50; // Максимальное количество слайдов для поиска
+        
+        while (slideNumber <= maxSlides) {
+          const slideUrls = [
+            // Стандартные варианты названий
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.JPG`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpg`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.png`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber}.jpeg`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.JPG`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.jpg`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.png`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide${slideNumber}.jpeg`,
+            // Русские названия
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/%D0%A1%D0%BB%D0%B0%D0%B9%D0%B4${slideNumber}.JPG`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/%D0%A1%D0%BB%D0%B0%D0%B9%D0%B4${slideNumber}.jpg`,
+            // Нумерация с ведущими нулями
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber.toString().padStart(2, '0')}.JPG`,
+            `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide${slideNumber.toString().padStart(2, '0')}.jpg`,
+          ];
           
-          courseData.slides.forEach((slideUrl, index) => {
-            slides.push({
-              number: index + 1,
-              title: `Слайд ${index + 1}`,
-              imageUrl: slideUrl,
-              description: `Содержание слайда ${index + 1} по теме "${courseData.title}"`
-            });
-          });
+          let foundSlide = false;
           
-        } else {
-          // Старый метод - пытаемся найти слайды на GitHub
-          console.log('Trying to find slides on GitHub...');
-          const folderName = courseId;
-          let slideNumber = 1;
+          for (const slideUrl of slideUrls) {
+            try {
+              // Проверяем существование файла
+              const response = await fetch(slideUrl, { method: 'HEAD' });
+              if (response.ok) {
+                slides.push({
+                  number: slideNumber,
+                  title: `Слайд ${slideNumber}`,
+                  imageUrl: slideUrl,
+                  description: `Слайд ${slideNumber} курса "${courseData.title}"`
+                });
+                console.log(`Found slide: ${slideUrl}`);
+                foundSlide = true;
+                break;
+              }
+            } catch (e) {
+              // Пропускаем ошибки
+              continue;
+            }
+          }
           
-          while (slideNumber <= 50) {
-            const slideUrls = [
-              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}/Slide${slideNumber}.JPG`,
-              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}/Slide${slideNumber}.jpg`,
-              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}/%D0%A1%D0%BB%D0%B0%D0%B9%D0%B4${slideNumber}.JPG`,
-              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${folderName}/slide${slideNumber}.jpg`
+          if (!foundSlide && slideNumber === 1) {
+            // Если не нашли первый слайд, пробуем альтернативные названия для первого слайда
+            const firstSlideUrls = [
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide1.JPG`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide1.jpg`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide1.JPG`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/slide1.jpg`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide01.JPG`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide01.jpg`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/1.JPG`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/1.jpg`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide1.jpeg`,
+              `https://raw.githubusercontent.com/qhse-training/hse-course/main/${courseFolder}/Slide1.png`,
             ];
             
-            let found = false;
-            for (const slideUrl of slideUrls) {
+            for (const slideUrl of firstSlideUrls) {
               try {
                 const response = await fetch(slideUrl, { method: 'HEAD' });
                 if (response.ok) {
                   slides.push({
-                    number: slideNumber,
-                    title: `Слайд ${slideNumber}`,
+                    number: 1,
+                    title: 'Слайд 1',
                     imageUrl: slideUrl,
-                    description: `Содержание слайда ${slideNumber} по теме "${courseData.title}"`
+                    description: `Первый слайд курса "${courseData.title}"`
                   });
-                  found = true;
-                  console.log(`Found slide: ${slideUrl}`);
+                  console.log(`Found first slide: ${slideUrl}`);
+                  foundSlide = true;
                   break;
                 }
               } catch (e) {
-                // Пропускаем ошибки
+                continue;
               }
             }
-            
-            if (!found) {
-              // Если не нашли слайд с этим номером, возможно, это последний слайд
-              break;
-            }
-            
-            slideNumber++;
           }
+          
+          // Если не нашли слайд с текущим номером, проверяем следующий
+          if (!foundSlide && slideNumber >= 3) {
+            // Если не нашли 3 слайда подряд, прекращаем поиск
+            console.log(`Stopping search after not finding slide ${slideNumber}`);
+            break;
+          }
+          
+          slideNumber++;
         }
 
         if (slides.length === 0) {
-          showError('Слайды курса не найдены. Пожалуйста, обратитесь к администратору.');
+          // Если слайды не найдены, показываем сообщение
+          showNoSlidesMessage();
           return;
         }
 
@@ -491,8 +533,29 @@
 
       } catch (error) {
         console.error('Ошибка загрузки слайдов:', error);
-        showError('Ошибка загрузки слайдов: ' + error.message);
+        showNoSlidesMessage();
       }
+    }
+
+    // Show message when no slides found
+    function showNoSlidesMessage() {
+      slideContentEl.innerHTML = `
+        <div class="error">
+          <h3>Слайды не найдены</h3>
+          <p>Не удалось загрузить слайды для этого курса.</p>
+          <p>Возможные причины:</p>
+          <ul style="text-align: left; margin: 10px 0;">
+            <li>Слайды еще не загружены в репозиторий</li>
+            <li>Неправильное название папки курса</li>
+            <li>Проблемы с подключением к интернету</li>
+          </ul>
+          <p style="margin-top: 10px;">
+            <strong>Папка курса:</strong> ${courseFolder || 'не определена'}<br>
+            <strong>ID курса:</strong> ${courseId}
+          </p>
+          <p style="margin-top: 20px;">Пожалуйста, обратитесь к администратору.</p>
+        </div>
+      `;
     }
 
     // Load user progress
@@ -505,6 +568,15 @@
         if (progressDoc.exists) {
           const allProgress = progressDoc.data();
           userProgress = allProgress[courseId] || {};
+          
+          // Восстанавливаем последний просмотренный слайд
+          if (userProgress.currentSlide && slides.length > 0) {
+            const savedSlide = userProgress.currentSlide;
+            if (savedSlide >= 0 && savedSlide < slides.length) {
+              currentSlideIndex = savedSlide;
+            }
+          }
+          
           console.log('Loaded user progress:', userProgress);
         }
 
@@ -519,7 +591,7 @@
     async function saveUserProgress() {
       try {
         const user = auth.currentUser;
-        if (!user) return;
+        if (!user || slides.length === 0) return;
 
         const viewedSlides = userProgress.viewedSlides || [];
         if (!viewedSlides.includes(currentSlideIndex)) {
@@ -544,7 +616,8 @@
         userProgress = {
           ...userProgress,
           slidesViewed: progressPercentage,
-          viewedSlides: viewedSlides
+          viewedSlides: viewedSlides,
+          currentSlide: currentSlideIndex
         };
 
         updateProgressBar();
@@ -567,13 +640,13 @@
           <img src="${slide.imageUrl}" 
                alt="${slide.title}" 
                class="slide-image" 
-               onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600/2c3e50/ffffff?text=Слайд+${currentSlideIndex + 1}';"
+               onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600/2c3e50/ffffff?text=Слайд+${currentSlideIndex + 1}+не+загружен';"
                loading="lazy">
           <div class="slide-description">
-            <p><strong>${courseData.title}</strong></p>
+            <p><strong>${courseData.title}</strong> - Слайд ${currentSlideIndex + 1} из ${slides.length}</p>
             <p>${slide.description}</p>
             <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
-              <i class="fas fa-info-circle"></i> Для навигации используйте стрелки на клавиатуре или кнопки ниже
+              <i class="fas fa-info-circle"></i> Для навигации используйте стрелки ← → на клавиатуре, кнопки ниже или свайп на мобильных устройствах
             </p>
           </div>
         </div>
@@ -597,11 +670,14 @@
       
       // Update progress bar color based on progress
       if (progress >= 100) {
-        progressBar.style.backgroundColor = '#2ecc71';
+        progressBar.style.backgroundColor = '#2ecc71'; // Зеленый
+        progressBar.title = 'Курс полностью просмотрен';
       } else if (progress >= 50) {
-        progressBar.style.backgroundColor = '#f39c12';
+        progressBar.style.backgroundColor = '#f39c12'; // Оранжевый
+        progressBar.title = 'Курс просмотрен наполовину';
       } else {
-        progressBar.style.backgroundColor = '#3498db';
+        progressBar.style.backgroundColor = '#3498db'; // Синий
+        progressBar.title = 'Курс начат';
       }
     }
 
@@ -627,7 +703,7 @@
       if (!document.fullscreenElement) {
         elem.requestFullscreen().catch(err => {
           console.error(`Ошибка включения полноэкранного режима: ${err.message}`);
-          alert('Ваш браузер не поддерживает полноэкранный режим');
+          alert('Ваш браузер не поддерживает полноэкранный режим или требуется ручное разрешение');
         });
       } else {
         document.exitFullscreen();
@@ -636,25 +712,11 @@
 
     // Open test
     function openTest() {
-      if (!courseData) return;
+      if (!courseData || !courseFolder) return;
       
-      let testUrl;
-      
-      if (courseData.testHtml) {
-        // Если testHtml уже полный URL
-        if (courseData.testHtml.startsWith('http')) {
-          testUrl = courseData.testHtml;
-        } else {
-          // Иначе формируем путь
-          testUrl = `https://qhse-training.github.io/hse-course/${courseData.testHtml}`;
-        }
-      } else if (courseData.hasTest) {
-        // Генерируем URL теста на основе ID курса
-        testUrl = `https://qhse-training.github.io/hse-course/test.html?course=${courseId}`;
-      } else {
-        alert('Тест для этого курса не доступен');
-        return;
-      }
+      // Формируем URL теста на основе папки курса
+      const courseNumber = getCourseNumber(courseFolder);
+      const testUrl = `https://qhse-training.github.io/hse-course/${courseFolder}/test${courseNumber}.html`;
       
       console.log('Opening test URL:', testUrl);
       window.open(testUrl, '_blank');
@@ -671,16 +733,16 @@
     function showError(message) {
       slideContentEl.innerHTML = `
         <div class="error">
-          <h3>Ошибка</h3>
+          <h3>Ошибка загрузки курса</h3>
           <p>${message}</p>
-          <div style="margin-top: 20px;">
+          <div style="margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
             <p><strong>Текущий URL:</strong> ${window.location.href}</p>
-            <p><strong>Параметры:</strong> ${window.location.search}</p>
             <p><strong>ID курса:</strong> ${courseId || 'не определен'}</p>
+            <p><strong>Папка курса:</strong> ${courseFolder || 'не определена'}</p>
           </div>
           <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
                   class="action-btn btn-back" style="margin-top: 20px;">
-            <i class="fas fa-arrow-left"></i> Вернуться к курсам
+            <i class="fas fa-arrow-left"></i> Вернуться к списку курсов
           </button>
         </div>
       `;
@@ -713,8 +775,6 @@
           prevSlide();
           break;
         case 'ArrowRight':
-          nextSlide();
-          break;
         case ' ':
         case 'Spacebar':
           e.preventDefault(); // Prevent space from scrolling page
