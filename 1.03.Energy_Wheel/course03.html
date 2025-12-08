@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Колесо энергий</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+      --success-color: #27ae60;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      line-height: 1.6;
+    }
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .logo-container { display: flex; align-items: center; gap: 1rem; }
+    .logo-text { font-size: 1.5rem; font-weight: bold; }
+    .user-info { display: flex; align-items: center; gap: 1rem; }
+    .user-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background-color: var(--secondary-color);
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-weight: bold;
+    }
+    nav {
+      background-color: var(--dark-color);
+      padding: 0.5rem 2rem;
+    }
+    nav ul {
+      display: flex; list-style: none; gap: 1.5rem;
+    }
+    nav a {
+      color: white; text-decoration: none; padding: 0.5rem 0;
+      transition: color 0.3s;
+    }
+    nav a:hover, nav a.active { color: var(--secondary-color); }
+    .course-container {
+      max-width: 1200px; margin: 2rem auto; padding: 0 1rem;
+    }
+    .course-header {
+      background-color: white; border-radius: 8px;
+      padding: 2rem; margin-bottom: 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .course-title {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .course-description {
+      color: #666;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+    }
+    .progress-container {
+      width: 100%; background-color: #eee;
+      border-radius: 10px; margin: 1.5rem 0; height: 20px;
+    }
+    .progress-bar {
+      height: 100%; border-radius: 10px;
+      background-color: var(--success-color);
+      width: 0%; transition: width 0.5s ease;
+      display: flex; align-items: center;
+      justify-content: center; color: white; font-size: 0.7rem;
+    }
+    .slide-container {
+      background-color: white; border-radius: 8px;
+      padding: 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .slide-title {
+      color: var(--primary-color); margin-bottom: 1.5rem;
+    }
+    .slide-content { margin-bottom: 1.5rem; }
+    .slide-image {
+      max-width: 100%; max-height: 600px;
+      height: auto; border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .slide-description {
+      color: #555; margin-top: 1rem; line-height: 1.6;
+      text-align: left;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+    }
+    .slide-navigation {
+      display: flex; justify-content: center;
+      gap: 1rem; margin-top: 2rem;
+    }
+    .nav-btn, .fullscreen-btn {
+      padding: 0.8rem 1.5rem; border: none; border-radius: 6px;
+      cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 600;
+    }
+    .nav-btn {
+      background-color: var(--secondary-color); color: white;
+    }
+    .nav-btn:hover {
+      background-color: #2980b9; transform: translateY(-2px);
+    }
+    .nav-btn:disabled {
+      background-color: #ccc; cursor: not-allowed; transform: none;
+    }
+    .fullscreen-btn {
+      background-color: var(--primary-color); color: white;
+    }
+    .fullscreen-btn:hover {
+      background-color: #1a252f; transform: translateY(-2px);
+    }
+    .slide-info {
+      margin-top: 1rem;
+      font-weight: bold;
+      color: var(--primary-color);
+      font-size: 1.1rem;
+    }
+    .actions {
+      margin-top: 2rem; display: flex;
+      justify-content: center; gap: 1rem;
+    }
+    .action-btn {
+      padding: 0.8rem 1.5rem;
+      background-color: var(--success-color); color: white;
+      border: none; border-radius: 6px;
+      text-decoration: none; font-weight: bold;
+      cursor: pointer; transition: all 0.3s;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .action-btn:hover {
+      background-color: #219653;
+      transform: translateY(-2px);
+    }
+    .btn-back {
+      background-color: #7f8c8d;
+    }
+    .btn-back:hover {
+      background-color: #6c7b7d;
+    }
+    .btn-test {
+      background-color: #e67e22;
+    }
+    .btn-test:hover {
+      background-color: #d35400;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+    .error {
+      text-align: center;
+      padding: 40px;
+      color: #e74c3c;
+    }
+    .course-meta {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1rem 0;
+      color: #666;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .course-folder {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .course-resources {
+      margin-top: 15px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #3498db;
+    }
+    .resource-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #3498db;
+      text-decoration: none;
+      margin: 5px 10px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid #e0e0e0;
+      transition: all 0.3s;
+    }
+    .resource-link:hover {
+      background: #f0f7ff;
+      border-color: #3498db;
+      transform: translateY(-2px);
+    }
+    .login-prompt {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin: 2rem 0;
+    }
+    @media (max-width: 768px) {
+      header { flex-direction: column; text-align: center; gap: 1rem; }
+      nav ul { flex-direction: column; gap: 0.5rem; }
+      .slide-navigation, .actions { flex-direction: column; }
+      .nav-btn, .fullscreen-btn, .action-btn {
+        width: 100%; justify-content: center;
+      }
+      .slide-image { max-height: 400px; }
+      .course-meta { flex-direction: column; gap: 0.5rem; }
+      .course-resources { text-align: center; }
+      .resource-link { display: block; margin: 8px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-container">
+      <i class="fas fa-hard-hat fa-2x"></i>
+      <div class="logo-text">OHSMS Academy</div>
+    </div>
+    <div class="user-info">
+      <span id="username">Загрузка...</span>
+      <div class="user-avatar" id="userAvatar">?</div>
+    </div>
+  </header>
+  <nav>
+    <ul>
+      <li><a href="https://qhse-training.github.io/hse-course/courses.html" class="active">Мои курсы</a></li>
+      <li><a href="#" onclick="logout()">Выйти</a></li>
+    </ul>
+  </nav>
+  
+  <div class="course-container" id="mainContent">
+    <!-- Контент будет загружен динамически -->
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+      authDomain: "qhse-training.firebaseapp.com",
+      projectId: "qhse-training",
+      storageBucket: "qhse-training.appspot.com",
+      messagingSenderId: "4501351718",
+      appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Глобальные переменные
+    let courseId = '1TjKZJXk54ZDa3MbPQ3T'; // ID третьего курса
+    let courseFolder = '1.03.Energy_Wheel';
+    let slides = [];
+    let currentSlideIndex = 0;
+    let userData = null;
+    let courseData = null;
+    let userProgress = {};
+
+    // Карта соответствия ID курса и папки курса
+    const courseFolderMap = {
+      '0EFXo6H4N1mbA1jBJwOK': '1.01.Occupational_Health_and_Safety_Management_System',
+      '1TjKZJXk54ZDa3MbPQ3T': '1.03.Energy_Wheel',
+      // Добавьте здесь другие курсы по мере необходимости
+    };
+
+    // Обратная карта: папка -> ID курса
+    const folderToIdMap = {
+      '1.01.occupational_health_and_safety_management_system': '0EFXo6H4N1mbA1jBJwOK',
+      '1.01.occupationalhealthandsafetymanagementsystem': '0EFXo6H4N1mbA1jBJwOK',
+      'occupational_health_and_safety_management_system': '0EFXo6H4N1mbA1jBJwOK',
+      '1.03.energy_wheel': '1TjKZJXk54ZDa3MbPQ3T',
+      'energy_wheel': '1TjKZJXk54ZDa3MbPQ3T',
+      '1.03.energywheel': '1TjKZJXk54ZDa3MbPQ3T',
+      // Добавьте здесь другие соответствия
+    };
+
+    // Get course ID from URL or folder name
+    function getCourseId() {
+      console.log('Getting course ID from URL...');
+      console.log('Full URL:', window.location.href);
+      console.log('Pathname:', window.location.pathname);
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      let id = urlParams.get('id');
+      
+      // Если ID передан в параметрах
+      if (id) {
+        console.log('Course ID from URL params:', id);
+        return id;
+      }
+      
+      // Если ID не передан, пробуем определить из URL path
+      const pathParts = window.location.pathname.split('/');
+      console.log('Path parts:', pathParts);
+      
+      // Ищем название папки в URL
+      for (let i = pathParts.length - 2; i >= 0; i--) {
+        const part = pathParts[i];
+        if (part && part !== 'hse-course' && part !== '' && !part.endsWith('.html')) {
+          // Это может быть название папки
+          const folderName = part.toLowerCase().replace(/-/g, '_');
+          console.log('Found possible folder:', part, '-> normalized:', folderName);
+          
+          // Пробуем найти ID по папке
+          for (const [key, value] of Object.entries(folderToIdMap)) {
+            if (folderName.includes(key.toLowerCase()) || key.toLowerCase().includes(folderName)) {
+              id = value;
+              console.log('Found ID from folder mapping:', key, '->', id);
+              break;
+            }
+          }
+          
+          if (id) break;
+        }
+      }
+      
+      // Если все еще не нашли, используем дефолтное значение для третьего курса
+      if (!id) {
+        id = '1TjKZJXk54ZDa3MbPQ3T'; // ID третьего курса по умолчанию
+        console.log('Using default course ID for Energy Wheel:', id);
+      }
+      
+      return id;
+    }
+
+    // Get course folder from ID
+    function getCourseFolderFromId(courseId) {
+      return courseFolderMap[courseId] || courseId;
+    }
+
+    // Get course number from folder name
+    function getCourseNumber(folderName) {
+      const match = folderName.match(/^(\d+\.\d+)/);
+      if (match) {
+        const parts = match[1].split('.');
+        return parts[1] || '03';
+      }
+      return '03';
+    }
+
+    // Формирование URL для GitHub Pages теста
+    function getTestUrl() {
+      if (!courseFolder) return '#';
+      // Используем формат test03.html для третьего курса
+      return `https://qhse-training.github.io/hse-course/${courseFolder}/test03.html`;
+    }
+
+    // Create course HTML structure
+    function createCourseHTML() {
+      return `
+        <div class="course-header">
+          <h1 class="course-title" id="courseTitle">Загрузка курса...</h1>
+          <div class="course-description" id="courseDescription"></div>
+          <div class="course-meta" id="courseMeta"></div>
+          <div id="courseResources"></div>
+          <div class="progress-container">
+            <div class="progress-bar" id="progressBar">0%</div>
+          </div>
+        </div>
+        
+        <div class="slide-container">
+          <h2 class="slide-title" id="slideTitle">Загрузка слайда...</h2>
+          <div class="slide-content">
+            <div id="slideContent" class="loading">
+              <p>Загрузка материалов курса...</p>
+            </div>
+          </div>
+          <div class="slide-navigation">
+            <button class="nav-btn" id="prevBtn" onclick="prevSlide()" disabled>
+              <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            <button class="nav-btn" id="nextBtn" onclick="nextSlide()" disabled>
+              Вперед <i class="fas fa-arrow-right"></i>
+            </button>
+            <button class="fullscreen-btn" onclick="toggleFullscreen()" id="fullscreenBtn">
+              <i class="fas fa-expand"></i> Полный экран
+            </button>
+          </div>
+          <div class="slide-info">
+            Слайд <span id="currentSlide">0</span> из <span id="totalSlides">0</span>
+          </div>
+        </div>
+        
+        <div class="actions">
+          <a href="https://qhse-training.github.io/hse-course/courses.html" class="action-btn btn-back">
+            <i class="fas fa-arrow-left"></i> К списку курсов
+          </a>
+          <button class="action-btn btn-test" id="testBtn" onclick="openTest()" disabled>
+            <i class="fas fa-clipboard-check"></i> Пройти тест
+          </button>
+        </div>
+      `;
+    }
+
+    // Load course data
+    async function loadCourseData() {
+      try {
+        courseId = getCourseId();
+        console.log('Final Course ID:', courseId);
+        
+        if (!courseId) {
+          showError('Не удалось определить курс. Пожалуйста, перейдите к курсу из списка курсов.');
+          return;
+        }
+
+        // Определяем папку курса
+        courseFolder = getCourseFolderFromId(courseId);
+        console.log('Course folder:', courseFolder);
+
+        // Данные третьего курса из предоставленной структуры
+        courseData = {
+          title: "Колесо энергий",
+          description: "Управление опасными источниками энергии",
+          module: "MODULE 1",
+          duration: "1 час",
+          price: 1000,
+          slides: [
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide1",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide2",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide3",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide4",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide5",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide6.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide7.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide8.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide9.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide10.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide11.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide12.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide13.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide14.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide15.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide16.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide17.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide18.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide19.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide20.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide21.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide22.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide23.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide24.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide25.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide26.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide27.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide28.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide29.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide30.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide31.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide32.JPG",
+            "https://raw.githubusercontent.com/qhse-training/hse-course/main/1.03.Energy_Wheel/Slide33.JPG"
+          ],
+          testHtml: "https://qhse-training.github.io/hse-course/1.03.Energy_Wheel/test03.html"
+        };
+
+        console.log('Course data loaded:', courseData);
+
+        // Обновляем интерфейс
+        await updateCourseInterface();
+
+        // Загружаем слайды
+        await loadSlides();
+
+        // Загружаем прогресс пользователя
+        await loadUserProgress();
+
+        // Включаем кнопку теста
+        const testBtn = document.getElementById('testBtn');
+        if (testBtn) {
+          testBtn.disabled = false;
+          testBtn.title = 'Перейти к тестированию';
+        }
+
+      } catch (error) {
+        console.error('Ошибка загрузки курса:', error);
+        showError(`Ошибка загрузки курса: ${error.message}. Проверьте подключение к интернету.`);
+      }
+    }
+
+    // Update course interface
+    async function updateCourseInterface() {
+      const courseTitleEl = document.getElementById('courseTitle');
+      const courseDescriptionEl = document.getElementById('courseDescription');
+      const courseMetaEl = document.getElementById('courseMeta');
+      const courseResourcesEl = document.getElementById('courseResources');
+
+      if (!courseTitleEl) return;
+
+      // Update course info
+      courseTitleEl.textContent = courseData?.title || 'Колесо энергий';
+      courseDescriptionEl.textContent = courseData?.description || 'Управление опасными источниками энергии';
+      
+      // Update course metadata
+      let metaHTML = '';
+      if (courseData?.module) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-layer-group"></i> ${courseData.module}</div>`;
+      }
+      if (courseData?.duration) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-clock"></i> ${courseData.duration}</div>`;
+      }
+      if (courseData?.price) {
+        metaHTML += `<div class="meta-item"><i class="fas fa-tag"></i> ${courseData.price} руб.</div>`;
+      }
+      courseMetaEl.innerHTML = metaHTML;
+
+      // Очищаем ресурсы курса
+      courseResourcesEl.innerHTML = `
+        <div class="course-folder">
+          <i class="fas fa-folder"></i> Папка курса: ${courseFolder}
+        </div>
+      `;
+    }
+
+    // Load slides
+    async function loadSlides() {
+      try {
+        slides = [];
+        
+        if (!courseData || !courseData.slides || !Array.isArray(courseData.slides)) {
+          console.error('No slides data found');
+          showNoSlidesMessage();
+          return;
+        }
+
+        console.log('Loading slides from course data:', courseData.slides.length);
+        
+        // Формируем слайды из предоставленных данных
+        courseData.slides.forEach((slideUrl, index) => {
+          slides.push({
+            number: index + 1,
+            title: `Слайд ${index + 1}`,
+            imageUrl: slideUrl,
+            description: `Слайд ${index + 1} курса "Колесо энергий" - Управление опасными источниками энергии`
+          });
+        });
+
+        if (slides.length === 0) {
+          showNoSlidesMessage();
+          return;
+        }
+
+        console.log(`Loaded ${slides.length} slides`);
+        const totalSlidesEl = document.getElementById('totalSlides');
+        if (totalSlidesEl) {
+          totalSlidesEl.textContent = slides.length;
+        }
+        updateSlide();
+
+      } catch (error) {
+        console.error('Ошибка загрузки слайдов:', error);
+        showNoSlidesMessage();
+      }
+    }
+
+    // Show message when no slides found
+    function showNoSlidesMessage() {
+      const slideContentEl = document.getElementById('slideContent');
+      if (!slideContentEl) return;
+      
+      slideContentEl.innerHTML = `
+        <div class="error">
+          <h3>Слайды не найдены</h3>
+          <p>Не удалось загрузить слайды для этого курса.</p>
+          <p>Возможные причины:</p>
+          <ul style="text-align: left; margin: 10px 0;">
+            <li>Слайды еще не загружены в репозиторий</li>
+            <li>Файлы слайдов имеют другое название</li>
+            <li>Проблемы с подключением к интернету</li>
+          </ul>
+          <p style="margin-top: 10px;">
+            <strong>Папка курса:</strong> ${courseFolder || '1.03.Energy_Wheel'}<br>
+            <strong>ID курса:</strong> ${courseId || '1TjKZJXk54ZDa3MbPQ3T'}
+          </p>
+        </div>
+      `;
+    }
+
+    // Load user progress
+    async function loadUserProgress() {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const progressDoc = await db.collection('user_progress').doc(user.uid).get();
+        if (progressDoc.exists) {
+          const allProgress = progressDoc.data();
+          userProgress = allProgress[courseId] || {};
+          
+          // Восстанавливаем последний просмотренный слайд
+          if (userProgress.currentSlide !== undefined && slides.length > 0) {
+            const savedSlide = userProgress.currentSlide;
+            if (savedSlide >= 0 && savedSlide < slides.length) {
+              currentSlideIndex = savedSlide;
+            }
+          }
+          
+          console.log('Loaded user progress:', userProgress);
+        }
+
+        updateProgressBar();
+        
+      } catch (error) {
+        console.warn('Ошибка загрузки прогресса:', error);
+      }
+    }
+
+    // Save user progress
+    async function saveUserProgress() {
+      try {
+        const user = auth.currentUser;
+        if (!user || slides.length === 0) return;
+
+        const viewedSlides = userProgress.viewedSlides || [];
+        if (!viewedSlides.includes(currentSlideIndex)) {
+          viewedSlides.push(currentSlideIndex);
+        }
+
+        const slidesViewed = Math.min(viewedSlides.length, slides.length);
+        const progressPercentage = Math.round((slidesViewed / slides.length) * 100);
+
+        // Update progress in Firestore
+        await db.collection('user_progress').doc(user.uid).set({
+          [courseId]: {
+            slidesViewed: progressPercentage,
+            lastViewed: new Date().toISOString(),
+            viewedSlides: viewedSlides,
+            currentSlide: currentSlideIndex,
+            lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+          }
+        }, { merge: true });
+
+        // Update local progress
+        userProgress = {
+          ...userProgress,
+          slidesViewed: progressPercentage,
+          viewedSlides: viewedSlides,
+          currentSlide: currentSlideIndex
+        };
+
+        updateProgressBar();
+
+      } catch (error) {
+        console.error('Ошибка сохранения прогресса:', error);
+      }
+    }
+
+    // Update slide display
+    function updateSlide() {
+      if (slides.length === 0) return;
+
+      const slide = slides[currentSlideIndex];
+      const slideTitleEl = document.getElementById('slideTitle');
+      const currentSlideEl = document.getElementById('currentSlide');
+      const slideContentEl = document.getElementById('slideContent');
+      
+      if (!slideTitleEl || !currentSlideEl || !slideContentEl) return;
+      
+      slideTitleEl.textContent = slide.title;
+      currentSlideEl.textContent = currentSlideIndex + 1;
+
+      // Простой вывод слайда
+      slideContentEl.innerHTML = `
+        <div style="text-align: center;">
+          <img src="${slide.imageUrl}" 
+               alt="${slide.title}" 
+               class="slide-image" 
+               onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600/2c3e50/ffffff?text=Слайд+${currentSlideIndex + 1}+не+загружен';"
+               loading="lazy">
+          <div class="slide-description">
+            <p><strong>Колесо энергий</strong> - Слайд ${currentSlideIndex + 1} из ${slides.length}</p>
+            <p>${slide.description}</p>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">
+              <i class="fas fa-info-circle"></i> Для навигации используйте стрелки ← → на клавиатуре, кнопки ниже или свайп на мобильных устройствах
+            </p>
+          </div>
+        </div>
+      `;
+
+      // Update navigation buttons
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      if (prevBtn) prevBtn.disabled = currentSlideIndex === 0;
+      if (nextBtn) nextBtn.disabled = currentSlideIndex === slides.length - 1;
+
+      // Save progress
+      saveUserProgress();
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+      if (slides.length === 0) return;
+
+      const progress = userProgress.slidesViewed || 0;
+      const progressBar = document.getElementById('progressBar');
+      if (!progressBar) return;
+      
+      progressBar.style.width = `${progress}%`;
+      progressBar.textContent = `${progress}%`;
+      
+      // Update progress bar color based on progress
+      if (progress >= 100) {
+        progressBar.style.backgroundColor = '#2ecc71';
+        progressBar.title = 'Курс полностью просмотрен';
+      } else if (progress >= 50) {
+        progressBar.style.backgroundColor = '#f39c12';
+        progressBar.title = 'Курс просмотрен наполовину';
+      } else {
+        progressBar.style.backgroundColor = '#3498db';
+        progressBar.title = 'Курс начат';
+      }
+    }
+
+    // Navigation functions
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        currentSlideIndex--;
+        updateSlide();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < slides.length - 1) {
+        currentSlideIndex++;
+        updateSlide();
+      }
+    }
+
+    // Fullscreen functionality
+    function toggleFullscreen() {
+      const elem = document.documentElement;
+      
+      if (!document.fullscreenElement) {
+        elem.requestFullscreen().catch(err => {
+          console.error(`Ошибка включения полноэкранного режима: ${err.message}`);
+          alert('Ваш браузер не поддерживает полноэкранный режим или требуется ручное разрешение');
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Open test
+    function openTest() {
+      // Используем правильный URL теста для третьего курса
+      const testUrl = getTestUrl();
+      console.log('Opening test URL:', testUrl);
+      window.open(testUrl, '_blank');
+    }
+
+    // Logout
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = 'https://qhse-training.github.io/hse-course/login.html';
+      });
+    }
+
+    // Show error
+    function showError(message) {
+      const mainContent = document.getElementById('mainContent');
+      if (!mainContent) return;
+      
+      mainContent.innerHTML = `
+        <div class="error">
+          <h3>Ошибка загрузки курса</h3>
+          <p>${message}</p>
+          <div style="margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <p><strong>Текущий URL:</strong> ${window.location.href}</p>
+            <p><strong>ID курса:</strong> ${courseId || '1TjKZJXk54ZDa3MbPQ3T'}</p>
+            <p><strong>Папка курса:</strong> ${courseFolder || '1.03.Energy_Wheel'}</p>
+            <p><strong>Pathname:</strong> ${window.location.pathname}</p>
+          </div>
+          <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                  class="action-btn btn-back" style="margin-top: 20px;">
+            <i class="fas fa-arrow-left"></i> Вернуться к списку курсов
+          </button>
+        </div>
+      `;
+    }
+
+    // Show login prompt
+    function showLoginPrompt() {
+      const mainContent = document.getElementById('mainContent');
+      if (!mainContent) return;
+      
+      mainContent.innerHTML = `
+        <div class="login-prompt">
+          <h2>Требуется авторизация</h2>
+          <p>Для доступа к материалам курса необходимо войти в систему.</p>
+          <p style="margin-top: 20px;">
+            <a href="https://qhse-training.github.io/hse-course/login.html" class="action-btn" style="display: inline-flex;">
+              <i class="fas fa-sign-in-alt"></i> Войти в систему
+            </a>
+          </p>
+          <p style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+            Нет аккаунта? Обратитесь к администратору для получения доступа.
+          </p>
+        </div>
+      `;
+    }
+
+    // Initialize
+    auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed, user:', user);
+      
+      // Update user info in header
+      const usernameEl = document.getElementById('username');
+      const userAvatarEl = document.getElementById('userAvatar');
+      
+      if (user) {
+        usernameEl.textContent = user.email;
+        userAvatarEl.textContent = user.email.charAt(0).toUpperCase();
+        
+        // Initialize main content
+        const mainContent = document.getElementById('mainContent');
+        mainContent.innerHTML = createCourseHTML();
+        
+        // Load course data
+        await loadCourseData();
+      } else {
+        usernameEl.textContent = 'Не авторизован';
+        userAvatarEl.textContent = '?';
+        showLoginPrompt();
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      // Prevent navigation when user is typing in input fields
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          prevSlide();
+          break;
+        case 'ArrowRight':
+        case ' ':
+        case 'Spacebar':
+          e.preventDefault(); // Prevent space from scrolling page
+          nextSlide();
+          break;
+        case 'Escape':
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          }
+          break;
+      }
+    });
+
+    // Handle fullscreen change
+    document.addEventListener('fullscreenchange', () => {
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      if (fullscreenBtn) {
+        if (document.fullscreenElement) {
+          fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i> Обычный режим';
+          fullscreenBtn.title = 'Выйти из полноэкранного режима (Esc)';
+        } else {
+          fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i> Полный экран';
+          fullscreenBtn.title = 'Перейти в полноэкранный режим';
+        }
+      }
+    });
+    
+    // Add touch swipe support for mobile devices
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+    
+    function handleSwipe() {
+      const swipeThreshold = 50;
+      const diff = touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          // Swipe left - go to next slide
+          nextSlide();
+        } else {
+          // Swipe right - go to previous slide
+          prevSlide();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
