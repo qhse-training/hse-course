@@ -285,6 +285,157 @@
       border-radius: 4px;
     }
     
+    /* Новые стили для улучшенного интерфейса */
+    .progress-bar-container {
+      width: 100px;
+      height: 20px;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 10px;
+      overflow: hidden;
+    }
+    
+    .progress-bar-fill {
+      height: 100%;
+      background-color: #4CAF50;
+      border-radius: 10px;
+      transition: width 0.3s;
+    }
+    
+    .progress-text {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .details-btn {
+      background: none;
+      border: none;
+      color: var(--secondary);
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.9rem;
+      padding: 0;
+    }
+    
+    .details-btn:hover {
+      color: #2980b9;
+    }
+    
+    .user-details {
+      display: none;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    
+    .user-details.active {
+      display: block;
+    }
+    
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+    
+    .details-item {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .details-item h4 {
+      margin: 0 0 5px 0;
+      color: var(--primary);
+      font-size: 0.9rem;
+    }
+    
+    .details-item p {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+    
+    .certificate-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+    
+    .certificate-yes {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .certificate-no {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .course-progress-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .course-progress-item:last-child {
+      border-bottom: none;
+    }
+    
+    .course-title {
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex: 1;
+      margin: 0 10px;
+    }
+    
+    .stat-card:first-child {
+      margin-left: 0;
+    }
+    
+    .stat-card:last-child {
+      margin-right: 0;
+    }
+    
+    .stat-card h3 {
+      margin: 0 0 10px 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+    
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .stat-card .subtext {
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 5px;
+    }
+    
     @media (max-width: 768px) {
       .admin-container {
         flex-direction: column;
@@ -302,6 +453,14 @@
       
       .dashboard-cards {
         grid-template-columns: 1fr;
+      }
+      
+      .stats-row {
+        flex-direction: column;
+      }
+      
+      .stat-card {
+        margin: 0 0 10px 0;
       }
     }
   </style>
@@ -372,6 +531,30 @@
             <div class="card-icon">💰</div>
             <div class="card-title">Общий доход</div>
             <div class="card-value" id="totalIncome">0 ₸</div>
+          </div>
+          
+          <div class="card">
+            <div class="card-icon">✅</div>
+            <div class="card-title">Выданные сертификаты</div>
+            <div class="card-value" id="totalCertificates">0</div>
+          </div>
+          
+          <div class="card">
+            <div class="card-icon">📊</div>
+            <div class="card-title">Средний прогресс</div>
+            <div class="card-value" id="averageProgress">0%</div>
+          </div>
+        </div>
+        
+        <div class="stats-row">
+          <div class="stat-card">
+            <h3>Топ курсов по завершению</h3>
+            <div id="topCourses"></div>
+          </div>
+          
+          <div class="stat-card">
+            <h3>Статистика по тестам</h3>
+            <div id="testStats"></div>
           </div>
         </div>
         
@@ -507,10 +690,14 @@
     const pendingRequestsEl = document.getElementById('pendingRequests');
     const activeCoursesEl = document.getElementById('activeCourses');
     const totalIncomeEl = document.getElementById('totalIncome');
+    const totalCertificatesEl = document.getElementById('totalCertificates');
+    const averageProgressEl = document.getElementById('averageProgress');
     const recentRequestsEl = document.getElementById('recentRequests');
     const usersListEl = document.getElementById('usersList');
     const requestsListEl = document.getElementById('requestsList');
     const coursesListEl = document.getElementById('coursesList');
+    const topCoursesEl = document.getElementById('topCourses');
+    const testStatsEl = document.getElementById('testStats');
 
     // Current admin user
     let currentUser = null;
@@ -692,16 +879,129 @@
         const coursesSnapshot = await db.collection('courses').get();
         activeCoursesEl.textContent = coursesSnapshot.size;
         
-        // Calculate total income
+        // Get total certificates count
+        const certificatesSnapshot = await db.collection('certificates').get();
+        const totalCertificates = certificatesSnapshot.size;
+        totalCertificatesEl.textContent = totalCertificates;
+        
+        // Calculate average progress and other stats
+        const courseProgressSnapshot = await db.collection('course_progress').get();
+        let totalProgress = 0;
+        let progressCount = 0;
+        let completedCourses = 0;
         let totalIncome = 0;
-        const progressSnapshot = await db.collection('course_progress').get();
-        progressSnapshot.forEach(doc => {
+        let courseStats = {};
+        let testStats = {
+          total: 0,
+          passed: 0,
+          failed: 0,
+          averageScore: 0,
+          totalScore: 0
+        };
+        
+        courseProgressSnapshot.forEach(doc => {
           const progress = doc.data();
-          if (progress.paymentStatus === 'paid' && progress.amount) {
-            totalIncome += progress.amount;
+          
+          // Calculate progress
+          if (progress.progress) {
+            totalProgress += progress.progress;
+            progressCount++;
+          }
+          
+          // Count completed courses
+          if (progress.progress === 100) {
+            completedCourses++;
+          }
+          
+          // Calculate income (based on course price and completion)
+          if (progress.courseId) {
+            // Track course completion stats
+            if (!courseStats[progress.courseId]) {
+              courseStats[progress.courseId] = {
+                count: 0,
+                completed: 0
+              };
+            }
+            courseStats[progress.courseId].count++;
+            if (progress.progress === 100) {
+              courseStats[progress.courseId].completed++;
+            }
           }
         });
-        totalIncomeEl.textContent = totalIncome.toLocaleString() + ' ₸';
+        
+        // Get test results
+        const testResultsSnapshot = await db.collection('test_results').get();
+        testResultsSnapshot.forEach(doc => {
+          const testData = doc.data();
+          testStats.total++;
+          
+          // Handle different test data structures
+          if (testData.score !== undefined) {
+            testStats.totalScore += testData.score;
+            if (testData.passed === true || testData.score >= 70) {
+              testStats.passed++;
+            } else {
+              testStats.failed++;
+            }
+          } else {
+            // Handle nested structure (like XHbDGQPP31SZdFxCQcGHS26PORV2_0EFXo6H4N1mbA1jBJwOK_1765179982531)
+            Object.values(testData).forEach(result => {
+              if (result && typeof result === 'object' && result.score !== undefined) {
+                testStats.totalScore += result.score;
+                if (result.passed === true || result.score >= 70) {
+                  testStats.passed++;
+                } else {
+                  testStats.failed++;
+                }
+              }
+            });
+          }
+        });
+        
+        // Calculate average progress
+        const averageProgress = progressCount > 0 ? Math.round(totalProgress / progressCount) : 0;
+        averageProgressEl.textContent = averageProgress + '%';
+        
+        // Calculate average test score
+        testStats.averageScore = testStats.total > 0 ? Math.round(testStats.totalScore / testStats.total) : 0;
+        
+        // Display test statistics
+        testStatsEl.innerHTML = `
+          <div class="number">${testStats.total}</div>
+          <div class="subtext">Всего тестов пройдено</div>
+          <div style="margin-top: 10px;">
+            <div style="color: #27ae60;">✓ ${testStats.passed} пройдено</div>
+            <div style="color: #e74c3c;">✗ ${testStats.failed} не пройдено</div>
+            <div>Средний балл: ${testStats.averageScore}%</div>
+          </div>
+        `;
+        
+        // Display top courses
+        let topCoursesHtml = '';
+        const sortedCourses = Object.entries(courseStats)
+          .sort((a, b) => b[1].completed - a[1].completed)
+          .slice(0, 5);
+        
+        if (sortedCourses.length > 0) {
+          // Get course names
+          for (const [courseId, stats] of sortedCourses) {
+            const courseDoc = await db.collection('courses').doc(courseId).get();
+            const courseName = courseDoc.exists ? courseDoc.data().title : `Курс ${courseId}`;
+            const completionRate = Math.round((stats.completed / stats.count) * 100);
+            
+            topCoursesHtml += `
+              <div style="margin-bottom: 8px; padding: 5px; background: #f5f5f5; border-radius: 4px;">
+                <div style="font-weight: 500;">${courseName}</div>
+                <div style="font-size: 0.9rem; color: #666;">
+                  ${stats.completed} из ${stats.count} завершено (${completionRate}%)
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          topCoursesHtml = '<p style="color: #999;">Нет данных о завершении курсов</p>';
+        }
+        topCoursesEl.innerHTML = topCoursesHtml;
         
         // Get recent requests
         const recentRequests = await db.collection('requests')
@@ -827,7 +1127,7 @@
       }
     }
 
-    // Load registration requests
+    // Load registration requests with detailed information
     async function loadRequests() {
       try {
         const snapshot = await db.collection('requests')
@@ -846,7 +1146,10 @@
                 <th>ФИО</th>
                 <th>Email</th>
                 <th>Телефон</th>
-                <th>Дата</th>
+                <th>Заказанные курсы</th>
+                <th>Прогресс</th>
+                <th>Тесты</th>
+                <th>Сертификаты</th>
                 <th>Статус</th>
                 <th>Действия</th>
               </tr>
@@ -854,14 +1157,104 @@
             <tbody>
         `;
         
-        snapshot.forEach(doc => {
+        // Для каждого запроса собираем дополнительную информацию
+        for (const doc of snapshot.docs) {
           const request = doc.data();
+          const userId = request.userId;
+          
+          // Получаем прогресс пользователя по курсам
+          const userProgress = {};
+          const userProgressDocs = await db.collection('user_progress').get();
+          userProgressDocs.forEach(progressDoc => {
+            const progressData = progressDoc.data();
+            if (progressData.userId === userId || progressDoc.id.startsWith(userId + '_')) {
+              Object.entries(progressData).forEach(([courseId, courseProgress]) => {
+                if (courseId !== 'userId' && typeof courseProgress === 'object') {
+                  userProgress[courseId] = courseProgress;
+                }
+              });
+            }
+          });
+          
+          // Получаем сертификаты пользователя
+          const certificatesSnapshot = await db.collection('certificates')
+            .where('userId', '==', userId)
+            .get();
+          const certificates = [];
+          certificatesSnapshot.forEach(certDoc => {
+            certificates.push(certDoc.data());
+          });
+          
+          // Получаем результаты тестов пользователя
+          const testResultsSnapshot = await db.collection('test_results')
+            .where('userId', '==', userId)
+            .get();
+          const testResults = [];
+          testResultsSnapshot.forEach(testDoc => {
+            testResults.push(testDoc.data());
+          });
+          
+          // Анализируем данные о заказанных курсах
+          const selectedCourses = request.selectedCourses || [];
+          let totalProgress = 0;
+          let completedTests = 0;
+          let totalCertificates = certificates.length;
+          let courseDetails = '';
+          
+          selectedCourses.forEach(courseId => {
+            const progress = userProgress[courseId] || {};
+            const slidesViewed = progress.slidesViewed || 0;
+            const currentSlide = progress.currentSlide || 0;
+            const lastActivity = progress.lastActivity || 'Нет активности';
+            const testPassed = testResults.some(test => 
+              test.courseId === courseId && (test.passed === true || test.score >= 70)
+            );
+            const hasCertificate = certificates.some(cert => cert.courseId === courseId);
+            
+            if (testPassed) completedTests++;
+            
+            // Рассчитываем прогресс на основе просмотренных слайдов
+            let progressPercent = 0;
+            if (slidesViewed > 0) {
+              // Если есть информация о слайдах, считаем прогресс
+              progressPercent = Math.min(Math.round((currentSlide / slidesViewed) * 100), 100);
+            }
+            totalProgress += progressPercent;
+            
+            courseDetails += `
+              <div class="course-progress-item">
+                <div class="course-title">Курс ID: ${courseId}</div>
+                <div style="font-size: 0.9rem; color: #666;">
+                  Слайды: ${currentSlide}/${slidesViewed}<br>
+                  Тест: ${testPassed ? '✅ Пройден' : '❌ Не пройден'}<br>
+                  Сертификат: ${hasCertificate ? '✅ Есть' : '❌ Нет'}
+                </div>
+              </div>
+            `;
+          });
+          
+          // Рассчитываем средний прогресс
+          const avgProgress = selectedCourses.length > 0 
+            ? Math.round(totalProgress / selectedCourses.length) 
+            : 0;
+          
+          // Индикатор прогресса
+          const progressBar = `
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" style="width: ${avgProgress}%"></div>
+            </div>
+            <span class="progress-text">${avgProgress}%</span>
+          `;
+          
           html += `
             <tr>
-              <td>${request.fullName}</td>
+              <td><strong>${request.fullName}</strong></td>
               <td>${request.email}</td>
               <td>${request.phone || '—'}</td>
-              <td>${new Date(request.timestamp?.toDate()).toLocaleDateString()}</td>
+              <td>${selectedCourses.length} курсов</td>
+              <td>${progressBar}</td>
+              <td>${completedTests}/${selectedCourses.length}</td>
+              <td>${totalCertificates}</td>
               <td>
                 <span class="status ${request.approved ? 'status-approved' : 'status-pending'}">
                   ${request.approved ? 'Одобрено' : 'На рассмотрении'}
@@ -872,13 +1265,51 @@
                 <button class="btn btn-success approve-btn" data-id="${doc.id}">Одобрить</button>
                 <button class="btn btn-danger reject-btn" data-id="${doc.id}">Отклонить</button>
                 ` : ''}
+                <button class="details-btn" onclick="toggleUserDetails('${userId}')">
+                  Детали
+                </button>
+              </td>
+            </tr>
+            <tr id="details-${userId}" style="display: none;">
+              <td colspan="9">
+                <div class="user-details">
+                  <h4>Детальная информация по пользователю</h4>
+                  <div class="details-grid">
+                    <div class="details-item">
+                      <h4>Заказано курсов</h4>
+                      <p>${selectedCourses.length}</p>
+                    </div>
+                    <div class="details-item">
+                      <h4>Прогресс</h4>
+                      <p>${avgProgress}%</p>
+                    </div>
+                    <div class="details-item">
+                      <h4>Пройдено тестов</h4>
+                      <p>${completedTests}/${selectedCourses.length}</p>
+                    </div>
+                    <div class="details-item">
+                      <h4>Сертификатов</h4>
+                      <p>${totalCertificates}</p>
+                    </div>
+                  </div>
+                  <h4 style="margin-top: 15px;">Детали по курсам:</h4>
+                  <div style="max-height: 200px; overflow-y: auto;">
+                    ${courseDetails || '<p>Нет данных о курсах</p>'}
+                  </div>
+                </div>
               </td>
             </tr>
           `;
-        });
+        }
         
         html += `</tbody></table>`;
         requestsListEl.innerHTML = html;
+        
+        // Добавляем функцию для отображения деталей
+        window.toggleUserDetails = function(userId) {
+          const element = document.getElementById(`details-${userId}`);
+          element.style.display = element.style.display === 'none' ? 'table-row' : 'none';
+        };
         
         // Add event listeners to action buttons
         document.querySelectorAll('.approve-btn').forEach(btn => {
