@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Система управления охраной труда</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .test-header {
+            background: var(--primary);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .test-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .test-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        
+        .timer {
+            background: var(--warning);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background: #eee;
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .question-container {
+            padding: 30px;
+        }
+        
+        .question {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .question.active {
+            border-color: var(--secondary);
+            background: #f8f9fa;
+        }
+        
+        .question-number {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .option:hover {
+            border-color: var(--secondary);
+            background: #f0f8ff;
+        }
+        
+        .option.selected {
+            border-color: var(--secondary);
+            background: #e3f2fd;
+        }
+        
+        .option.correct {
+            border-color: var(--success);
+            background: #e8f5e9;
+        }
+        
+        .option.incorrect {
+            border-color: var(--error);
+            background: #ffebee;
+        }
+        
+        .option input {
+            display: none;
+        }
+        
+        .option-label {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .option.selected .option-label {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+        
+        .option-text {
+            flex: 1;
+            font-size: 16px;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            background: var(--secondary);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .submit-btn {
+            background: var(--success);
+        }
+        
+        .submit-btn:hover {
+            background: #27ae60;
+        }
+        
+        .results-container {
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            border: 10px solid;
+        }
+        
+        .score-passed {
+            border-color: var(--success);
+            color: var(--success);
+            background: #e8f5e9;
+        }
+        
+        .score-failed {
+            border-color: var(--error);
+            color: var(--error);
+            background: #ffebee;
+        }
+        
+        .results-details {
+            margin: 30px 0;
+            text-align: left;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .certificate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s;
+        }
+        
+        .certificate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1 id="testTitle">Тест: Система управления охраной труда (СУОТ)</h1>
+            <div class="test-info">
+                <div>Вопросов: <span id="totalQuestions">0</span></div>
+                <div class="timer" id="timer">⏰ 60:00</div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div id="testContent">
+            <!-- Контент теста будет загружен сюда -->
+        </div>
+        
+        <div class="navigation" id="navigation" style="display: none;">
+            <button class="nav-btn" id="prevBtn" onclick="prevQuestion()">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+            <div>
+                Вопрос <span id="currentQuestionNum">1</span> из <span id="totalQuestionsNum">0</span>
+            </div>
+            <button class="nav-btn" id="nextBtn" onclick="nextQuestion()">
+                Далее <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
+            authDomain: "qhse-training.firebaseapp.com",
+            projectId: "qhse-training",
+            storageBucket: "qhse-training.appspot.com",
+            messagingSenderId: "4501351718",
+            appId: "1:4501351718:web:503b00c9ac052b58e2e5e7"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Test data - правильные ответы
+        const correctAnswers = {
+            1: 'b', 2: 'c', 3: 'a', 4: 'd', 5: 'b',
+            6: 'c', 7: 'a', 8: 'b', 9: 'd', 10: 'a'
+        };
+
+        // Test questions
+        const testQuestions = [
+            {
+                id: 1,
+                question: "Что такое система управления охраной труда (СУОТ)?",
+                options: [
+                    { id: 'a', text: "Набор правил по технике безопасности" },
+                    { id: 'b', text: "Совокупность взаимосвязанных элементов для управления рисками в области охраны труда" },
+                    { id: 'c', text: "Инструкции по использованию СИЗ" },
+                    { id: 'd', text: "Система медицинских осмотров" }
+                ]
+            },
+            {
+                id: 2,
+                question: "Какой международный стандарт определяет требования к СУОТ?",
+                options: [
+                    { id: 'a', text: "ISO 9001" },
+                    { id: 'b', text: "ISO 14001" },
+                    { id: 'c', text: "ISO 45001" },
+                    { id: 'd', text: "ISO 50001" }
+                ]
+            },
+            {
+                id: 3,
+                question: "Кто несет ответственность за безопасность на рабочем месте?",
+                options: [
+                    { id: 'a', text: "Все работники организации" },
+                    { id: 'b', text: "Только руководитель" },
+                    { id: 'c', text: "Только специалист по охране труда" },
+                    { id: 'd', text: "Только работники опасных производств" }
+                ]
+            },
+            {
+                id: 4,
+                question: "Что включает в себя политика в области охраны труда?",
+                options: [
+                    { id: 'a', text: "Только финансовые цели" },
+                    { id: 'b', text: "Только производственные показатели" },
+                    { id: 'c', text: "Только требования законодательства" },
+                    { id: 'd', text: "Обязательства по обеспечению безопасных условий труда" }
+                ]
+            },
+            {
+                id: 5,
+                question: "Как часто нужно проводить оценку рисков?",
+                options: [
+                    { id: 'a', text: "Раз в 5 лет" },
+                    { id: 'b', text: "Регулярно, при изменении условий труда" },
+                    { id: 'c', text: "Только при приеме на работу" },
+                    { id: 'd', text: "Только после несчастного случая" }
+                ]
+            },
+            {
+                id: 6,
+                question: "Что такое инцидент в системе охраны труда?",
+                options: [
+                    { id: 'a', text: "Любое нарушение правил" },
+                    { id: 'b', text: "Только несчастный случай" },
+                    { id: 'c', text: "Событие, которое могло привести к травме или заболеванию" },
+                    { id: 'd', text: "Только авария на производстве" }
+                ]
+            },
+            {
+                id: 7,
+                question: "Каков минимальный проходной балл по тесту?",
+                options: [
+                    { id: 'a', text: "100%" },
+                    { id: 'b', text: "80%" },
+                    { id: 'c', text: "70%" },
+                    { id: 'd', text: "60%" }
+                ]
+            },
+            {
+                id: 8,
+                question: "Что означает аббревиатура СИЗ?",
+                options: [
+                    { id: 'a', text: "Система индивидуальной защиты" },
+                    { id: 'b', text: "Средства индивидуальной защиты" },
+                    { id: 'c', text: "Стандарты индивидуальной защиты" },
+                    { id: 'd', text: "Сертификат индивидуальной защиты" }
+                ]
+            },
+            {
+                id: 9,
+                question: "Какой документ является основным по охране труда в организации?",
+                options: [
+                    { id: 'a', text: "Трудовой договор" },
+                    { id: 'b', text: "Штатное расписание" },
+                    { id: 'c', text: "Правила внутреннего трудового распорядка" },
+                    { id: 'd', text: "Положение о системе управления охраной труда" }
+                ]
+            },
+            {
+                id: 10,
+                question: "Для чего проводится инструктаж по охране труда?",
+                options: [
+                    { id: 'a', text: "Для ознакомления работников с требованиями безопасности" },
+                    { id: 'b', text: "Для выполнения формальностей" },
+                    { id: 'c', text: "Только для новых работников" },
+                    { id: 'd', text: "Только для опасных работ" }
+                ]
+            }
+        ];
+
+        // Global variables
+        let currentUser = null;
+        let courseId = null;
+        let userAnswers = {};
+        let currentQuestionIndex = 0;
+        let timeLeft = 60 * 60; // 60 minutes in seconds
+        let timerInterval = null;
+        let testCompleted = false;
+
+        // Initialize test
+        async function initTest() {
+            try {
+                // Check authentication
+                currentUser = await new Promise((resolve, reject) => {
+                    const unsubscribe = auth.onAuthStateChanged(user => {
+                        unsubscribe();
+                        if (user) {
+                            resolve(user);
+                        } else {
+                            reject(new Error('Пользователь не авторизован'));
+                        }
+                    });
+                });
+
+                // Get course ID from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                courseId = urlParams.get('id');
+                
+                if (!courseId) {
+                    showError('ID курса не указан');
+                    return;
+                }
+
+                // Load user progress to check if slides were viewed
+                await loadUserProgress();
+
+                // Start test
+                startTest();
+
+                // Start timer
+                startTimer();
+
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                showError('Для прохождения теста необходимо войти в систему');
+            }
+        }
+
+        // Load user progress
+        async function loadUserProgress() {
+            try {
+                const progressDoc = await db.collection('user_progress').doc(currentUser.uid).get();
+                if (progressDoc.exists) {
+                    const allProgress = progressDoc.data();
+                    const courseProgress = allProgress[courseId] || {};
+                    
+                    // Check if user has viewed all slides
+                    if (!courseProgress.slidesViewed || courseProgress.slidesViewed < 100) {
+                        showError('Для доступа к тесту необходимо просмотреть все материалы курса');
+                        return false;
+                    }
+                    
+                    return true;
+                } else {
+                    showError('Прогресс по курсу не найден. Пройдите курс сначала.');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки прогресса:', error);
+                // Allow test even if progress cannot be loaded
+                return true;
+            }
+        }
+
+        // Start test
+        function startTest() {
+            document.getElementById('totalQuestions').textContent = testQuestions.length;
+            document.getElementById('totalQuestionsNum').textContent = testQuestions.length;
+            
+            displayQuestion();
+            document.getElementById('navigation').style.display = 'flex';
+            updateProgressBar();
+        }
+
+        // Display current question
+        function displayQuestion() {
+            const question = testQuestions[currentQuestionIndex];
+            const testContent = document.getElementById('testContent');
+            
+            let optionsHTML = '';
+            question.options.forEach(option => {
+                const isSelected = userAnswers[question.id] === option.id;
+                optionsHTML += `
+                    <div class="option ${isSelected ? 'selected' : ''}" 
+                         onclick="selectAnswer(${question.id}, '${option.id}')">
+                        <div class="option-label">${option.id.toUpperCase()}</div>
+                        <div class="option-text">${option.text}</div>
+                    </div>
+                `;
+            });
+            
+            testContent.innerHTML = `
+                <div class="question-container">
+                    <div class="question active">
+                        <div class="question-number">
+                            <span>Вопрос ${question.id}</span>
+                        </div>
+                        <div class="question-text">${question.question}</div>
+                        <div class="options">
+                            ${optionsHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('currentQuestionNum').textContent = currentQuestionIndex + 1;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').innerHTML = 
+                currentQuestionIndex === testQuestions.length - 1 
+                    ? 'Завершить тест <i class="fas fa-check"></i>' 
+                    : 'Далее <i class="fas fa-arrow-right"></i>';
+        }
+
+        // Select answer
+        function selectAnswer(questionId, answerId) {
+            userAnswers[questionId] = answerId;
+            displayQuestion();
+            updateProgressBar();
+        }
+
+        // Next question
+        function nextQuestion() {
+            if (currentQuestionIndex < testQuestions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            } else {
+                submitTest();
+            }
+        }
+
+        // Previous question
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            const answeredCount = Object.keys(userAnswers).length;
+            const progress = (answeredCount / testQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        // Start timer
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitTest();
+                }
+            }, 1000);
+        }
+
+        // Update timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `⏰ ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Submit test
+        async function submitTest() {
+            if (testCompleted) return;
+            testCompleted = true;
+            
+            clearInterval(timerInterval);
+            
+            // Calculate results
+            const totalQuestions = testQuestions.length;
+            let correctCount = 0;
+            
+            testQuestions.forEach(question => {
+                if (userAnswers[question.id] === correctAnswers[question.id]) {
+                    correctCount++;
+                }
+            });
+            
+            const score = Math.round((correctCount / totalQuestions) * 100);
+            const passed = score >= 100; // 100% required
+            
+            // Save results to Firestore
+            await saveTestResults(score, passed);
+            
+            // Update progress if passed
+            if (passed) {
+                await updateUserProgress(score);
+            }
+            
+            // Display results
+            displayResults(score, passed, correctCount, totalQuestions);
+        }
+
+        // Save test results to Firestore
+        async function saveTestResults(score, passed) {
+            try {
+                const resultData = {
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    courseId: courseId,
+                    score: score,
+                    passed: passed,
+                    answers: userAnswers,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    completedAt: new Date().toISOString()
+                };
+                
+                await db.collection('test_results').add(resultData);
+                console.log('Результаты теста сохранены');
+                
+            } catch (error) {
+                console.error('Ошибка сохранения результатов:', error);
+                // Continue even if save fails
+            }
+        }
+
+        // Update user progress
+        async function updateUserProgress(score) {
+            try {
+                const progressDocRef = db.collection('user_progress').doc(currentUser.uid);
+                
+                const progressData = {
+                    [courseId]: {
+                        testPassed: true,
+                        testScore: score,
+                        testCompletedAt: new Date().toISOString(),
+                        lastActivity: firebase.firestore.FieldValue.serverTimestamp()
+                    }
+                };
+                
+                await progressDocRef.set(progressData, { merge: true });
+                console.log('Прогресс обновлен');
+                
+            } catch (error) {
+                console.error('Ошибка обновления прогресса:', error);
+                // Continue even if update fails
+            }
+        }
+
+        // Display results
+        function displayResults(score, passed, correctCount, totalQuestions) {
+            const testContent = document.getElementById('testContent');
+            const navigation = document.getElementById('navigation');
+            
+            navigation.style.display = 'none';
+            
+            let resultHTML = `
+                <div class="results-container">
+                    <div class="score-circle ${passed ? 'score-passed' : 'score-failed'}">
+                        ${score}%
+                    </div>
+                    <h2>${passed ? '🎉 Тест успешно пройден!' : '❌ Тест не пройден'}</h2>
+                    <p>${passed ? 'Поздравляем! Вы успешно прошли тест.' : 'К сожалению, вы не набрали достаточное количество баллов.'}</p>
+                    
+                    <div class="results-details">
+                        <div class="result-item">
+                            <span>Правильных ответов:</span>
+                            <span><strong>${correctCount} из ${totalQuestions}</strong></span>
+                        </div>
+                        <div class="result-item">
+                            <span>Процент выполнения:</span>
+                            <span><strong>${score}%</strong></span>
+                        </div>
+                        <div class="result-item">
+                            <span>Требуемый минимум:</span>
+                            <span><strong>100%</strong></span>
+                        </div>
+                        <div class="result-item">
+                            <span>Статус:</span>
+                            <span><strong>${passed ? 'ПРОЙДЕН' : 'НЕ ПРОЙДЕН'}</strong></span>
+                        </div>
+                    </div>
+            `;
+            
+            if (passed) {
+                resultHTML += `
+                    <button class="certificate-btn" onclick="generateCertificate(${score})">
+                        <i class="fas fa-award"></i> Получить сертификат
+                    </button>
+                    <p style="color: #666; margin-top: 20px;">
+                        Сертификат будет сгенерирован с уникальным идентификатором
+                    </p>
+                `;
+            } else {
+                resultHTML += `
+                    <button class="certificate-btn" onclick="retryTest()" style="background: var(--warning);">
+                        <i class="fas fa-redo"></i> Попробовать снова
+                    </button>
+                    <p style="color: #666; margin-top: 20px;">
+                        Для успешной сдачи теста необходимо ответить правильно на все вопросы
+                    </p>
+                `;
+            }
+            
+            resultHTML += `
+                    <div style="margin-top: 30px;">
+                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                                style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            <i class="fas fa-arrow-left"></i> Вернуться к курсам
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            testContent.innerHTML = resultHTML;
+        }
+
+        // Generate certificate
+        async function generateCertificate(score) {
+            try {
+                // Generate unique certificate ID
+                const certificateId = 'CERT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                
+                // Get user data
+                const userDoc = await db.collection('approved_users').doc(currentUser.uid).get();
+                const userData = userDoc.exists ? userDoc.data() : {};
+                const userName = userData.fullName || currentUser.email.split('@')[0];
+                
+                // Get course data
+                const courseDoc = await db.collection('courses').doc(courseId).get();
+                const courseData = courseDoc.exists ? courseDoc.data() : {};
+                const courseName = courseData.title || 'Система управления по охране труда (СУОТ)';
+                
+                // Update progress with certificate
+                await db.collection('user_progress').doc(currentUser.uid).set({
+                    [courseId]: {
+                        certificateGenerated: true,
+                        certificateId: certificateId,
+                        certificateDate: new Date().toISOString(),
+                        certificateScore: score
+                    }
+                }, { merge: true });
+                
+                // Show certificate
+                showCertificate(certificateId, userName, courseName, score);
+                
+            } catch (error) {
+                console.error('Ошибка генерации сертификата:', error);
+                alert('Ошибка при генерации сертификата. Попробуйте позже.');
+            }
+        }
+
+        // Show certificate
+        function showCertificate(certificateId, userName, courseName, score) {
+            const certificateWindow = window.open('', '_blank', 'width=1000,height=800');
+            const currentDate = new Date().toLocaleDateString('ru-RU');
+            
+            certificateWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Сертификат - ${courseName}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400;500&display=swap');
+                        
+                        body { 
+                            font-family: 'Roboto', sans-serif; 
+                            padding: 40px; 
+                            text-align: center; 
+                            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                            min-height: 100vh;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            margin: 0;
+                        }
+                        
+                        .certificate-container {
+                            background: white;
+                            border-radius: 15px;
+                            padding: 50px;
+                            width: 900px;
+                            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+                            border: 10px solid #2c3e50;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        .certificate-header {
+                            margin-bottom: 40px;
+                            padding-bottom: 20px;
+                            border-bottom: 3px solid #3498db;
+                        }
+                        
+                        .certificate-title {
+                            font-family: 'Playfair Display', serif;
+                            font-size: 48px;
+                            font-weight: 700;
+                            color: #2c3e50;
+                            margin: 0;
+                            letter-spacing: 3px;
+                            text-transform: uppercase;
+                        }
+                        
+                        .certificate-subtitle {
+                            font-size: 20px;
+                            color: #7f8c8d;
+                            margin-top: 15px;
+                            font-weight: 300;
+                        }
+                        
+                        .certificate-content {
+                            margin: 40px 0;
+                            padding: 30px;
+                            background: #f8f9fa;
+                            border-radius: 10px;
+                            border-left: 5px solid #3498db;
+                        }
+                        
+                        .certificate-name {
+                            font-family: 'Playfair Display', serif;
+                            font-size: 36px;
+                            color: #e74c3c;
+                            margin: 25px 0;
+                            font-weight: 700;
+                        }
+                        
+                        .certificate-course {
+                            font-size: 28px;
+                            color: #2c3e50;
+                            margin: 30px 0;
+                            font-weight: 500;
+                            line-height: 1.4;
+                        }
+                        
+                        .certificate-details {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-top: 50px;
+                            padding-top: 30px;
+                            border-top: 2px solid #eee;
+                        }
+                        
+                        .detail-item {
+                            text-align: center;
+                            flex: 1;
+                        }
+                        
+                        .detail-label {
+                            font-size: 16px;
+                            color: #7f8c8d;
+                            margin-bottom: 8px;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                        }
+                        
+                        .detail-value {
+                            font-size: 20px;
+                            color: #2c3e50;
+                            font-weight: 500;
+                        }
+                        
+                        .certificate-footer {
+                            margin-top: 60px;
+                            padding-top: 30px;
+                            border-top: 2px solid #3498db;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-end;
+                        }
+                        
+                        .signature {
+                            text-align: center;
+                        }
+                        
+                        .signature-line {
+                            width: 200px;
+                            height: 1px;
+                            background: #2c3e50;
+                            margin: 20px auto;
+                        }
+                        
+                        .issued-by {
+                            font-size: 18px;
+                            color: #2c3e50;
+                            font-weight: 500;
+                            margin-top: 10px;
+                        }
+                        
+                        .certificate-id {
+                            background: #2c3e50;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            font-family: monospace;
+                            font-size: 14px;
+                            letter-spacing: 1px;
+                            display: inline-block;
+                            margin-top: 20px;
+                        }
+                        
+                        .watermark {
+                            position: absolute;
+                            opacity: 0.03;
+                            font-size: 200px;
+                            transform: rotate(-45deg);
+                            top: 30%;
+                            left: 10%;
+                            white-space: nowrap;
+                            color: #2c3e50;
+                            font-family: 'Playfair Display', serif;
+                            font-weight: 700;
+                            z-index: 0;
+                        }
+                        
+                        .seal {
+                            position: absolute;
+                            top: 50px;
+                            right: 50px;
+                            width: 120px;
+                            height: 120px;
+                            border: 3px solid #e74c3c;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-family: 'Playfair Display', serif;
+                            font-size: 14px;
+                            font-weight: 700;
+                            color: #e74c3c;
+                            text-align: center;
+                            padding: 10px;
+                            background: rgba(255,255,255,0.9);
+                            transform: rotate(15deg);
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="certificate-container">
+                        <div class="watermark">СЕРТИФИКАТ</div>
+                        <div class="seal">
+                            QHSE<br>SOLUTIONS
+                        </div>
+                        
+                        <div class="certificate-header">
+                            <h1 class="certificate-title">Сертификат</h1>
+                            <p class="certificate-subtitle">Настоящим подтверждается, что</p>
+                        </div>
+                        
+                        <div class="certificate-content">
+                            <div class="certificate-name">${userName}</div>
+                            <p style="font-size: 20px; margin: 20px 0;">успешно прошёл(а) курс обучения по программе</p>
+                            <div class="certificate-course">"${courseName}"</div>
+                            <p style="font-size: 16px; color: #7f8c8d; margin-top: 20px;">
+                                Результат тестирования: <strong>${score}%</strong>
+                            </p>
+                        </div>
+                        
+                        <div class="certificate-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Дата выдачи</div>
+                                <div class="detail-value">${currentDate}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">ID сер
