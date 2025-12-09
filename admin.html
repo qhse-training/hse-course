@@ -568,6 +568,7 @@
       <div id="usersSection" class="content-section" style="display: none;">
         <h2 class="section-title">Управление пользователями</h2>
         <button class="btn btn-primary" id="addUserBtn" style="margin-bottom: 15px;">Добавить пользователя</button>
+        <button class="btn btn-warning" id="fixMissingCoursesBtn" style="margin-bottom: 15px; margin-left: 10px; background-color: #e67e22; color: white;">Исправить отсутствующие курсы</button>
         <div id="usersList">
           <p>Загрузка пользователей...</p>
         </div>
@@ -680,6 +681,7 @@
     const contentSections = document.querySelectorAll('.content-section');
     const addUserBtn = document.getElementById('addUserBtn');
     const addCourseBtn = document.getElementById('addCourseBtn');
+    const fixMissingCoursesBtn = document.getElementById('fixMissingCoursesBtn');
     const courseModal = document.getElementById('courseModal');
     const userModal = document.getElementById('userModal');
     const cancelCourseBtn = document.getElementById('cancelCourseBtn');
@@ -763,6 +765,13 @@
     addUserBtn.addEventListener('click', () => {
       document.getElementById('userForm').reset();
       userModal.style.display = 'flex';
+    });
+
+    // Fix missing courses button
+    fixMissingCoursesBtn.addEventListener('click', () => {
+      if (confirm('Эта функция найдет всех пользователей без назначенных курсов и добавит курсы из их заявок. Продолжить?')) {
+        fixAllMissingCourses();
+      }
     });
 
     // Close modals
@@ -1138,6 +1147,7 @@
                 <th>Email</th>
                 <th>Телефон</th>
                 <th>Роль</th>
+                <th>Курсы</th>
                 <th>Дата регистрации</th>
                 <th>Действия</th>
               </tr>
@@ -1147,15 +1157,27 @@
         
         snapshot.forEach(doc => {
           const user = doc.data();
+          const courses = user.courses || [];
+          const hasCourses = courses.length > 0;
+          
           html += `
             <tr>
               <td>${user.fullName || 'Не указано'}</td>
               <td>${user.email}</td>
               <td>${user.phone || '—'}</td>
               <td>${user.role || 'user'}</td>
+              <td>
+                ${hasCourses ? 
+                  `<span style="color: #27ae60;">${courses.length} курсов</span>` : 
+                  `<span style="color: #e74c3c;">Нет курсов</span>`
+                }
+              </td>
               <td>${new Date(user.createdAt?.toDate()).toLocaleDateString()}</td>
               <td>
                 <button class="btn btn-primary edit-user-btn" data-id="${doc.id}">Изменить</button>
+                ${!hasCourses ? `
+                <button class="btn btn-warning fix-user-courses-btn" data-id="${doc.id}" style="background-color: #e67e22; color: white;">Добавить курсы</button>
+                ` : ''}
                 ${user.role !== 'admin' ? `
                 <button class="btn btn-danger delete-user-btn" data-id="${doc.id}">Удалить</button>
                 ` : ''}
@@ -1170,6 +1192,10 @@
         // Add event listeners to action buttons
         document.querySelectorAll('.edit-user-btn').forEach(btn => {
           btn.addEventListener('click', () => editUser(btn.dataset.id));
+        });
+        
+        document.querySelectorAll('.fix-user-courses-btn').forEach(btn => {
+          btn.addEventListener('click', () => fixUserCourses(btn.dataset.id));
         });
         
         document.querySelectorAll('.delete-user-btn').forEach(btn => {
@@ -1464,7 +1490,7 @@
       }
     }
 
-    // Approve registration request
+    // Approve registration request - ИСПРАВЛЕННАЯ ВЕРСИЯ
     async function approveRequest(requestId) {
       if (!confirm('Вы уверены, что хотите одобрить эту заявку?')) return;
       
@@ -1479,6 +1505,7 @@
         }
         
         const request = requestDoc.data();
+        const selectedCourses = request.selectedCourses || [];
         
         // Update request status
         await requestRef.update({ 
@@ -1487,13 +1514,36 @@
           approvedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // Add user to approved_users
-        await db.collection('approved_users').doc(request.userId).set({
+        // ✅ ВАЖНО: Создаем/обновляем документ в approved_users с курсами
+        const userData = {
           email: request.email,
           fullName: request.fullName,
           phone: request.phone || '',
           role: 'user',
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        
+        // ✅ Добавляем курсы ТОЛЬКО если они есть в заявке
+        if (selectedCourses.length > 0) {
+          userData.courses = selectedCourses;
+        }
+        
+        // Используем set с merge: true, чтобы не перезаписать другие поля
+        await db.collection('approved_users').doc(request.userId).set(userData, { merge: true });
+        
+        // ✅ Создать заказ в коллекции orders (для совместимости)
+        await db.collection('orders').add({
+          userId: request.userId,
+          email: request.email,
+          fullName: request.fullName,
+          phone: request.phone || '',
+          courses: selectedCourses,
+          role: 'user',
+          status: 'approved',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          source: 'admin_panel',
+          approvedBy: currentUser.uid,
+          approvedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
         // Reload data
@@ -1501,7 +1551,7 @@
         loadRequests();
         loadUsers();
         
-        alert('Заявка успешно одобрена!');
+        alert('Заявка успешно одобрена и курсы назначены!');
       } catch (error) {
         console.error('Ошибка одобрения заявки:', error);
         alert('Произошла ошибка при одобрении заявки');
@@ -1523,6 +1573,86 @@
       } catch (error) {
         console.error('Ошибка отклонения заявки:', error);
         alert('Произошла ошибка при отклонении заявки');
+      }
+    }
+
+    // Fix missing courses for a specific user
+    async function fixUserCourses(userId) {
+      try {
+        // Найти заявку пользователя
+        const requestsSnapshot = await db.collection('requests')
+          .where('userId', '==', userId)
+          .get();
+        
+        if (!requestsSnapshot.empty) {
+          const request = requestsSnapshot.docs[0].data();
+          const courses = request.selectedCourses || [];
+          
+          if (courses.length > 0) {
+            // Обновить approved_users с курсами
+            await db.collection('approved_users').doc(userId).update({
+              courses: courses
+            });
+            
+            alert(`Добавлено ${courses.length} курсов пользователю`);
+            loadUsers();
+          } else {
+            alert('У пользователя нет выбранных курсов в заявке');
+          }
+        } else {
+          alert('Не найдена заявка для этого пользователя');
+        }
+      } catch (error) {
+        console.error('Ошибка исправления курсов:', error);
+        alert('Произошла ошибка при добавлении курсов');
+      }
+    }
+
+    // Fix all missing courses
+    async function fixAllMissingCourses() {
+      try {
+        // Получить все approved_users без поля courses или с пустым массивом
+        const usersSnapshot = await db.collection('approved_users').get();
+        let fixedCount = 0;
+        let errorCount = 0;
+        
+        for (const userDoc of usersSnapshot.docs) {
+          const userId = userDoc.id;
+          const userData = userDoc.data();
+          
+          // Если нет поля courses или пустой массив
+          if (!userData.courses || !Array.isArray(userData.courses) || userData.courses.length === 0) {
+            try {
+              // Найти заявку пользователя
+              const requestsSnapshot = await db.collection('requests')
+                .where('userId', '==', userId)
+                .get();
+              
+              if (!requestsSnapshot.empty) {
+                const request = requestsSnapshot.docs[0].data();
+                const courses = request.selectedCourses || [];
+                
+                if (courses.length > 0) {
+                  // Обновить approved_users с курсами
+                  await db.collection('approved_users').doc(userId).update({
+                    courses: courses
+                  });
+                  fixedCount++;
+                  console.log(`Исправлен пользователь ${userId}:`, courses);
+                }
+              }
+            } catch (error) {
+              console.error(`Ошибка для пользователя ${userId}:`, error);
+              errorCount++;
+            }
+          }
+        }
+        
+        alert(`Исправлено ${fixedCount} пользователей. Ошибок: ${errorCount}`);
+        loadUsers();
+      } catch (error) {
+        console.error('Ошибка исправления:', error);
+        alert('Произошла ошибка');
       }
     }
 
