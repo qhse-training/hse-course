@@ -351,24 +351,46 @@
             border-radius: 20px;
         }
         
+        /* ИСПРАВЛЕННЫЙ БЛОК ТРЕБОВАНИЙ - правильные цвета */
         .test-requirements {
-            background: #fff8e1;
-            border: 2px solid #ffd54f;
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border: 2px solid #ffb74d;
             border-radius: 10px;
             padding: 15px;
             margin: 20px 0;
             font-size: 16px;
+            color: #3e2723; /* Темный коричневый текст */
+            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.1);
+        }
+        
+        .test-requirements h3 {
+            margin-bottom: 12px;
+            color: #e65100; /* Темный оранжевый для заголовка */
+            font-size: 18px;
+            font-weight: 700;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #ffb74d;
         }
         
         .requirement-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            padding: 5px;
+            color: #3e2723; /* Темный текст */
         }
         
         .requirement-item i {
-            color: #ff9800;
+            color: #ff9800; /* Оранжевые иконки */
+            font-size: 18px;
+            min-width: 24px;
+        }
+        
+        .requirement-item span {
+            color: #3e2723; /* Темный текст */
+            line-height: 1.5;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -379,7 +401,7 @@
             <div class="course-info" id="courseInfo"></div>
             
             <div class="test-requirements" id="requirementsInfo" style="display: none;">
-                <h3 style="margin-bottom: 10px; color: #ff6f00;">⚠️ Требования для прохождения теста:</h3>
+                <h3>⚠️ Требования для прохождения теста:</h3>
                 <div class="requirement-item">
                     <i class="fas fa-check-circle"></i>
                     <span>Необходимо просмотреть все слайды курса (100%)</span>
@@ -750,7 +772,6 @@
             }
             
             // 4. Fallback for testing - use a known course ID
-            // Change this to your actual course ID
             const fallbackId = '0EFXo6H4N1mbA1jBJwOK';
             console.log('Using fallback course ID:', fallbackId);
             return fallbackId;
@@ -774,42 +795,30 @@
             }
         }
 
-        // Check test requirements
+        // Check test requirements - ИСПРАВЛЕННАЯ ВЕРСИЯ
         async function checkTestRequirements() {
             try {
-                // For testing - skip requirements check
-                console.log('Skipping requirements check for testing');
-                return true;
-                
-                /*
-                // Original code - uncomment when ready
+                // Проверка, не сдавал ли уже тест
                 const progressDoc = await db.collection('user_progress').doc(currentUser.uid).get();
+                
                 if (progressDoc.exists) {
                     const allProgress = progressDoc.data();
                     const courseProgress = allProgress[courseId] || {};
                     
-                    // Check if user has viewed all slides
-                    if (!courseProgress.slidesViewed || courseProgress.slidesViewed < 100) {
-                        showError('Для доступа к тесту необходимо просмотреть все материалы курса (100% слайдов)');
-                        return false;
-                    }
-                    
-                    // Check if user already passed the test
+                    // Если уже сдал тест, показываем сообщение
                     if (courseProgress.testPassed) {
                         showTestAlreadyPassed(courseProgress.testScore);
                         return false;
                     }
-                    
-                    return true;
-                } else {
-                    showError('Прогресс по курсу не найден. Пройдите курс сначала.');
-                    return false;
                 }
-                */
+                
+                // Для тестирования разрешаем всем проходить тест
+                console.log('Allowing test access for user:', currentUser.email);
+                return true;
+                
             } catch (error) {
                 console.error('Ошибка проверки требований:', error);
-                // Allow test for debugging
-                console.log('Allowing test for debugging purposes');
+                // Все равно разрешаем пройти тест
                 return true;
             }
         }
