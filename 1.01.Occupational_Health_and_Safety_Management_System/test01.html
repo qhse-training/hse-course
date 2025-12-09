@@ -683,7 +683,7 @@
                     });
                 });
 
-                // Get course ID from URL - УНИВЕРСАЛЬНЫЙ МЕТОД
+                // Get course ID from URL
                 courseId = getCourseIdFromUrl();
                 
                 console.log('Course ID determined:', courseId);
@@ -718,12 +718,11 @@
             }
         }
 
-        // Универсальная функция получения ID курса
+        // Get course ID from URL
         function getCourseIdFromUrl() {
             console.log('Getting course ID from URL...');
-            console.log('Full URL:', window.location.href);
             
-            // 1. Пробуем получить из параметров URL (?id=...)
+            // 1. Try to get from URL parameters (?id=...)
             const urlParams = new URLSearchParams(window.location.search);
             let courseId = urlParams.get('id');
             
@@ -732,43 +731,26 @@
                 return courseId;
             }
             
-            // 2. Для вашей структуры: URL может быть без параметров, но с ID в пути
-            // Пример: /hse-course/1.01.Occupational_Health_and_Safety_Management_System/test01.html
-            const path = window.location.pathname;
-            console.log('URL path:', path);
-            
-            // Разбиваем путь на части
-            const pathParts = path.split('/');
-            console.log('Path parts:', pathParts);
-            
-            // Ищем часть, которая содержит название курса
-            for (let part of pathParts) {
-                if (part && 
-                    (part.includes('Occupational') || 
-                     part.includes('Health') || 
-                     part.includes('Safety') ||
-                     part.includes('Management') ||
-                     part.includes('System'))) {
-                    console.log('Found course ID in path:', part);
-                    return part;
+            // 2. Try to get from hash (#id=...)
+            const hash = window.location.hash;
+            if (hash) {
+                const hashParams = new URLSearchParams(hash.substring(1));
+                courseId = hashParams.get('id');
+                if (courseId) {
+                    console.log('Found course ID in hash:', courseId);
+                    return courseId;
                 }
             }
             
-            // 3. Если не нашли в пути, пробуем извлечь из parent folder
-            // Получаем папку, в которой находится test01.html
-            const testIndex = path.indexOf('test01.html');
-            if (testIndex > 0) {
-                const beforeTest = path.substring(0, testIndex);
-                const pathBefore = beforeTest.split('/').filter(p => p);
-                if (pathBefore.length > 0) {
-                    const possibleId = pathBefore[pathBefore.length - 1];
-                    console.log('Possible course ID from parent folder:', possibleId);
-                    return possibleId;
-                }
+            // 3. Try to get from localStorage (if coming from course page)
+            const savedCourseId = localStorage.getItem('currentCourseId');
+            if (savedCourseId) {
+                console.log('Found course ID in localStorage:', savedCourseId);
+                return savedCourseId;
             }
             
-            // 4. Запасной вариант для тестирования
-            // ID из вашего примера: 0EFXo6H4N1mbA1jBJwOK
+            // 4. Fallback for testing - use a known course ID
+            // Change this to your actual course ID
             const fallbackId = '0EFXo6H4N1mbA1jBJwOK';
             console.log('Using fallback course ID:', fallbackId);
             return fallbackId;
@@ -795,6 +777,12 @@
         // Check test requirements
         async function checkTestRequirements() {
             try {
+                // For testing - skip requirements check
+                console.log('Skipping requirements check for testing');
+                return true;
+                
+                /*
+                // Original code - uncomment when ready
                 const progressDoc = await db.collection('user_progress').doc(currentUser.uid).get();
                 if (progressDoc.exists) {
                     const allProgress = progressDoc.data();
@@ -817,9 +805,10 @@
                     showError('Прогресс по курсу не найден. Пройдите курс сначала.');
                     return false;
                 }
+                */
             } catch (error) {
                 console.error('Ошибка проверки требований:', error);
-                // Для тестирования разрешаем проходить тест
+                // Allow test for debugging
                 console.log('Allowing test for debugging purposes');
                 return true;
             }
@@ -1119,11 +1108,11 @@
             
             resultHTML += `
                     <div style="margin-top: 40px; display: flex; justify-content: center; gap: 20px;">
-                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                        <button onclick="goToCoursesPage()" 
                                 style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-arrow-left"></i> К списку курсов
                         </button>
-                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/${courseId}/course.html?id=${courseId}'" 
+                        <button onclick="goToCoursePage()" 
                                 style="padding: 12px 25px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
                             <i class="fas fa-book"></i> Повторить курс
                         </button>
@@ -1132,6 +1121,22 @@
             `;
             
             testContent.innerHTML = resultHTML;
+        }
+
+        // Go to courses page
+        function goToCoursesPage() {
+            // Use relative path
+            window.location.href = '../courses.html';
+        }
+
+        // Go to course page
+        function goToCoursePage() {
+            if (courseId) {
+                // Use relative path to course page
+                window.location.href = `../${courseId}/course.html?id=${courseId}`;
+            } else {
+                window.location.href = '../courses.html';
+            }
         }
 
         // Show test already passed
@@ -1159,7 +1164,7 @@
                     </button>
                     
                     <div style="margin-top: 40px;">
-                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                        <button onclick="goToCoursesPage()" 
                                 style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
                             <i class="fas fa-arrow-left"></i> Вернуться к курсам
                         </button>
@@ -1550,7 +1555,7 @@
                         ${message}
                     </p>
                     <div style="margin-top: 30px;">
-                        <button onclick="window.location.href='https://qhse-training.github.io/hse-course/courses.html'" 
+                        <button onclick="goToCoursesPage()" 
                                 style="padding: 12px 25px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 10px; margin: 0 auto;">
                             <i class="fas fa-arrow-left"></i> Вернуться к курсам
                         </button>
