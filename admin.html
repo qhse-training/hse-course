@@ -884,12 +884,17 @@
         const totalCertificates = certificatesSnapshot.size;
         totalCertificatesEl.textContent = totalCertificates;
         
+        // Calculate total income based on requested courses and their prices
+        const totalIncome = await calculateTotalIncome();
+        
+        // Обновляем отображение общего дохода
+        totalIncomeEl.textContent = totalIncome.toLocaleString('ru-RU') + ' ₸';
+        
         // Calculate average progress and other stats
         const courseProgressSnapshot = await db.collection('course_progress').get();
         let totalProgress = 0;
         let progressCount = 0;
         let completedCourses = 0;
-        let totalIncome = 0;
         let courseStats = {};
         let testStats = {
           total: 0,
@@ -913,9 +918,8 @@
             completedCourses++;
           }
           
-          // Calculate income (based on course price and completion)
+          // Track course completion stats
           if (progress.courseId) {
-            // Track course completion stats
             if (!courseStats[progress.courseId]) {
               courseStats[progress.courseId] = {
                 count: 0,
@@ -1021,6 +1025,8 @@
                 <th>ФИО</th>
                 <th>Email</th>
                 <th>Дата</th>
+                <th>Заказано курсов</th>
+                <th>Сумма (₸)</th>
                 <th>Статус</th>
                 <th>Действия</th>
               </tr>
@@ -1028,13 +1034,27 @@
             <tbody>
         `;
         
-        recentRequests.forEach(doc => {
+        for (const doc of recentRequests.docs) {
           const request = doc.data();
+          const selectedCourses = request.selectedCourses || [];
+          
+          // Рассчитываем сумму для этого пользователя
+          let userTotal = 0;
+          for (const courseId of selectedCourses) {
+            const courseDoc = await db.collection('courses').doc(courseId).get();
+            if (courseDoc.exists) {
+              const courseData = courseDoc.data();
+              userTotal += courseData.price || 0;
+            }
+          }
+          
           html += `
             <tr>
               <td>${request.fullName}</td>
               <td>${request.email}</td>
               <td>${new Date(request.timestamp?.toDate()).toLocaleDateString()}</td>
+              <td>${selectedCourses.length} курсов</td>
+              <td>${userTotal.toLocaleString('ru-RU')} ₸</td>
               <td>
                 <span class="status ${request.approved ? 'status-approved' : 'status-pending'}">
                   ${request.approved ? 'Одобрено' : 'На рассмотрении'}
@@ -1048,7 +1068,7 @@
               </td>
             </tr>
           `;
-        });
+        }
         
         html += `</tbody></table>`;
         recentRequestsEl.innerHTML = html;
@@ -1063,6 +1083,40 @@
         });
       } catch (error) {
         console.error('Ошибка загрузки данных:', error);
+      }
+    }
+
+    // Функция для расчета общего дохода
+    async function calculateTotalIncome() {
+      try {
+        let totalIncome = 0;
+        
+        // Получаем все заявки
+        const requestsSnapshot = await db.collection('requests').get();
+        
+        // Для каждой заявки суммируем стоимость выбранных курсов
+        for (const requestDoc of requestsSnapshot.docs) {
+          const requestData = requestDoc.data();
+          const selectedCourses = requestData.selectedCourses || [];
+          
+          // Для каждого выбранного курса получаем его цену
+          for (const courseId of selectedCourses) {
+            try {
+              const courseDoc = await db.collection('courses').doc(courseId).get();
+              if (courseDoc.exists) {
+                const courseData = courseDoc.data();
+                totalIncome += courseData.price || 0;
+              }
+            } catch (error) {
+              console.error(`Ошибка получения курса ${courseId}:`, error);
+            }
+          }
+        }
+        
+        return totalIncome;
+      } catch (error) {
+        console.error('Ошибка расчета общего дохода:', error);
+        return 0;
       }
     }
 
@@ -1147,6 +1201,7 @@
                 <th>Email</th>
                 <th>Телефон</th>
                 <th>Заказанные курсы</th>
+                <th>Сумма (₸)</th>
                 <th>Прогресс</th>
                 <th>Тесты</th>
                 <th>Сертификаты</th>
@@ -1161,6 +1216,17 @@
         for (const doc of snapshot.docs) {
           const request = doc.data();
           const userId = request.userId;
+          const selectedCourses = request.selectedCourses || [];
+          
+          // Рассчитываем сумму для этого пользователя
+          let userTotal = 0;
+          for (const courseId of selectedCourses) {
+            const courseDoc = await db.collection('courses').doc(courseId).get();
+            if (courseDoc.exists) {
+              const courseData = courseDoc.data();
+              userTotal += courseData.price || 0;
+            }
+          }
           
           // Получаем прогресс пользователя по курсам
           const userProgress = {};
@@ -1195,20 +1261,25 @@
           });
           
           // Анализируем данные о заказанных курсах
-          const selectedCourses = request.selectedCourses || [];
           let totalProgress = 0;
           let completedTests = 0;
-          let totalCertificates = certificates.length;
+          let totalCertificatesCount = certificates.length;
           let courseDetails = '';
           
-          selectedCourses.forEach(courseId => {
+          for (const courseId of selectedCourses) {
             const progress = userProgress[courseId] || {};
             const slidesViewed = progress.slidesViewed || 0;
             const currentSlide = progress.currentSlide || 0;
-            const lastActivity = progress.lastActivity || 'Нет активности';
-            const testPassed = testResults.some(test => 
-              test.courseId === courseId && (test.passed === true || test.score >= 70)
-            );
+            
+            // Проверяем, пройден ли тест
+            let testPassed = false;
+            for (const test of testResults) {
+              if (test.courseId === courseId && (test.passed === true || test.score >= 70)) {
+                testPassed = true;
+                break;
+              }
+            }
+            
             const hasCertificate = certificates.some(cert => cert.courseId === courseId);
             
             if (testPassed) completedTests++;
@@ -1216,22 +1287,32 @@
             // Рассчитываем прогресс на основе просмотренных слайдов
             let progressPercent = 0;
             if (slidesViewed > 0) {
-              // Если есть информация о слайдах, считаем прогресс
               progressPercent = Math.min(Math.round((currentSlide / slidesViewed) * 100), 100);
             }
             totalProgress += progressPercent;
             
+            // Получаем название курса для отображения
+            let courseName = `Курс ${courseId}`;
+            let coursePrice = 0;
+            const courseDoc = await db.collection('courses').doc(courseId).get();
+            if (courseDoc.exists) {
+              const courseData = courseDoc.data();
+              courseName = courseData.title || courseName;
+              coursePrice = courseData.price || 0;
+            }
+            
             courseDetails += `
               <div class="course-progress-item">
-                <div class="course-title">Курс ID: ${courseId}</div>
+                <div class="course-title">${courseName}</div>
                 <div style="font-size: 0.9rem; color: #666;">
+                  Цена: ${coursePrice.toLocaleString('ru-RU')} ₸<br>
                   Слайды: ${currentSlide}/${slidesViewed}<br>
                   Тест: ${testPassed ? '✅ Пройден' : '❌ Не пройден'}<br>
                   Сертификат: ${hasCertificate ? '✅ Есть' : '❌ Нет'}
                 </div>
               </div>
             `;
-          });
+          }
           
           // Рассчитываем средний прогресс
           const avgProgress = selectedCourses.length > 0 
@@ -1252,9 +1333,10 @@
               <td>${request.email}</td>
               <td>${request.phone || '—'}</td>
               <td>${selectedCourses.length} курсов</td>
+              <td>${userTotal.toLocaleString('ru-RU')} ₸</td>
               <td>${progressBar}</td>
               <td>${completedTests}/${selectedCourses.length}</td>
-              <td>${totalCertificates}</td>
+              <td>${totalCertificatesCount}</td>
               <td>
                 <span class="status ${request.approved ? 'status-approved' : 'status-pending'}">
                   ${request.approved ? 'Одобрено' : 'На рассмотрении'}
@@ -1271,7 +1353,7 @@
               </td>
             </tr>
             <tr id="details-${userId}" style="display: none;">
-              <td colspan="9">
+              <td colspan="10">
                 <div class="user-details">
                   <h4>Детальная информация по пользователю</h4>
                   <div class="details-grid">
@@ -1280,16 +1362,16 @@
                       <p>${selectedCourses.length}</p>
                     </div>
                     <div class="details-item">
+                      <h4>Общая сумма</h4>
+                      <p>${userTotal.toLocaleString('ru-RU')} ₸</p>
+                    </div>
+                    <div class="details-item">
                       <h4>Прогресс</h4>
                       <p>${avgProgress}%</p>
                     </div>
                     <div class="details-item">
                       <h4>Пройдено тестов</h4>
                       <p>${completedTests}/${selectedCourses.length}</p>
-                    </div>
-                    <div class="details-item">
-                      <h4>Сертификатов</h4>
-                      <p>${totalCertificates}</p>
                     </div>
                   </div>
                   <h4 style="margin-top: 15px;">Детали по курсам:</h4>
@@ -1342,7 +1424,7 @@
                 <th>Название</th>
                 <th>Описание</th>
                 <th>Модуль</th>
-                <th>Цена</th>
+                <th>Цена (₸)</th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -1356,7 +1438,7 @@
               <td>${course.title}</td>
               <td>${course.description || '—'}</td>
               <td>${course.module || '—'}</td>
-              <td>${course.price || 0} ₸</td>
+              <td>${course.price ? course.price.toLocaleString('ru-RU') : '0'} ₸</td>
               <td>
                 <button class="btn btn-primary edit-course-btn" data-id="${doc.id}">Изменить</button>
                 <button class="btn btn-danger delete-course-btn" data-id="${doc.id}">Удалить</button>
@@ -1480,9 +1562,6 @@
       
       try {
         await db.collection('approved_users').doc(userId).delete();
-        
-        // You might also want to delete the auth user here
-        // Note: This requires Cloud Functions or Admin SDK
         
         alert('Пользователь успешно удален');
         loadUsers();
