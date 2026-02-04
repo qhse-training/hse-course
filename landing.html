@@ -128,6 +128,8 @@
     .price {
       font-weight: bold;
       color: #28a745;
+      white-space: nowrap; /* Предотвращает перенос текста */
+      min-width: 120px; /* Минимальная ширина для ячеек с ценами */
     }
     .loading {
       text-align: center;
@@ -151,6 +153,19 @@
       margin: 10px 0;
       border: 1px solid #c3e6cb;
     }
+    /* Стили для фиксированных ширин колонок */
+    .col-number {
+      width: 40px; /* Для номера */
+      text-align: center;
+    }
+    .col-price {
+      width: 140px; /* Увеличенная ширина для цен */
+      text-align: center;
+    }
+    .col-select {
+      width: 80px; /* Для чекбоксов */
+      text-align: center;
+    }
     @media (max-width: 768px) {
       .container {
         padding: 15px;
@@ -159,6 +174,9 @@
       table {
         display: block;
         overflow-x: auto;
+      }
+      .col-number, .col-price, .col-select {
+        width: auto; /* На мобильных делаем адаптивными */
       }
     }
   </style>
@@ -172,140 +190,140 @@
     <table>
       <thead>
         <tr>
-          <th>№</th>
+          <th class="col-number">№</th>
           <th>Название курса</th>
           <th>Описание</th>
-          <th>Цена</th>
-          <th>Выбрать</th>
+          <th class="col-price">Цена</th>
+          <th class="col-select">Выбрать</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>1</td>
+          <td class="col-number">1</td>
           <td><strong>Лидерство и приверженность</strong></td>
           <td>Развитие лидерских качеств у руководителей для формирования культуры безопасности, вовлечения команды и достижения целей «нулевого травматизма».</td>
-          <td class="price">20 000 ₸</td>
-          <td>
+          <td class="price col-price">20 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="leadership" id="course_1">
             <label for="course_1" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>2</td>
+          <td class="col-number">2</td>
           <td><strong>Культура безопасности (для работников)</strong></td>
           <td>Формирование личной ответственности и осознанного отношения к безопасности. Объяснение культуры общей ответственности за безопасность, принципов «остановки работы» и взаимной заботы.</td>
-          <td class="price">10 000 ₸</td>
-          <td>
+          <td class="price col-price">10 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="safety_culture" id="course_2">
             <label for="course_2" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>3</td>
+          <td class="col-number">3</td>
           <td><strong>Система управления охраной труда (СУОТ)</strong></td>
           <td>Практический курс по разработке, внедрению и аудиту СУОТ в соответствии с международным стандартом ISO 45001:2018, МОТ и требованиями ТК РК.</td>
-          <td class="price">50 000 ₸</td>
-          <td>
+          <td class="price col-price">50 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="sut" id="course_3">
             <label for="course_3" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>4</td>
+          <td class="col-number">4</td>
           <td><strong>Оценка рисков</strong></td>
           <td>Полный цикл: от идентификации опасностей до управления рисками. Изучение методик оценки рисков. Включает Колесо энергий, Иерархия контроля, Ранжирование рисков.</td>
-          <td class="price">50 000 ₸</td>
-          <td>
+          <td class="price col-price">50 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="risk_assessment" id="course_4">
             <label for="course_4" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>5</td>
+          <td class="col-number">5</td>
           <td><strong>Курсы повышения квалификации для специалистов ОТ, ТБ и ООС</strong></td>
           <td>Глубокое погружение в современные системы управления. Развитие компетенций по внедрению СУОТ (ISO 45001), управлению рисками, внутреннему аудиту, расследованию инцидентов.</td>
-          <td class="price">50 000 ₸</td>
-          <td>
+          <td class="price col-price">50 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="advanced_training" id="course_5">
             <label for="course_5" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>6</td>
+          <td class="col-number">6</td>
           <td><strong>Расследование несчастных случаев и отчётность</strong></td>
           <td>Освоение методик глубокого анализа причин (Root Cause Analysis): «5 почему», «Дерево причин». Подготовка отчётности в соответствии с требованиями РК и международными протоколами (IOGP).</td>
-          <td class="price">50 000 ₸</td>
-          <td>
+          <td class="price col-price">50 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="incident_investigation" id="course_6">
             <label for="course_6" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>7</td>
+          <td class="col-number">7</td>
           <td><strong>IOSH — Управление безопасностью</strong></td>
           <td>Ведущий курс по охране труда и технике безопасности для руководителей высшего и среднего звена.</td>
-          <td class="price">150 000 ₸</td>
-          <td>
+          <td class="price col-price">150 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_management" id="course_7">
             <label for="course_7" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>8</td>
+          <td class="col-number">8</td>
           <td><strong>IOSH — Безопасная работа</strong></td>
           <td>Ведущий курс по охране труда и технике безопасности для рядовых сотрудников.</td>
-          <td class="price">150 000 ₸</td>
-          <td>
+          <td class="price col-price">150 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_working_safely" id="course_8">
             <label for="course_8" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>9</td>
+          <td class="col-number">9</td>
           <td><strong>NEBOSH IGC — Управление охраной труда</strong></td>
           <td>Международный генеральный сертификат по охране труда и управлению рисками.</td>
-          <td class="price">600 000 ₸</td>
-          <td>
+          <td class="price col-price">600 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="nebosh_igc" id="course_9">
             <label for="course_9" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>10</td>
+          <td class="col-number">10</td>
           <td><strong>Нулевая смертность — Vision Zero (ISSA)</strong></td>
           <td>Ознакомление с глобальной платформой и принципами движения, объединяющего специалистов по охране труда для стратегия достижения нулевого травматизма нулевого уровня смертности и повышения благополучия трудящихся.</td>
-          <td class="price">25 000</td>
-          <td>
+          <td class="price col-price">Бесплатно</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="vision_zero" id="course_10">
             <label for="course_10" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>11</td>
+          <td class="col-number">11</td>
           <td><strong>Правила спасения жизни (IOGP)</strong></td>
           <td>Ознакомление работников с действиями по защите себя и коллег независимо от места работы.</td>
-          <td class="price">25 000 ₸</td>
-          <td>
+          <td class="price col-price">25 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="life_saving_rules" id="course_11">
             <label for="course_11" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>12</td>
+          <td class="col-number">12</td>
           <td><strong>Основы технологической безопасности (IOGP)</strong></td>
           <td>Изучение основных принципов, разработанных для поддержки компаний в стремлении сократить и полностью исключить смертельные и тяжёлые инциденты.</td>
-          <td class="price">25 000 ₸</td>
-          <td>
+          <td class="price col-price">25 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="process_safety" id="course_12">
             <label for="course_12" style="display: none;"></label>
           </td>
         </tr>
         <tr>
-          <td>13</td>
+          <td class="col-number">13</td>
           <td><strong>Система экологического менеджмента: аспекты, воздействия и соблюдение требований</strong></td>
           <td>Формирование навыков идентификации экологических аспектов, оценки их значимости, управления природоохранными рисками и обеспечения соответствия экологического кодекса РК и стандарта ISO 14001.</td>
-          <td class="price">50 000 ₸</td>
-          <td>
+          <td class="price col-price">50 000 ₸</td>
+          <td class="col-select">
             <input type="checkbox" class="course-checkbox" name="selectedCourses" value="environmental_management" id="course_13">
             <label for="course_13" style="display: none;"></label>
           </td>
