@@ -3,391 +3,480 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Выбор курсов и регистрация</title>
+  <title>Полный каталог курсов по безопасности</title>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
     body { 
-      font-family: sans-serif; 
-      margin: 20px; 
-      background-color: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0; 
+      padding: 20px;
+      background-color: #f0f2f5;
     }
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
-    h1 {
-      color: #333;
-      text-align: center;
-      margin-bottom: 30px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid #007bff;
-    }
-    h2 {
-      margin-top: 30px;
-      background: linear-gradient(to right, #f8f9fa, #e9ecef);
-      padding: 12px 15px;
-      border-left: 4px solid #007bff;
-      border-radius: 4px;
-      color: #495057;
-    }
-    table {
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-bottom: 30px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px 15px; 
-      border: 1px solid #dee2e6; 
-      text-align: left;
-    }
-    th { 
-      background: #007bff; 
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      font-weight: 600;
+      padding: 40px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    tr:nth-child(even) {
-      background-color: #f8f9fa;
+    .header h1 {
+      margin: 0;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    .header p {
+      font-size: 1.2em;
+      margin-top: 10px;
+      opacity: 0.95;
+    }
+    .module {
+      background: white;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .module-header {
+      padding: 20px;
+      color: white;
+      font-size: 1.5em;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .module-header h2 {
+      margin: 0;
+      font-size: 1.2em;
+    }
+    .module-header p {
+      margin: 5px 0 0;
+      font-size: 0.8em;
+      opacity: 0.9;
+    }
+    .module-1 { background: linear-gradient(135deg, #2c3e50, #3498db); }
+    .module-2 { background: linear-gradient(135deg, #27ae60, #2ecc71); }
+    .module-3 { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+    .module-3 .warning-icon {
+      background: #f1c40f;
+      color: #c0392b;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      margin-left: 15px;
+      display: inline-block;
+    }
+    .module-4 { background: linear-gradient(135deg, #8e44ad, #9b59b6); }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th {
+      background: #f8f9fa;
+      padding: 15px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+    td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: top;
     }
     tr:hover {
-      background-color: #e9ecef;
+      background-color: #f8f9fa;
     }
-    input[type="submit"] {
-      padding: 12px 30px;
-      background: linear-gradient(to right, #007bff, #0056b3);
-      border: none;
-      color: white;
-      font-size: 16px;
+    .course-name {
       font-weight: 600;
+      color: #2c3e50;
+      width: 20%;
+    }
+    .course-description {
+      color: #6c757d;
+      font-size: 0.95em;
+      line-height: 1.4;
+    }
+    .course-price {
+      font-weight: bold;
+      color: #27ae60;
+      white-space: nowrap;
+      width: 10%;
+      text-align: right;
+      padding-right: 25px;
+    }
+    .course-select {
+      width: 5%;
+      text-align: center;
+    }
+    .course-checkbox {
+      transform: scale(1.3);
       cursor: pointer;
-      border-radius: 5px;
-      transition: all 0.3s;
-      display: block;
-      margin: 30px auto 0;
+      accent-color: #667eea;
     }
-    input[type="submit"]:hover { 
-      background: linear-gradient(to right, #0056b3, #004494);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    input[type="submit"]:active {
-      transform: translateY(0);
-    }
-    label { 
-      display: block; 
-      margin: 15px 0 5px;
-      font-weight: 600;
-      color: #495057;
-    }
-    input[type="text"],
-    input[type="tel"],
-    input[type="email"],
-    input[type="password"],
-    textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 16px;
-      transition: border-color 0.3s;
-    }
-    input:focus,
-    textarea:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
-    }
-    textarea {
-      min-height: 100px;
-      resize: vertical;
+    .badge-critical {
+      background: #e74c3c;
+      color: white;
+      font-size: 0.7em;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 10px;
+      white-space: nowrap;
     }
     .form-section {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 8px;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
       margin-top: 30px;
-      border: 1px solid #e9ecef;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
     .form-section h3 {
       margin-top: 0;
-      color: #495057;
-      border-bottom: 1px solid #dee2e6;
+      color: #2c3e50;
+      font-size: 1.8em;
+      border-bottom: 3px solid #667eea;
       padding-bottom: 10px;
     }
-    .course-checkbox {
-      transform: scale(1.2);
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #495057;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      border-color: #667eea;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.2em;
+      font-weight: 600;
+      border-radius: 50px;
       cursor: pointer;
+      transition: all 0.3s;
+      display: block;
+      margin: 30px auto 0;
+      box-shadow: 0 4px 15px rgba(102,126,234,0.4);
     }
-    .price {
-      font-weight: bold;
-      color: #28a745;
-      white-space: nowrap; /* Предотвращает перенос текста */
-      min-width: 120px; /* Минимальная ширина для ячеек с ценами */
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102,126,234,0.6);
     }
-    .loading {
-      text-align: center;
-      padding: 20px;
-      color: #6c757d;
-      font-style: italic;
+    .submit-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
     }
-    .error {
-      background-color: #f8d7da;
-      color: #721c24;
-      padding: 10px;
-      border-radius: 4px;
-      margin: 10px 0;
-      border: 1px solid #f5c6cb;
+    .message {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 500;
     }
     .success {
-      background-color: #d4edda;
+      background: #d4edda;
       color: #155724;
-      padding: 10px;
-      border-radius: 4px;
-      margin: 10px 0;
       border: 1px solid #c3e6cb;
     }
-    /* Стили для фиксированных ширин колонок */
-    .col-number {
-      width: 40px; /* Для номера */
-      text-align: center;
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
     }
-    .col-price {
-      width: 140px; /* Увеличенная ширина для цен */
-      text-align: center;
+    .warning-module {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px;
+      border-radius: 5px;
     }
-    .col-select {
-      width: 80px; /* Для чекбоксов */
-      text-align: center;
+    .total-selected {
+      background: #e9ecef;
+      padding: 15px 25px;
+      border-radius: 50px;
+      display: inline-block;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    .total-price {
+      color: #27ae60;
+      font-size: 1.3em;
+      margin-left: 15px;
     }
     @media (max-width: 768px) {
-      .container {
-        padding: 15px;
-        margin: 10px;
-      }
-      table {
-        display: block;
-        overflow-x: auto;
-      }
-      .col-number, .col-price, .col-select {
-        width: auto; /* На мобильных делаем адаптивными */
-      }
+      .container { padding: 10px; }
+      .header { padding: 20px; }
+      .header h1 { font-size: 1.8em; }
+      table { display: block; overflow-x: auto; }
+      .course-price { text-align: left; padding-right: 15px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🎓 Выберите курсы и зарегистрируйтесь</h1>
-    
-    <h2>📂 ПЕРЕЧЕНЬ КУРСОВ ПО ОХРАНЕ ТРУДА, ТЕХНИКЕ БЕЗОПАСНОСТИ И ОХРАНЕ ОКРУЖАЮЩЕЙ СРЕДЫ</h2>
-    
-    <table>
-      <thead>
-        <tr>
-          <th class="col-number">№</th>
-          <th>Название курса</th>
-          <th>Описание</th>
-          <th class="col-price">Цена</th>
-          <th class="col-select">Выбрать</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="col-number">1</td>
-          <td><strong>Лидерство и приверженность</strong></td>
-          <td>Развитие лидерских качеств у руководителей для формирования культуры безопасности, вовлечения команды и достижения целей «нулевого травматизма».</td>
-          <td class="price col-price">20 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="leadership" id="course_1">
-            <label for="course_1" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">2</td>
-          <td><strong>Культура безопасности (для работников)</strong></td>
-          <td>Формирование личной ответственности и осознанного отношения к безопасности. Объяснение культуры общей ответственности за безопасность, принципов «остановки работы» и взаимной заботы.</td>
-          <td class="price col-price">10 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="safety_culture" id="course_2">
-            <label for="course_2" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">3</td>
-          <td><strong>Система управления охраной труда (СУОТ)</strong></td>
-          <td>Практический курс по разработке, внедрению и аудиту СУОТ в соответствии с международным стандартом ISO 45001:2018, МОТ и требованиями ТК РК.</td>
-          <td class="price col-price">50 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="sut" id="course_3">
-            <label for="course_3" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">4</td>
-          <td><strong>Оценка рисков</strong></td>
-          <td>Полный цикл: от идентификации опасностей до управления рисками. Изучение методик оценки рисков. Включает Колесо энергий, Иерархия контроля, Ранжирование рисков.</td>
-          <td class="price col-price">50 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="risk_assessment" id="course_4">
-            <label for="course_4" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">5</td>
-          <td><strong>Курсы повышения квалификации для специалистов ОТ, ТБ и ООС</strong></td>
-          <td>Глубокое погружение в современные системы управления. Развитие компетенций по внедрению СУОТ (ISO 45001), управлению рисками, внутреннему аудиту, расследованию инцидентов.</td>
-          <td class="price col-price">50 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="advanced_training" id="course_5">
-            <label for="course_5" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">6</td>
-          <td><strong>Расследование несчастных случаев и отчётность</strong></td>
-          <td>Освоение методик глубокого анализа причин (Root Cause Analysis): «5 почему», «Дерево причин». Подготовка отчётности в соответствии с требованиями РК и международными протоколами (IOGP).</td>
-          <td class="price col-price">50 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="incident_investigation" id="course_6">
-            <label for="course_6" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">7</td>
-          <td><strong>IOSH — Управление безопасностью</strong></td>
-          <td>Ведущий курс по охране труда и технике безопасности для руководителей высшего и среднего звена.</td>
-          <td class="price col-price">150 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_management" id="course_7">
-            <label for="course_7" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">8</td>
-          <td><strong>IOSH — Безопасная работа</strong></td>
-          <td>Ведущий курс по охране труда и технике безопасности для рядовых сотрудников.</td>
-          <td class="price col-price">150 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_working_safely" id="course_8">
-            <label for="course_8" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">9</td>
-          <td><strong>NEBOSH IGC — Управление охраной труда</strong></td>
-          <td>Международный генеральный сертификат по охране труда и управлению рисками.</td>
-          <td class="price col-price">600 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="nebosh_igc" id="course_9">
-            <label for="course_9" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">10</td>
-          <td><strong>Нулевая смертность — Vision Zero (ISSA)</strong></td>
-          <td>Ознакомление с глобальной платформой и принципами движения, объединяющего специалистов по охране труда для стратегия достижения нулевого травматизма нулевого уровня смертности и повышения благополучия трудящихся.</td>
-          <td class="price col-price">25 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="vision_zero" id="course_10">
-            <label for="course_10" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">11</td>
-          <td><strong>Правила спасения жизни (IOGP)</strong></td>
-          <td>Ознакомление работников с действиями по защите себя и коллег независимо от места работы.</td>
-          <td class="price col-price">25 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="life_saving_rules" id="course_11">
-            <label for="course_11" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">12</td>
-          <td><strong>Основы технологической безопасности (IOGP)</strong></td>
-          <td>Изучение основных принципов, разработанных для поддержки компаний в стремлении сократить и полностью исключить смертельные и тяжёлые инциденты.</td>
-          <td class="price col-price">25 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="process_safety" id="course_12">
-            <label for="course_12" style="display: none;"></label>
-          </td>
-        </tr>
-        <tr>
-          <td class="col-number">13</td>
-          <td><strong>Система экологического менеджмента: аспекты, воздействия и соблюдение требований</strong></td>
-          <td>Формирование навыков идентификации экологических аспектов, оценки их значимости, управления природоохранными рисками и обеспечения соответствия экологического кодекса РК и стандарта ISO 14001.</td>
-          <td class="price col-price">50 000 ₸</td>
-          <td class="col-select">
-            <input type="checkbox" class="course-checkbox" name="selectedCourses" value="environmental_management" id="course_13">
-            <label for="course_13" style="display: none;"></label>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="header">
+      <h1>🎓 ПОЛНЫЙ КАТАЛОГ КУРСОВ ПО БЕЗОПАСНОСТИ</h1>
+      <p>Профессиональное обучение по охране труда, технике безопасности и охране окружающей среды</p>
+    </div>
 
+    <!-- МОДУЛЬ 1: ОСНОВЫ ОХРАНЫ ТРУДА И УПРАВЛЕНИЯ РИСКАМИ -->
+    <div class="module">
+      <div class="module-header module-1">
+        <h2>📘 МОДУЛЬ 1: ОСНОВЫ ОХРАНЫ ТРУДА И УПРАВЛЕНИЯ РИСКАМИ</h2>
+        <p>Фундаментальные знания, системы управления и базовые инструменты безопасности</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>№</th><th>Название курса</th><th>Описание</th><th>Цена</th><th>Выбрать</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td class="course-name">Система управления охраной труда (СУОТ)</td><td class="course-description">Практический курс по разработке, внедрению и аудиту СУОТ в соответствии с международным стандартом ISO 45001:2018, МОТ и требованиями ТК РК.</td><td class="course-price">50 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="sut_mod1"></td></tr>
+          <tr><td>2</td><td class="course-name">Колесо энергий</td><td class="course-description">Систематическая идентификация опасностей через анализ источников энергии, чтобы выявить все потенциальные источники травм и повреждений перед началом работ.</td><td class="course-price">25 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="energy_wheel"></td></tr>
+          <tr><td>3</td><td class="course-name">Иерархия контроля опасности</td><td class="course-description">Применение структурированной системы приоритетов для выбора и внедрения наиболее эффективных мер защиты.</td><td class="course-price">25 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="hierarchy_control"></td></tr>
+          <tr><td>4</td><td class="course-name">Оценка риска</td><td class="course-description">Полный цикл: от идентификации опасностей до управления рисками. Изучение методик оценки рисков. Включает Колесо энергий, иерархию контроля, ранжирование рисков.</td><td class="course-price">50 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="risk_assessment"></td></tr>
+          <tr><td>5</td><td class="course-name">Знаки безопасности</td><td class="course-description">Требования к применению и размещению знаков безопасности и сигнальной маркировки.</td><td class="course-price">15 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="safety_signs"></td></tr>
+          <tr><td>6</td><td class="course-name">Карты наблюдения</td><td class="course-description">Система поведенческих наблюдений для оценки безопасных практик и состояния рабочей среды.</td><td class="course-price">20 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="observation_cards"></td></tr>
+          <tr><td>7</td><td class="course-name">Средства индивидуальной защиты (СИЗ)</td><td class="course-description">Правила выбора, применения и обслуживания средств индивидуальной защиты.</td><td class="course-price">20 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="ppe"></td></tr>
+          <tr><td>8</td><td class="course-name">Наряд-допуск</td><td class="course-description">Организация работ повышенной опасности с использованием системы нарядов-допусков.</td><td class="course-price">30 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="work_permit"></td></tr>
+          <tr><td>9</td><td class="course-name">Мониторинг и измерение показателей БиОТ</td><td class="course-description">Контроль, мониторинг и анализ ключевых показателей в области безопасности и охраны труда.</td><td class="course-price">25 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="monitoring"></td></tr>
+          <tr><td>10</td><td class="course-name">Расследование несчастных случаев и отчетность</td><td class="course-description">Освоение методик глубокого анализа причин (Root Cause Analysis): «5 почему», «Дерево причин». Подготовка отчетности в соответствии с требованиями РК и международными протоколами (IOGP).</td><td class="course-price">50 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="incident_investigation"></td></tr>
+          <tr><td>11</td><td class="course-name">Действия персонала в аварийных ситуациях</td><td class="course-description">Планирование и отработка действий персонала при чрезвычайных ситуациях.</td><td class="course-price">30 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="emergency_response"></td></tr>
+          <tr><td>12</td><td class="course-name">Первая помощь</td><td class="course-description">Отработка навыков оказания первой помощи на рабочем месте.</td><td class="course-price">20 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="first_aid"></td></tr>
+          <tr><td>13</td><td class="course-name">Проверка рабочих мест</td><td class="course-description">Методика проведения плановых и внеплановых инспекций (проверок) рабочих мест и производственный контроль.</td><td class="course-price">25 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="workplace_inspection"></td></tr>
+          <tr><td>14</td><td class="course-name">Проведение аудита</td><td class="course-description">Организация и проведение внутренних аудитов системы управления.</td><td class="course-price">30 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="auditing"></td></tr>
+          <tr><td>15</td><td class="course-name">Анализ и улучшение управления</td><td class="course-description">Анализ эффективности и планирование мероприятий по улучшению системы управления.</td><td class="course-price">25 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="management_improvement"></td></tr>
+          <tr><td>16</td><td class="course-name">Аттестация рабочих мест и производственный контроль</td><td class="course-description">Методы оценки условий труда и организация производственного контроля.</td><td class="course-price">30 000 ₸</td><td class="course-select"><input type="checkbox" class="course-checkbox" name="selectedCourses" value="workplace_certification"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- МОДУЛЬ 2: ПРОИЗВОДСТВЕННЫЕ ОПАСНОСТИ И МЕРЫ ЗАЩИТЫ -->
+    <div class="module">
+      <div class="module-header module-2">
+        <h2>🔧 МОДУЛЬ 2: ПРОИЗВОДСТВЕННЫЕ ОПАСНОСТИ И МЕРЫ ЗАЩИТЫ</h2>
+        <p>Все физические, химические, биологические, эргономические и психологические факторы</p>
+      </div>
+      <table>
+        <thead><tr><th>№</th><th>Название курса</th><th>Описание</th><th>Цена</th><th>Выбрать</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Шум и защита слуха</td><td>Профилактика потери слуха на производстве.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="noise"></td></tr>
+          <tr><td>2</td><td>Вибрация</td><td>Защита от локальной и общей вибрации.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="vibration"></td></tr>
+          <tr><td>3</td><td>Радиационная безопасность</td><td>Защита от радиации на рабочем месте.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="radiation"></td></tr>
+          <tr><td>4</td><td>Работа в экстремальную погоду</td><td>Профилактика теплового удара и переохлаждения.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="extreme_weather"></td></tr>
+          <tr><td>5</td><td>Освещение рабочей зоны</td><td>Требования к освещению и защита глаз.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="lighting"></td></tr>
+          <tr><td>6</td><td>Падающие предметы</td><td>Защита от падающих объектов и обрушений.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="falling_objects"></td></tr>
+          <tr><td>7</td><td>Ручные и переносные инструменты</td><td>Безопасное использование ручного и переносного электроинструмента.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="hand_tools"></td></tr>
+          <tr><td>8</td><td>Крутящиеся и вращающиеся механизмы</td><td>Защита от опасных движущихся частей оборудования.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rotating_machinery"></td></tr>
+          <tr><td>9</td><td>Летящие частицы</td><td>Защита от разлетающихся частиц, стружки и искр.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="flying_particles"></td></tr>
+          <tr><td>10</td><td>Защита глаз и лица</td><td>Правильный выбор и применение средств защиты глаз и лица.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="eye_face"></td></tr>
+          <tr><td>11</td><td>Защита рук и пальцев</td><td>Профилактика травм рук и правильный выбор перчаток.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="hand_protection"></td></tr>
+          <tr><td>12</td><td>Скользкие поверхности, спотыкания и падения</td><td>Профилактика травм от спотыканий, поскальзываний и падений.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="slips_trips"></td></tr>
+          <tr><td>13</td><td>Электробезопасность</td><td>Безопасная работа с электроустановками и электроинструментом.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="electrical"></td></tr>
+          <tr><td>14</td><td>Химическая опасность</td><td>Безопасная работа с опасными химическими веществами.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="chemical"></td></tr>
+          <tr><td>15</td><td>Защита органов дыхания</td><td>Правильный выбор и использование средств индивидуальной защиты органов дыхания (СИЗОД).</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="respiratory"></td></tr>
+          <tr><td>16</td><td>Высокое давление</td><td>Опасности работ под высоким давлением и меры защиты.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="high_pressure"></td></tr>
+          <tr><td>17</td><td>Биологическая опасность</td><td>Защита от биологических рисков и патогенов.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="biological"></td></tr>
+          <tr><td>18</td><td>Эргономика</td><td>Оптимизация рабочих мест для комфорта и безопасности.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="ergonomics"></td></tr>
+          <tr><td>19</td><td>Ручное перемещение грузов</td><td>Безопасное выполнение погрузочно-разгрузочных работ.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="manual_handling"></td></tr>
+          <tr><td>20</td><td>Психологические факторы</td><td>Профилактика стресса и выгорания.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="psychological"></td></tr>
+          <tr><td>21</td><td>Психоактивные вещества</td><td>Профилактика злоупотребления психотропными веществами на рабочем месте.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="psychoactive"></td></tr>
+          <tr><td>22</td><td>Уязвимые работники</td><td>Специальные меры защиты для уязвимых групп работников.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="vulnerable"></td></tr>
+          <tr><td>23</td><td>Уборка рабочего места</td><td>Содержание рабочего места в порядке.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="housekeeping"></td></tr>
+          <tr><td>24</td><td>Пожарная безопасность</td><td>Профилактика возгораний, использование огнетушителей и действия при пожаре.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="fire_safety"></td></tr>
+          <tr><td>25</td><td>Экологические аспекты</td><td>Экологические аспекты производства.</td><td>15 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="environmental_aspects"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- МОДУЛЬ 3: КРИТИЧЕСКИЕ ПРАВИЛА БЕЗОПАСНОСТИ (LIFE-SAVING RULES) -->
+    <div class="module">
+      <div class="module-header module-3">
+        <h2>⚠️ МОДУЛЬ 3: КРИТИЧЕСКИЕ ПРАВИЛА БЕЗОПАСНОСТИ (LIFE-SAVING RULES)</h2>
+        <p>ПРАВИЛА, КОТОРЫЕ СОХРАНЯТ ЖИЗНЬ</p>
+        <span class="warning-icon">❗ Высший приоритет</span>
+      </div>
+      <div class="warning-module">
+        <strong>❗ ВАЖНО:</strong> Данный модуль имеет наивысший приоритет. Нарушение этих правил с высокой вероятностью может привести к смертельному исходу. Курсы этого модуля обязательны для всех работников, занятых в соответствующих видах работ.
+      </div>
+      <table>
+        <thead><tr><th>№</th><th>Название курса</th><th>Описание</th><th>Цена</th><th>Выбрать</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Правило 1: Отключение защитных устройств</td><td>Получение разрешения перед отключением или блокировкой защитных устройств. Критически важное оборудование, процедуры, компенсирующие меры.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_safety_devices"></td></tr>
+          <tr><td>2</td><td>Правило 2: Безопасное вождение</td><td>Профилактика аварий при эксплуатации служебного транспорта. План поездок, усталость, ремни, отвлечение внимания, состояние дорог.</td><td>30 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_driving"></td></tr>
+          <tr><td>3</td><td>Правило 3: Безопасность в замкнутых пространствах</td><td>Изоляция, анализ воздуха, вентиляция, наблюдатель, план спасения, СИЗОД.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_confined_space"></td></tr>
+          <tr><td>4</td><td>Правило 4: Изоляция источников энергии (LOTO)</td><td>Система блокировки/маркировки. Идентификация всех источников, блокировка/бирки, проверка отсутствия энергии, остаточная энергия.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_loto"></td></tr>
+          <tr><td>5</td><td>Правило 5: Безопасность при огневых работах</td><td>Контроль источников воспламенения, анализ воздуха, удаление горючих, пожарный наблюдатель.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_hot_work"></td></tr>
+          <tr><td>6</td><td>Правило 6: Безопасность при земляных работах</td><td>Подземные коммуникации, устойчивость стенок, крепление, грунт, доступ/выход.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_excavation"></td></tr>
+          <tr><td>7</td><td>Правило 7: Линия огня</td><td>10 категорий опасностей, безопасная позиция, ограждения, закрепление предметов.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_line_of_fire"></td></tr>
+          <tr><td>8</td><td>Правило 8: Безопасность грузоподъемных работ</td><td>Планирование подъема, квалификация, вес груза, такелаж, устойчивость крана, запретные зоны.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_lifting"></td></tr>
+          <tr><td>9</td><td>Правило 9: Работа по наряду-допуску</td><td>Оценка рисков, понимание наряда, подтверждение мер, повторная оценка при изменениях.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_work_permit"></td></tr>
+          <tr><td>10</td><td>Правило 10: Безопасность работ на высоте</td><td>100% крепление, проверка СИЗ, анкерные точки, план спасения, закрепление инструментов.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_working_at_height"></td></tr>
+          <tr><td>11</td><td>Правило 11: Сероводород (H2S)</td><td>Свойства H2S, персональные детекторы, СИЗОД, эвакуация, спасение.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_h2s"></td></tr>
+          <tr><td>12</td><td>Правило 12: Работа с тяжёлой техникой</td><td>Безопасная эксплуатация тяжелой строительной и специальной техники.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rule_heavy_equipment"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- МОДУЛЬ 4: СПЕЦИАЛИЗИРОВАННЫЕ КУРСЫ И МЕЖДУНАРОДНЫЕ СТАНДАРТЫ -->
+    <div class="module">
+      <div class="module-header module-4">
+        <h2>🌟 МОДУЛЬ 4: СПЕЦИАЛИЗИРОВАННЫЕ КУРСЫ И МЕЖДУНАРОДНЫЕ СТАНДАРТЫ</h2>
+        <p>Профессиональные сертификации, лидерские программы и углубленные курсы</p>
+      </div>
+      <table>
+        <thead><tr><th>№</th><th>Название курса</th><th>Описание</th><th>Цена</th><th>Выбрать</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Курсы повышения квалификации для специалистов ОТ, ТБ и ООС</td><td>Глубокое погружение в современные системы управления. Развитие компетенций по внедрению СУОТ (ISO 45001), управлению рисками, внутреннему аудиту, расследованию инцидентов.</td><td>75 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="advanced_hse"></td></tr>
+          <tr><td>2</td><td>Система экологического менеджмента: аспекты, воздействия и соблюдение требований</td><td>Формирование навыков идентификации экологических аспектов, оценки их значимости, управления природоохранными рисками и обеспечения соответствия Экологического кодекса РК и стандарта ISO 14001.</td><td>50 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="iso_14001"></td></tr>
+          <tr><td>3</td><td>Лидерство и приверженность</td><td>Развитие лидерских качеств у руководителей для формирования культуры безопасности, вовлечения команды и достижения целей «нулевого травматизма».</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="leadership"></td></tr>
+          <tr><td>4</td><td>Культура безопасности (для работников)</td><td>Формирование личной ответственности и осознанного отношения к безопасности. Объяснение принципов «остановки работы» и взаимной заботы.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="safety_culture"></td></tr>
+          <tr><td>5</td><td>Безопасность в офисе и дома</td><td>Профилактика травм в офисе и быту.</td><td>10 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="office_safety"></td></tr>
+          <tr><td>6</td><td>Основы технологической безопасности (IOGP)</td><td>Изучение основных принципов, разработанных для поддержки компаний в стремлении сократить и полностью исключить смертельные и тяжёлые инциденты в области технологической безопасности.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="process_safety_iogp"></td></tr>
+          <tr><td>7</td><td>Правила спасения жизни (IOGP)</td><td>Ознакомление работников с действиями по защите себя и коллег независимо от места работы. Обзор 12 критических правил.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="life_saving_iogp"></td></tr>
+          <tr><td>8</td><td>Нулевая смертность — Vision Zero (ISSA)</td><td>Ознакомление с глобальной платформой и принципами движения, объединяющего специалистов по охране труда для стратегии достижения нулевого травматизма и повышения благополучия трудящихся.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="vision_zero"></td></tr>
+          <tr><td>9</td><td>Программа RigPass (IADC)</td><td>Стандартизированная программа вводного инструктажа по безопасности для работников буровой отрасли.</td><td>30 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="rigpass"></td></tr>
+          <tr><td>10</td><td>Курс IWCF Уровень 1</td><td>Базовый курс по основам контроля над скважиной с акцентом на превентивные меры.</td><td>40 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="iwcf"></td></tr>
+          <tr><td>11</td><td>Авторизованный газоанализаторщик (OPITO)</td><td>Обеспечение персонала знаниями для безопасного проведения проверок уровня кислорода, а также горючих и токсичных газов.</td><td>35 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="gas_tester"></td></tr>
+          <tr><td>12</td><td>Наблюдатель замкнутого пространства</td><td>Подготовка и обучение наблюдателей для работ в замкнутых пространствах.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="confined_space_attendant"></td></tr>
+          <tr><td>13</td><td>Пожарный наблюдатель</td><td>Подготовка пожарных наблюдателей при проведении огневых работ.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="fire_watcher"></td></tr>
+          <tr><td>14</td><td>Сигнальщик (Флагман)</td><td>Обучение специалистов по подаче сигналов при грузоподъемных работах.</td><td>20 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="banksman"></td></tr>
+          <tr><td>15</td><td>IOSH — Управление безопасностью</td><td>Ведущий курс по охране труда и технике безопасности для руководителей высшего и среднего звена.</td><td>150 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_managing"></td></tr>
+          <tr><td>16</td><td>IOSH — Безопасная работа</td><td>Ведущий курс по охране труда и технике безопасности для рядовых сотрудников.</td><td>150 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="iosh_working"></td></tr>
+          <tr><td>17</td><td>NEBOSH IGC — Управление охраной труда и оценка риска</td><td>Международный генеральный сертификат по охране труда и управлению рисками.</td><td>650 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="nebosh_igc"></td></tr>
+          <tr><td>18</td><td>Интегрированные системы менеджмента и внутренний аудитор</td><td>Понимать и применять требования ISO 14001 и ISO 45001. Участвовать в создании и поддержании интегрированной системы менеджмента ОТ, ПБ и ООС. Планировать и проводить внутренние аудиты по ISO 19011.</td><td>100 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="integrated_management"></td></tr>
+          <tr><td>19</td><td>Курсы английского языка. Английский с нуля</td><td>Профессиональный английский для специалистов по охране труда, инженеров и менеджеров.</td><td>100 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="english"></td></tr>
+          <tr><td>20</td><td>Опытный пользователь ПК</td><td>Повышение навыков работы с ПК до уровня опытного пользователя.</td><td>25 000 ₸</td><td><input type="checkbox" class="course-checkbox" name="selectedCourses" value="pc_skills"></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Итого и форма регистрации -->
     <div class="form-section">
-      <h3>📝 Ваши данные для регистрации</h3>
+      <h3>📝 ВАШИ ДАННЫЕ ДЛЯ РЕГИСТРАЦИИ</h3>
+      <div id="selectedSummary" class="total-selected">
+        Выбрано курсов: <span id="selectedCount">0</span> | Общая стоимость: <span id="totalPrice" class="total-price">0 ₸</span>
+      </div>
+      
       <form id="courseForm">
-        <label>ФИО (полное имя):</label>
-        <input type="text" name="fullName" required placeholder="Иванов Иван Иванович">
-        
-        <label>Телефон:</label>
-        <input type="tel" name="phone" required placeholder="+7 (777) 123-45-67">
-        
-        <label>Email:</label>
-        <input type="email" name="email" required placeholder="example@mail.ru">
-        
-        <label>Пароль (для входа в личный кабинет):</label>
-        <input type="password" name="password" required placeholder="Не менее 6 символов">
-        
-        <label>Комментарий (необязательно):</label>
-        <textarea name="comment" placeholder="Ваши пожелания или вопросы..."></textarea>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>ФИО (полное имя):</label>
+            <input type="text" name="fullName" required placeholder="Иванов Иван Иванович">
+          </div>
+          <div class="form-group">
+            <label>Телефон:</label>
+            <input type="tel" name="phone" required placeholder="+7 (777) 123-45-67">
+          </div>
+          <div class="form-group">
+            <label>Email:</label>
+            <input type="email" name="email" required placeholder="example@mail.ru">
+          </div>
+          <div class="form-group">
+            <label>Пароль (для входа в личный кабинет):</label>
+            <input type="password" name="password" required placeholder="Не менее 6 символов">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label>Комментарий (необязательно):</label>
+            <textarea name="comment" placeholder="Ваши пожелания или вопросы..."></textarea>
+          </div>
+        </div>
         
         <div id="message"></div>
         
-        <input type="submit" value="✅ Зарегистрироваться и отправить заявку">
+        <button type="submit" class="submit-btn">✅ Зарегистрироваться и отправить заявку</button>
       </form>
     </div>
   </div>
 
   <script>
-    // Конфигурация Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDQXNLAsqmSlAjplpdl2anPSyiDxbz3CjY",
       authDomain: "qhse-training.firebaseapp.com",
       projectId: "qhse-training",
     };
     
-    // Инициализация Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
     
-    // Обработчик отправки формы
+    // Подсчет выбранных курсов и общей стоимости
+    function updateSelectedSummary() {
+      const checkboxes = document.querySelectorAll('.course-checkbox');
+      let count = 0;
+      let total = 0;
+      
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          count++;
+          const priceRow = cb.closest('tr');
+          if (priceRow) {
+            const priceCell = priceRow.querySelector('.course-price') || priceRow.cells[3];
+            if (priceCell) {
+              const priceText = priceCell.textContent.replace(/[^\d]/g, '');
+              total += parseInt(priceText) || 0;
+            }
+          }
+        }
+      });
+      
+      document.getElementById('selectedCount').textContent = count;
+      document.getElementById('totalPrice').textContent = total.toLocaleString() + ' ₸';
+    }
+    
+    document.querySelectorAll('.course-checkbox').forEach(cb => {
+      cb.addEventListener('change', updateSelectedSummary);
+    });
+    
     document.getElementById("courseForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const messageDiv = document.getElementById("message");
       
-      // Получение данных формы
       const fullName = form.fullName.value.trim();
       const phone = form.phone.value.trim();
       const email = form.email.value.trim().toLowerCase();
       const password = form.password.value;
       const comment = form.comment.value.trim();
       
-      // Получение выбранных курсов
       const selectedCourses = Array.from(
-        document.querySelectorAll('input[name="selectedCourses"]:checked')
+        document.querySelectorAll('.course-checkbox:checked')
       ).map(cb => cb.value);
       
-      // Валидация
       if (!email || !password || !fullName || !phone) {
         showMessage("Пожалуйста, заполните все обязательные поля.", "error");
         return;
@@ -403,65 +492,52 @@
         return;
       }
       
-      // Отключение кнопки отправки
-      const submitBtn = form.querySelector('input[type="submit"]');
-      const originalBtnText = submitBtn.value;
-      submitBtn.value = "⏳ Обработка...";
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn.innerHTML;
+      submitBtn.innerHTML = "⏳ Обработка...";
       submitBtn.disabled = true;
       
       try {
         let userCredential;
-        
-        // Проверка существования пользователя
         const methods = await auth.fetchSignInMethodsForEmail(email);
         
         if (methods.length === 0) {
-          // Новый пользователь — регистрация
           userCredential = await auth.createUserWithEmailAndPassword(email, password);
           showMessage("✅ Аккаунт успешно создан!", "success");
         } else {
-          // Пользователь существует — вход
           userCredential = await auth.signInWithEmailAndPassword(email, password);
           showMessage("✅ Вы успешно вошли в систему!", "success");
         }
         
         const user = userCredential.user;
         
-        // СОЗДАНИЕ ЗАКАЗА в коллекции orders (как в старой системе)
         const orderData = {
           fullName,
           phone,
           email,
-          courses: selectedCourses,  // Важно: поле называется courses, а не selectedCourses
-          role: "user",              // Добавляем поле role как в новой структуре
+          courses: selectedCourses,
+          role: "user",
           createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-          // Опциональные поля для будущего использования:
-          userId: user.uid,          // Для связи с пользователем
-          comment: comment || null,  // Комментарий (если есть)
-          status: "new",             // Статус заказа
-          source: "landing"          // Откуда пришел заказ
+          userId: user.uid,
+          comment: comment || null,
+          status: "new",
+          source: "landing",
+          totalCourses: selectedCourses.length
         };
         
-        // Сохранение заказа в Firestore
         await db.collection("orders").add(orderData);
         
         showMessage("🎉 Заявка успешно отправлена! Ваш заказ создан.", "success");
         
-        // Очистка формы
         form.reset();
-        
-        // Сброс выбранных курсов
-        document.querySelectorAll('input[name="selectedCourses"]:checked').forEach(cb => {
+        document.querySelectorAll('.course-checkbox:checked').forEach(cb => {
           cb.checked = false;
         });
-        
-        // Перенаправление или другие действия после успешной отправки
-        // window.location.href = "/success.html"; // Раскомментировать если нужно
+        updateSelectedSummary();
         
       } catch (error) {
         console.error("Ошибка:", error);
         
-        // Обработка конкретных ошибок Firebase
         if (error.code === "auth/wrong-password") {
           showMessage("❌ Неверный пароль. Если вы забыли пароль, используйте восстановление или зарегистрируйтесь с другим email.", "error");
         } else if (error.code === "auth/email-already-in-use") {
@@ -476,18 +552,15 @@
           showMessage("❌ Ошибка: " + (error.message || "Неизвестная ошибка"), "error");
         }
       } finally {
-        // Восстановление кнопки отправки
-        submitBtn.value = originalBtnText;
+        submitBtn.innerHTML = originalBtnText;
         submitBtn.disabled = false;
       }
     });
     
-    // Вспомогательная функция для отображения сообщений
     function showMessage(text, type) {
       const messageDiv = document.getElementById("message");
-      messageDiv.innerHTML = `<div class="${type}">${text}</div>`;
+      messageDiv.innerHTML = `<div class="message ${type}">${text}</div>`;
       
-      // Автоматическое скрытие успешных сообщений
       if (type === "success") {
         setTimeout(() => {
           messageDiv.innerHTML = '';
@@ -495,6 +568,8 @@
       }
     }
     
+    // Инициализация подсчета
+    updateSelectedSummary();
   </script>
 </body>
 </html>
